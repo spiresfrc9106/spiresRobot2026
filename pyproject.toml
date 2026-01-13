@@ -6,29 +6,27 @@
 [tool.robotpy]
 
 # Version of robotpy this project depends on
-robotpy_version = "2024.3.2.2"
+robotpy_version = "2026.1.1"
 
-# Which extra RobotPy components should be installed
+# Which optional robotpy components should be installed?
 # -> equivalent to `pip install robotpy[extra1, ...]
-robotpy_extras = [
-    # "all"
+components = [
+    #"all",
     "apriltag",
-    # "commands2"
+    # "commands2",
     "cscore",
-    # "navx"
-    # "pathplannerlib"
-    # "phoenix5"
-    # "phoenix6"
+    # "romi",
+    # "sim",
+    # "xrp",
     "playingwithfusion",
     "rev",
-    # "romi"
     "sim",
-    # "xrp"
 ]
 
-# Other pip packages to install
+# Other pip packages to install, such as vendor packages (each element
+# is equivalent to a line in requirements.txt)
 requires = [
-    "photonlibpy==2024.2.4",
-    "debugpy==1.6.7",
-    "numpy==1.25.2",
+    # "photonlibpy",
+    "debugpy",
+    "numpy",
 ]
