@@ -7,11 +7,6 @@ from drivetrain.controlStrategies.autoSteer import AutoSteer
 from drivetrain.controlStrategies.trajectory import Trajectory
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.drivetrainControl import DrivetrainControl
-from Elevatorandmech.algaeManipulatorControl import AlgeaIntakeControl, AlgaeWristControl
-from Elevatorandmech.coralManipulatorControl import CoralManipulatorControl
-from Elevatorandmech.ElevatorControl import ElevatorControl
-from humanInterface.driverInterface import DriverInterface
-from humanInterface.ledControl import LEDControl
 from memes.ctreMusicPlayback import CTREMusicPlayback
 from humanInterface.operatorInterface import OperatorInterface
 from navigation.forceGenerators import PointObstacle
@@ -47,10 +42,6 @@ class MyRobot(wpilib.TimedRobot):
 
         self.webserver = Webserver()
 
-        self.algaeWrist = AlgaeWristControl()
-        self.algaeIntake = AlgeaIntakeControl()
-        self.coralMan = CoralManipulatorControl()
-
         self.driveTrain = DrivetrainControl()
         self.autodrive = AutoDrive()
         self.autosteer = AutoSteer()
@@ -69,10 +60,6 @@ class MyRobot(wpilib.TimedRobot):
         self.rioMonitor = RIOMonitor()
         self.pwrMon = PowerMonitor()
 
-        self.elev = ElevatorControl()
-
-        self.algaeManip = AlgaeWristControl()
-
         # Normal robot code updates every 20ms, but not everything needs to be that fast.
         # Register slower-update periodic functions
         self.addPeriodic(self.pwrMon.update, 0.2, 0.0)
@@ -85,12 +72,6 @@ class MyRobot(wpilib.TimedRobot):
     def robotPeriodic(self):
         self.stt.start()
 
-        self.algaeIntake.update()
-        self.stt.mark("algaeIntake")
-
-        self.algaeWrist.update()
-        self.stt.mark("algaeWrist")
-
         self.dInt.update()
         self.stt.mark("Driver Interface")
 
@@ -99,16 +80,6 @@ class MyRobot(wpilib.TimedRobot):
 
         self.oInt.update()
         self.stt.mark("Operator Interface")
-
-        self.coralMan.update()
-        self.stt.mark("Coral Manipulator")
-
-        self.elev.setSafeToLeaveL1(self.coralMan.getCoralSafeToMove())
-        self.ledCtrl.setCoralInterferencePossible(not self.coralMan.getCoralSafeToMove())
-        self.oInt.setElevatorBlocked(not self.coralMan.getCoralSafeToMove())
-
-        self.elev.update()
-        self.stt.mark("Elevator")
 
         self.autodrive.updateTelemetry()
         self.driveTrain.poseEst._telemetry.setCurAutoDriveWaypoints(self.autodrive.getWaypoints())
@@ -178,13 +149,6 @@ class MyRobot(wpilib.TimedRobot):
         
         self.autodrive.setRequest(self.dInt.getAutoDrive())
 
-        self.algaeIntake.setInput(self.oInt.getIntakeAlgae(),self.oInt.getEjectAlgae(), self.oInt.getAlgaeManipCmd())
-
-        self.algaeManip.setDesPos(self.oInt.getAlgaeManipCmd())
-
-        if self.oInt.getElevReset():
-            self.elev.zeroElevatorReading()
-
         if self.dInt.getGyroResetCmd():
             self.driveTrain.resetGyro()
 
@@ -203,13 +167,6 @@ class MyRobot(wpilib.TimedRobot):
         #    for tf in tfs:
         #        obs = PointObstacle(location=(ct+tf), strength=0.5)
         #        self.autodrive.rfp.addObstacleObservation(obs)
-
-        self.coralMan.setCoralCmd(self.oInt.getCoralCmd(), self.dInt.getEjectCoral())
-        self.coralMan.setAtL1(self.elev.getHeightM() < (self.elev.L1_Height.get() + 0.1))
-
-        self.elev.setSafeToLeaveL1(self.coralMan.getCoralSafeToMove())
-        self.elev.setManualAdjCmd(self.oInt.getElevManAdjCmd())
-        self.elev.setHeightGoal(self.oInt.getElevCmd())
 
         # No trajectory in Teleop
         Trajectory().setCmd(None)

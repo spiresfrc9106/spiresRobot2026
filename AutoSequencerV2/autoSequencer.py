@@ -4,16 +4,8 @@ from AutoSequencerV2.modeList import ModeList
 from AutoSequencerV2.builtInModes.doNothingMode import DoNothingMode
 from AutoSequencerV2.builtInModes.waitMode import WaitMode
 from AutoSequencerV2.sequentialCommandGroup import SequentialCommandGroup
-from Autonomous.modes.cCycleL1 import CCycleL1
-from Autonomous.modes.cCycleL2 import CCycleL2
-from Autonomous.modes.lCycleL1 import LCycleL1
-from Autonomous.modes.scoreOneL4 import ScoreOneL4
-from Autonomous.modes.center1CoralL1 import Center1CoralL1
 from Autonomous.modes.driveForwardSlowly import DriveForwardSlowly
 from Autonomous.modes.driveOut import DriveOut
-
-from Autonomous.modes.lCycleL2 import LCycleL2
-from Autonomous.modes.scoreTwoL1 import scoreTwoL1
 from utils.singleton import Singleton
 from utils.allianceTransformUtils import onRed
 from utils.autonomousTransformUtils import setFlip
@@ -40,15 +32,6 @@ class AutoSequencer(metaclass=Singleton):
         #right now, DriveOut is all commented out, so we don't need to add it to the list. 
         self.mainModeList.addMode(DriveOut())
         self.mainModeList.addMode(DriveForwardSlowly())
-        self.mainModeList.addMode(Center1CoralL1())
-        self.mainModeList.addMode(LCycleL1())
-        self.mainModeList.addMode(LCycleL2())
-        #self.mainModeList.addMode(LCycleL4())
-        self.mainModeList.addMode(CCycleL1())
-        self.mainModeList.addMode(CCycleL2())
-        #self.mainModeList.addMode(CCycleL4())
-        self.mainModeList.addMode(scoreTwoL1())
-        self.mainModeList.addMode(ScoreOneL4())
         
         self.topLevelCmdGroup = SequentialCommandGroup()
         self.startPose = Pose2d()
