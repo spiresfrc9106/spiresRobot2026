@@ -8,6 +8,8 @@ from drivetrain.controlStrategies.trajectory import Trajectory
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.drivetrainControl import DrivetrainControl
 from memes.ctreMusicPlayback import CTREMusicPlayback
+from humanInterface.driverInterface import DriverInterface
+from humanInterface.ledControl import LEDControl
 from humanInterface.operatorInterface import OperatorInterface
 from navigation.forceGenerators import PointObstacle
 from utils.segmentTimeTracker import SegmentTimeTracker
@@ -136,14 +138,12 @@ class MyRobot(wpilib.TimedRobot):
     def teleopPeriodic(self):
 
         # TODO - this is technically one loop delayed, which could induce lag
-        self.driveTrain.setElevLimiter(self.elev.getDtSpeedLimitFactor())
         self.driveTrain.setManualCmd(self.dInt.getCmd(), self.dInt.getRobotRelative())
 
 
         # We're enabled as long as the driver is commanding it, and we're _not_ trying to control robot relative.
         enableAutoSteer = not self.dInt.getRobotRelative() and self.dInt.getAutoSteerEnable()
         self.autosteer.setAutoSteerActiveCmd(enableAutoSteer)
-        self.autosteer.setHasCoral(self.coralMan.hasCoralAnywhere())
         self.autosteer.setAlignToProcessor(self.dInt.getAutoSteerToAlgaeProcessor())
         self.autosteer.setAlignDownfield(self.dInt.getAutoSteerDownfield())
         
