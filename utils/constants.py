@@ -60,10 +60,11 @@ LED_STACK_LIGHT_CTRL_PWM = 9
 ## DIO Bank
 #######################################################################################
 
-DT_FR_AZMTH_ENC_PORT = 0
-DT_BR_AZMTH_ENC_PORT = 1
+DT_BR_AZMTH_ENC_PORT = 0
+DT_FL_AZMTH_ENC_PORT = 1
 DT_BL_AZMTH_ENC_PORT = 2
-DT_FL_AZMTH_ENC_PORT = 3
+DT_FR_AZMTH_ENC_PORT = 3
+
 CORAL_GAME_PIECE_B_PORT = 4
 CORAL_GAME_PIECE_F_PORT = 5
 ELEV_TOF_CANID = 6

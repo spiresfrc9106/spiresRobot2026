@@ -48,11 +48,11 @@ class DrivetrainControl(metaclass=Singleton):
 
         self.modules.append(
             SwerveModuleControl("BL", DT_BL_WHEEL_CANID, DT_BL_AZMTH_CANID, DT_BL_AZMTH_ENC_PORT, 
-                                BL_ENCODER_MOUNT_OFFSET_RAD, False, True)
+                                BL_ENCODER_MOUNT_OFFSET_RAD, True, True)
         )
         self.modules.append(
             SwerveModuleControl("BR", DT_BR_WHEEL_CANID, DT_BR_AZMTH_CANID, DT_BR_AZMTH_ENC_PORT, 
-                                BR_ENCODER_MOUNT_OFFSET_RAD, True, True)
+                                BR_ENCODER_MOUNT_OFFSET_RAD, False, True)
         )
 
         self.desChSpd = ChassisSpeeds()
@@ -91,8 +91,8 @@ class DrivetrainControl(metaclass=Singleton):
 
         self.curCmd = self.curManCmd
         self.curCmd = Trajectory().update(self.curCmd, curEstPose)
-        self.curCmd = AutoSteer().update(self.curCmd, curEstPose)
-        self.curCmd = AutoDrive().update(self.curCmd, curEstPose)
+        # self.curCmd = AutoSteer().update(self.curCmd, curEstPose)
+        # self.curCmd = AutoDrive().update(self.curCmd, curEstPose)
 
         self.curCmd.scaleBy(self.elevSpeedLimit)
 
