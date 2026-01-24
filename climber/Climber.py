@@ -19,7 +19,7 @@ class Climber:
 
     def startClimb(self,distance):
         if self.arm_motor.getMotorPositionRad() < distance:
-            self.pivot_motor.setPosCmd(6)
+            self.pivot_motor.setPosCmd(0)
                  #TODO: retract intake.
             self.arm_motor.setVelCmd(6)
             self.arm_motor.getMotorPositionRad()
