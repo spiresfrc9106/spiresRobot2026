@@ -17,7 +17,7 @@ from utils.faults import Fault
 from utils.signalLogging import addLog
 from wrappers.wrapperedPoseEstPhotonCamera import WrapperedPoseEstPhotonCamera
 from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
-from utils.constants import blueReefLocation, redReefLocation
+#from utils.constants import blueReefLocation, redReefLocation #2025 code
 
 # Convienent abreviations for the types that we'll be passing around here.
 # This is primarily driven by wpilib's conventions:
@@ -132,12 +132,12 @@ class DrivetrainPoseEstimator:
         self._poseEst.update(self._curRawGyroAngle, curModulePositions)
         self._curEstPose = self._poseEst.getEstimatedPosition()
 
-        # make sure we're not inside the reef somewhow
+        """# make sure we're not inside the hub somewhow #2025 code -- so old code that should be updated
         startPoseEst = self._curEstPose
-        self._curEstPose = self._adjustOutsideReef(self._curEstPose, blueReefLocation)
-        self._curEstPose = self._adjustOutsideReef(self._curEstPose, redReefLocation)
+        self._curEstPose = self._adjustOutsideReef(self._curEstPose, blueReefLocation) #2025 code 
+        self._curEstPose = self._adjustOutsideReef(self._curEstPose, redReefLocation) 
         if(startPoseEst != self._curEstPose):
-            self._poseEst.resetTranslation(self._curEstPose.translation())
+            self._poseEst.resetTranslation(self._curEstPose.translation())"""
 
         # Record the estimate to telemetry/logging-
         self._telemetry.update(self._curEstPose, [x.angle for x in curModulePositions])

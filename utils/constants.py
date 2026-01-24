@@ -11,11 +11,11 @@ from wpimath.geometry import Translation2d
 FIELD_X_M = 17.548 # "Length"
 FIELD_Y_M = 8.062  # "Width"
 
-# Blue Reef Location
-_REEF_LOC_X_M = 4.502
-_REEF_LOC_Y_M = 4.0363
-blueReefLocation = Translation2d(_REEF_LOC_X_M, _REEF_LOC_Y_M)
-redReefLocation = Translation2d(FIELD_X_M - _REEF_LOC_X_M, _REEF_LOC_Y_M)
+# Blue Hub Location
+_HUB_LOC_X_M = 4.6255
+_HUB_LOC_Y_M = 4.0347
+blueHubLocation = Translation2d(_HUB_LOC_X_M, _HUB_LOC_Y_M)
+redHubLocation = Translation2d(FIELD_X_M - _HUB_LOC_X_M, _HUB_LOC_Y_M)
 
 #######################################################################################
 ## CAN ID'S
@@ -30,15 +30,15 @@ DT_BR_WHEEL_CANID = 6
 DT_BR_AZMTH_CANID = 7
 DT_BL_WHEEL_CANID = 8
 DT_BL_AZMTH_CANID = 9
-ELEV_RM_CANID = 10
-ELEV_LM_CANID = 11
-ELEV_TOF_CANID = 12
-CORAL_R_CANID = 13
-CORAL_L_CANID = 14
-ALGAE_INT_CANID = 15
-ALGAE_WRIST_CANID = 16
-CLIMB_CANID = 19
-ALGAE_GAMEPIECE_CANID = 20
+TURRET_PITCH_CANID = 10
+TURRET_YAW_CANID = 11
+TOP_SHOOTER_CANID = 12
+BOTTOM_SHOOTER_CANID = 13
+UNASSIGNED14 = 14
+UNASSIGNED15 = 15
+UNASSIGNED16 = 16
+UNASSIGNED19 = 19
+UNASSIGNED18 = 20
 
 #######################################################################################
 ## PWM Bank

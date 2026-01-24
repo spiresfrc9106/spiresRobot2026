@@ -8,3 +8,7 @@ class shooterTargetCmd(Enum): #These are just temporary/example names. We should
     CORNERTWO = 2
 
 SHOOTEROFFSET = 0
+
+SHOOTER_WHEEL_RADIUS = 0.0254 # meters converted from 2 inches  
+
+GRAVITY = -9.8 #Meters/second
