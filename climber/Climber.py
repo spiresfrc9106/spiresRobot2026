@@ -16,6 +16,7 @@ class Climber:
 
     def setGearing(self, newGearing):
         self.gearing = newGearing
+        
     def setSpeed(self, newSpeed):
         self.speed = newSpeed
 
