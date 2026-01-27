@@ -11,7 +11,9 @@ from fuelSystems.fuelSystemConstants import GRAVITY, SHOOTER_WHEEL_RADIUS
 
 class ShooterController(metaclass=Singleton):
 
-    def __init__(self):
+    def __init__(self): 
+        #TODO -- ADD A CHECK TO PREVENT US FROM TRYING TO GO PAST OUR MAXIMUM ANGLES. from 5 to 67 degrees. 
+        #
         
         # motor declerations here
         #2 krakens for the shooter wheels
@@ -22,7 +24,7 @@ class ShooterController(metaclass=Singleton):
         self.pitchMotor = WrapperedSparkMax(TURRET_PITCH_CANID, "TurretMotorPitch", brakeMode=True)
         self.yawMotor = WrapperedSparkMax(TURRET_YAW_CANID, "TurretMotorYaw", brakeMode=True)
 
-        # 
+        self.curPos = self.robotPosEst.getCurEstPose()
 
         self.toldToShoot = True
 
@@ -52,6 +54,7 @@ class ShooterController(metaclass=Singleton):
             #This is "Traejctory Relative," X axis is the line from the base of the robot at the center of the turret to
             #the base of the hub at the center  
 
+            self.oldPos = self.curPos 
             self.curPos = self.robotPosEst.getCurEstPose()
             self.curHubPos = blueHubLocation #THIS DOESN'T CHECK WHICH ALLIANCE WE ARE I NEED TO IMPLEMENT THAT LATER
 
@@ -71,15 +74,20 @@ class ShooterController(metaclass=Singleton):
             self.desTrajVelo = math.sqrt((2*GRAVITY*self.hubTrajectoryMaxHeight)/(2*abs(GRAVITY)))
             self.desTrajPitch = ((2*self.hubTrajectoryMaxHeight)/(self.desTrajVelo))
 
+            # Get robots velocity by measuring distance traveled since last cycle and
+            # dividing it by time.
+
+            self.robotCycleTime = 0.02
+
+            self.robotXVelo = (self.curPos.X() - self.oldPos.X()) / self.robotCycleTime
+            self.robotYVelo = (self.curPos.Y() - self.oldPos.Y()) / self.robotCycleTime
+
             #Convert the robot's velocity to be relative to our trajectory-freindly axis from its own relative one.
             #The angle difference between the field axis and the trajectory one.
 
-            self.robotRelXVelo = 0 #-- will later implement way to get velocity 
-            self.robotRelYVelo = 0 # by storing position from last code cycle divided by 20 or 40 ms (check time variable?)
-
             self.robotToTrajAxisDiff = math.atan(self.turretPosX / self.turretPosY) #Task for my future self -- Check if this
-            self.robotTrajRelVeloX = 1 / (math.sin(self.robotToTrajAxisDiff) * self.robotRelXVelo) #code accidentally flips
-            self.robotTrajRelVeloY = 1 / (math.cos(self.robotToTrajAxisDiff) * self.robotRelYVelo) #X and Y axis
+            self.robotTrajRelVeloX = 1 / (math.sin(self.robotToTrajAxisDiff) * self.robotXVelo) #code accidentally flips
+            self.robotTrajRelVeloY = 1 / (math.cos(self.robotToTrajAxisDiff) * self.robotYVelo) #X and Y axis
 
             #All of the components of the vector for the needed ball velocity to score
             self.neededBallXVelo = math.cos(self.desTrajPitch) * self.desTrajVelo - self.robotTrajRelVeloX
@@ -105,6 +113,10 @@ class ShooterController(metaclass=Singleton):
             #i think?
 
             #hopefully
+
+            self.shooterTopMotor.setVelCmd(self.neededShooterRotVelo)
+            self.shooterBottomMotor.setVelCmd(self.neededShooterRotVelo)
+
             
         pass
 

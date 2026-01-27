@@ -26,7 +26,7 @@ import wpilib
 class MyRobot(wpilib.TimedRobot):
 
     def __init__(self):
-        super().__init__(period=0.04)
+        super().__init__(period=0.02) #Doug says to makek this 0.02 
 
     #########################################################
     ## Common init/update for all modes
