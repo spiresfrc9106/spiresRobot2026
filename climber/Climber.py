@@ -3,10 +3,6 @@ import math
 from rev import SparkMax, SparkMaxConfig, SparkBaseConfig
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
 from utils.constants import CLIMBER_ARM_CANID, CLIMBER_PIVOT_CANID
-WHEEL_GEAR_RATIO_L1 = 8.41
-WHEEL_GEAR_RATIO_L2 = 6.75
-WHEEL_GEAR_RATIO_L3 = 6.12
-AZMTH_GEAR_RATIO = 12.8
 class Climber:
     def Init(self):
         """Runs once when the robot starts."""
@@ -16,6 +12,10 @@ class Climber:
         self.move_duration = 0
         self.speed = 0
         self.distance = 0
+        self.gearing = 0 
+
+    def setGearing(self, newGearing):
+        self.gearing = newGearing
     def setSpeed(self, newSpeed):
         self.speed = newSpeed
 
