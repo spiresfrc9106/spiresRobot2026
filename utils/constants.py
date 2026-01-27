@@ -3,6 +3,7 @@
 # The math conversions are under units.py
 
 from wpimath.geometry import Translation2d
+from enum import Enum
 
 #######################################################################################
 ## FIELD DIMENSIONS
@@ -32,7 +33,7 @@ DT_BL_WHEEL_CANID = 8
 DT_BL_AZMTH_CANID = 9
 CLIMBER_ARM_CANID = 10
 CLIMBER_PIVOT_CANID = 11
-ELEV_TOF_CANID = 12
+CLIMBER_2ARM_CANID = 12
 CORAL_R_CANID = 13
 CORAL_L_CANID = 14
 ALGAE_INT_CANID = 15
@@ -70,3 +71,12 @@ ELEV_TOF_CANID = 6
 HEARTBEAT_LED_PIN = 7
 FIX_ME_LED_PIN = 8
 ALGAE_ENC_PORT = 9
+########################################################################################################
+## Enums
+########################################################################################################
+class ClimberSteps(Enum):
+    STEP0_IDLE = 0
+    STEP1_LONGHOOK_DOWN_SHORTHOOK_UP = 1
+    STEP2_SHORTHOOK_LATCHES_ONTO_BAR = 2
+    STEP3_LONGHOOK_DISENGAGES_FROM_BAR = 3
+    STEP4_LONGHOOK_BACK_DOWN = 4
