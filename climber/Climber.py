@@ -4,14 +4,14 @@ import math
 from unittest import case
 from rev import SparkMax, SparkMaxConfig, SparkBaseConfig
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
-from utils.constants import CLIMBER_ARM_CANID, CLIMBER_PIVOT_CANID, CLIMBER_2ARM_CANID, ClimberSteps
+from utils.constants import LONG_HOOK_CANID, CLIMBER_PIVOT_CANID, SHORT_HOOK_CANID, ClimberSteps
 
 class Climber:
     def Init(self):
         """Runs once when the robot starts."""
-        self.longhook_motor = WrapperedSparkMax(CLIMBER_ARM_CANID, "LongHookMotor", brakeMode=True)
+        self.longhook_motor = WrapperedSparkMax(LONG_HOOK_CANID, "LongHookMotor", brakeMode=True)
         self.pivot_motor = WrapperedSparkMax(CLIMBER_PIVOT_CANID, "PivotMotor", brakeMode=True)
-        self.smallhook_motor = WrapperedSparkMax(CLIMBER_2ARM_CANID, "SmallHookMotor", brakeMode=True)
+        self.smallhook_motor = WrapperedSparkMax(SHORT_HOOK_CANID, "SmallHookMotor", brakeMode=True)
         self.is_moving = False
         self.move_duration = 0
         self.speed = 0
@@ -40,7 +40,7 @@ class Climber:
     def startClimb(self):
         
         # pivot motor is fine for now
-        self.pivot_motor.setPosCmd(0)
+        self.pivot_motor.setPosCmd(-0)
         # ensure step handling with properly indented match/case blocks
         match self.step:
             case ClimberSteps.STEP0_IDLE:
