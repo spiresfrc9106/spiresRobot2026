@@ -68,8 +68,7 @@ class DrivetrainControl(metaclass=Singleton):
         self.gainsFR = SwerveModuleGainSet()
         self.gainsBL = SwerveModuleGainSet()
         self.gainsBR = SwerveModuleGainSet()
-        #old one where all swerve were set the same power
-        # self.gains = SwerveModuleGainSet()
+        #All swerve were can have independent power
 
         self.poseEst = DrivetrainPoseEstimator(self.getModulePositions())
 
