@@ -18,7 +18,7 @@ Defines the physical dimensions and characteristics of the drivetrain
 # Wheel base half width: Distance from the center of the frame rail
 # out to the center of the "contact patch" where the wheel meets the ground
 WHEEL_BASE_HALF_WIDTH_M = inchesToMeters(29 / 2.0)
-WHEEL_BASE_HALF_LENGTH_M = inchesToMeters(32 / 2.0)
+WHEEL_BASE_HALF_LENGTH_M = inchesToMeters(29 / 2.0)
 
 # Additional distance from the wheel contact patch out to the edge of the bumper
 BUMPER_THICKNESS_M = inchesToMeters(5.5)
