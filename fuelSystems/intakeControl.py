@@ -17,17 +17,22 @@ class IntakeController(metaclass=Singleton):
     def enableIntake(self):
         self.intakeEnabled = True
         self.intakeWheelsMotor.setVelCmd(8)
+        
+    def lowerIntake(self):
+        self.intakeMotor.setPosCmd(8)
 
     def disableIntake(self):
         self.intakeEnabled = False
         self.intakeWheelsMotor.setVelCmd(0)
+    def raiseIntake(self):
+        self.intakeMotor.setPosCmd(0)
+   
+   
     def getIntakeState(self):
         return self.intakeEnabled 
     
-    def lowerIntake(self):
-        self.intakeMotor.setPosCmd(8)
+   
         
-    def raiseIntake(self):
-        self.intakeMotor.setPosCmd(0)
+    
        
     
