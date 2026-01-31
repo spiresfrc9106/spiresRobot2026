@@ -21,6 +21,7 @@ from utils.rioMonitor import RIOMonitor
 from utils.signalLogging import logUpdate
 from utils.singleton import destroyAllSingletonInstances
 from webserver.webserver import Webserver
+from fuelSystems.shooterControl import ShooterController
 import wpilib
 
 class MyRobot(wpilib.TimedRobot):
@@ -59,6 +60,8 @@ class MyRobot(wpilib.TimedRobot):
 
         self.dashboard = Dashboard()
 
+        self.shooterCtrl = ShooterController()
+
         self.rioMonitor = RIOMonitor()
         self.pwrMon = PowerMonitor()
 
@@ -82,6 +85,9 @@ class MyRobot(wpilib.TimedRobot):
 
         self.oInt.update()
         self.stt.mark("Operator Interface")
+
+        self.shooterCtrl.update()
+        self.stt.mark("Shooter Update")
 
         #self.autodrive.updateTelemetry()
         #self.driveTrain.poseEst._telemetry.setCurAutoDriveWaypoints(self.autodrive.getWaypoints())

@@ -9,6 +9,7 @@ from wpimath.filter import SlewRateLimiter
 from wpilib import XboxController
 from wpilib import DriverStation
 from utils.calibration import Calibration
+from fuelSystems.shooterControl import ShooterController 
 
 class DriverInterface:
     """Class to gather input from the driver of the robot"""
@@ -41,6 +42,11 @@ class DriverInterface:
         self.robotRelative = False
 
         self.autoSteerEnable = True
+
+        #Shooter stuff
+        self.shooterCtrl = ShooterController()
+
+        self.shootCmd = False
 
         # Logging
         addLog("DI FwdRev Cmd", lambda: self.velXCmd, "mps")
@@ -104,6 +110,10 @@ class DriverInterface:
             else:
                 pass
 
+            self.shootCmd = self.ctrl.getBButton()
+
+            self.shooterCtrl.setShooting(self.shootCmd)
+            
             self.connectedFault.setNoFault()
 
         else:
@@ -115,6 +125,8 @@ class DriverInterface:
             self.autoDriveCmd = False
             self.robotRelative = False
             self.createDebugObstacle = False
+            self.shootCmd = False
+            self.shooterCtrl.setShooting(False)
             if(DriverStation.isFMSAttached()):
                 self.connectedFault.setFaulted()
 
