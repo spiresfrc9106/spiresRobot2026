@@ -1,4 +1,5 @@
 import random
+import math
 
 from wpimath.controller import SimpleMotorFeedforwardMeters
 from wpimath.controller import PIDController
@@ -8,7 +9,10 @@ from wpimath.geometry import Rotation2d
 from wpimath.filter import SlewRateLimiter
 from wpilib import TimedRobot
 
-
+from drivetrain.drivetrainPhysical import dtMotorRotToLinear
+from drivetrain.drivetrainPhysical import dtLinearToMotorRot
+from drivetrain.drivetrainPhysical import MAX_FWD_REV_SPEED_MPS
+from drivetrain.drivetrainPhysical import wrapperedSwerveDriveAzmthEncoder
 from drivetrain.swerveModuleGainSet import SwerveModuleGainSet
 from wrappers.wrapperedKraken import WrapperedKraken
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
@@ -19,6 +23,7 @@ from utils.signalLogging import addLog
 from drivetrain.drivetrainPhysical import dtMotorRotToLinear
 from drivetrain.drivetrainPhysical import dtLinearToMotorRot
 from drivetrain.drivetrainPhysical import MAX_FWD_REV_SPEED_MPS
+from utils.units import rad2Deg
 
 
 class SwerveModuleControl:
@@ -45,13 +50,16 @@ class SwerveModuleControl:
 
     def __init__(
         self,
+        subsystemName:str,
         moduleName:str,
+        wheelMotorWrapper:...,
         wheelMotorCanID:int,
         azmthMotorCanID:int,
         azmthEncoderPortIdx:int,
         azmthOffset:float,
-        invertWheel:bool,
-        invertAzmth:bool
+        invertWheelMotor:bool,
+        invertAzmthMotor:bool,
+        invertAzmthEncoder:bool
     ):
         """Instantiate one swerve drive module
 
@@ -61,25 +69,27 @@ class SwerveModuleControl:
             azmthMotorCanID (int): CAN Id for the azimuth motor for this module
             azmthEncoderPortIdx (int): RIO Port for the azimuth absolute encoder for this module
             azmthOffset (float): Mounting offset of the azimuth encoder in Radians.
-            invertWheel (bool): Inverts the drive direction of the wheel - needed since left/right sides are mirrored
-            invertAzmth (bool): Inverts the steering direction of the wheel - needed if motor is mounted upside
+            invertWheelMotor (bool): Inverts the drive direction of the wheel motor
+            invertAzmthMotor (bool): Inverts the steering direction of the azimuth motor
+            invertAzmthEncoder (bool): Inverts the direction of the steering azimuth encoder
         """
-        self.wheelMotor = WrapperedKraken(
-            wheelMotorCanID, moduleName + "_wheel", False
+        print(f"{moduleName} azmthOffset={rad2Deg(azmthOffset):7.1f} deg")
+        self.wheelMotor = wheelMotorWrapper(
+            wheelMotorCanID, subsystemName + moduleName + "/wheelMotor", False
         )
         self.azmthMotor = WrapperedSparkMax(
-            azmthMotorCanID, moduleName + "_azmth", True
+            azmthMotorCanID, subsystemName + moduleName + "/azmthMotor", True
         )
 
         # Note the azimuth encoder inversion should be fixed, based on the physical design of the encoder itself,
         # plus the swerve module physical construction. It might need to be tweaked here though if we change 
         # module brands or sensor brands.
-        self.azmthEnc = WrapperedSRXMagEncoder(
-            azmthEncoderPortIdx, moduleName + "_azmthEnc", azmthOffset, False
+        self.azmthEnc = wrapperedSwerveDriveAzmthEncoder(
+            azmthEncoderPortIdx, subsystemName + moduleName + "/azmthEnc", azmthOffset, invertAzmthEncoder
         )
 
-        self.wheelMotor.setInverted(invertWheel)
-        self.azmthMotor.setInverted(invertAzmth)
+        self.wheelMotor.setInverted(invertWheelMotor)
+        self.azmthMotor.setInverted(invertAzmthMotor)
 
         self.wheelMotorFF = SimpleMotorFeedforwardMeters(0, 0, 0)
 
@@ -97,12 +107,12 @@ class SwerveModuleControl:
 
         addLog(
             getAzmthDesTopicName(moduleName),
-            lambda: (self.optimizedDesiredState.angle.degrees()),
+            self.optimizedDesiredState.angle.degrees,
             "deg",
         )
         addLog(
             getAzmthActTopicName(moduleName),
-            lambda: (self.actualState.angle.degrees()),
+            self.actualState.angle.degrees,
             "deg",
         )
         addLog(
@@ -118,7 +128,7 @@ class SwerveModuleControl:
 
 
         # Simulation Support Only
-        self.wheelSimFilter = SlewRateLimiter(48.0)
+        self.wheelSimFilter = SlewRateLimiter(24.0)
 
     def getActualPosition(self)->SwerveModulePosition:
         """
@@ -150,9 +160,15 @@ class SwerveModuleControl:
         self.wheelMotor.setPID(
             gains.wheelP.get(), gains.wheelI.get(), gains.wheelD.get()
         )
-        self.wheelMotorFF = SimpleMotorFeedforwardMeters(
-            gains.wheelS.get(), gains.wheelV.get(), gains.wheelA.get()
-        )
+
+        if math.isclose(gains.wheelS.get(), 0) and \
+                math.isclose(gains.wheelV.get(), 0) and \
+                math.isclose(gains.wheelA.get(), 0):
+            self.wheelMotorFF = None
+        else:
+            self.wheelMotorFF = SimpleMotorFeedforwardMeters(
+                gains.wheelS.get(), gains.wheelV.get(), gains.wheelA.get()
+            )
         self.azmthCtrl.setPID(
             gains.azmthP.get(), gains.azmthI.get(), gains.azmthD.get()
         )
@@ -199,8 +215,12 @@ class SwerveModuleControl:
 
         # Send voltage and speed commands to the wheel motor
         motorDesSpd = dtLinearToMotorRot(self.optimizedDesiredState.speed)
-        motorVoltageFF = self.wheelMotorFF.calculate(self._prevMotorDesSpeed, motorDesSpd) #This is the problem child of the new non-backwards compatable Robotpy update. actualstate.speed is "prev" and motorDesSpd is "cur"
-        self.wheelMotor.setVelCmd(motorDesSpd, motorVoltageFF)                            
+        motorDesAccel = (motorDesSpd - self._prevMotorDesSpeed) / 0.02
+        if self.wheelMotorFF is None:
+            motorVoltageFF = 0
+        else:
+            motorVoltageFF = self.wheelMotorFF.calculate(motorDesSpd, motorDesAccel)
+        self.wheelMotor.setVelCmd(motorDesSpd, motorVoltageFF)
 
         self._prevMotorDesSpeed = motorDesSpd  # save for next loop
 

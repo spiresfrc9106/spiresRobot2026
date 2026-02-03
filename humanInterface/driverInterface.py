@@ -44,7 +44,7 @@ class DriverInterface:
         self.autoSteerEnable = True
 
         #Shooter stuff
-        self.shooterCtrl = ShooterController()
+        #self.shooterCtrl = ShooterController()
 
         self.shootCmd = False
 
@@ -111,11 +111,12 @@ class DriverInterface:
                 pass
 
             self.shootCmd = self.ctrl.getBButton()
+            """
             if self.shootCmd:
                 self.shooterCtrl.enableShooting()
             else:
                 self.shooterCtrl.disableShooting()
-            
+            """
             self.connectedFault.setNoFault()
 
         else:
@@ -128,7 +129,7 @@ class DriverInterface:
             self.robotRelative = False
             self.createDebugObstacle = False
             self.shootCmd = False
-            self.shooterCtrl.disableShooting()
+            #self.shooterCtrl.disableShooting()
             if(DriverStation.isFMSAttached()):
                 self.connectedFault.setFaulted()
 

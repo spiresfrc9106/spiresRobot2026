@@ -8,3 +8,7 @@ simgui-ds.json
 *.orig
 ctre_sim/
 memory_report.txt
+# 9106 specific ignores
+/venv*
+/.venv*
+/.idea

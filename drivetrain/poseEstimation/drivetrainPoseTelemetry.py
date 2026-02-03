@@ -10,9 +10,11 @@ from choreo.trajectory import SwerveTrajectory
 
 from drivetrain.controlStrategies.autoSteer import AutoSteer
 from utils.allianceTransformUtils import transform
-from drivetrain.drivetrainPhysical import ROBOT_TO_FRONT_CAM, ROBOT_TO_LEFTFRONT_CAM, ROBOT_TO_RIGHTFRONT_CAM, ROBOT_TO_RIGHTBACK_CAM, ROBOT_TO_LEFTBACK_CAM, robotToModuleTranslations
+from drivetrain.drivetrainPhysical import CAMS, robotToModuleTranslations
 from utils.autonomousTransformUtils import flip
 from wrappers.wrapperedPoseEstPhotonCamera import CameraPoseObservation
+from utils.signalLogging import addLog
+from ntcore import NetworkTableInstance
 
 
 class DrivetrainPoseTelemetry:
@@ -35,31 +37,24 @@ class DrivetrainPoseTelemetry:
 
         self.autoDriveGoalPose = Pose2d()
 
-        self.leftFrontCamPosePublisher = (
-            NetworkTableInstance.getDefault()
-            .getStructTopic("/LeftFrontCamPose", Pose3d)
-            .publish()
-        )
-        self.rightFrontCamPosePublisher = (
-            NetworkTableInstance.getDefault()
-            .getStructTopic("/RightFrontCamPose", Pose3d)
-            .publish()
-        )
-        self.leftBackCamPosePublisher = (
-            NetworkTableInstance.getDefault()
-            .getStructTopic("/LeftBackCamPose", Pose3d)
-            .publish()
-        )
-        self.rightBackCamPosePublisher = (
-            NetworkTableInstance.getDefault()
-            .getStructTopic("/RightBackCamPose", Pose3d)
-            .publish()
-        )
-        self.frontCamPosePublisher = (
-            NetworkTableInstance.getDefault()
-            .getStructTopic("/FrontCamPose", Pose3d)
-            .publish()
-        )
+        self.camPublishers = []
+        self.robotToCams = []
+        self.variabchnag =0
+        self.theInterestingValue = []
+        self.interestingTracker = []
+
+        icount = 0
+        for camConfig in CAMS:
+            self.camPublishers.append(camConfig['PUBLISHER'])
+            self.robotToCams.append(camConfig['ROBOT_TO_CAM'])
+            camName = camConfig['POSE_EST_LOG_NAME']
+
+            # self.interestingTracker.append(NetworkTableInstance.getDefault()
+            # .getStructTopic("/pos-interesting-output-" + camName, Pose3d)
+            # .publish())
+            icount += 1
+
+        self.camPublishersAndRobotToCams = zip(self.camPublishers, self.robotToCams)
 
         self.visionPoses = []
         self.modulePoses = []
@@ -116,13 +111,10 @@ class DrivetrainPoseTelemetry:
 
         self.field.getObject("autoDriveGoalPose").setPose(self.autoDriveGoalPose)
 
-        self.leftFrontCamPosePublisher.set(Pose3d(estPose).transformBy(ROBOT_TO_LEFTFRONT_CAM))
-        self.rightFrontCamPosePublisher.set(Pose3d(estPose).transformBy(ROBOT_TO_RIGHTFRONT_CAM))
-        self.leftBackCamPosePublisher.set(Pose3d(estPose).transformBy(ROBOT_TO_LEFTBACK_CAM))
-        self.rightBackCamPosePublisher.set(Pose3d(estPose).transformBy(ROBOT_TO_RIGHTBACK_CAM))
-
-
-        self.frontCamPosePublisher.set(Pose3d(estPose).transformBy(ROBOT_TO_FRONT_CAM))
+        icount = 0
+        for publisher, robotToCam in self.camPublishersAndRobotToCams:
+            publisher.set(Pose3d(estPose).transformBy(robotToCam))
+            icount += 1
 
     def setCurAutoTrajectory(self, trajIn):
         """Display a specific trajectory on the robot Field2d

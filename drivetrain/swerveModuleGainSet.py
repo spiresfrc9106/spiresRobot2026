@@ -13,7 +13,8 @@ class SwerveModuleGainSet:
 
     def __init__(self):
 
-        self.wheelP = Calibration("Drivetrain Module Wheel kP", 0.03)
+        #TODO rms Which value: self.wheelP = Calibration("Drivetrain Module Wheel kP", 0.03)
+        self.wheelP = Calibration("Drivetrain Module Wheel kP", 0.00005)
         self.wheelI = Calibration("Drivetrain Module Wheel kI", 0.0)
         self.wheelD = Calibration("Drivetrain Module Wheel kD", 0.0)
         self.wheelA = Calibration(

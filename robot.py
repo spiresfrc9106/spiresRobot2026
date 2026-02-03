@@ -1,41 +1,52 @@
 import sys
-# from phoenix6 import SignalLogger
+import gc
+import wpilib
+import ntcore as nt
+from wpimath.geometry import Translation2d, Pose2d, Rotation2d
 from AutoSequencerV2.autoSequencer import AutoSequencer
 from dashboard import Dashboard
+from testingMotors.motorCtrl import MotorControl, motorDepConstants
 from drivetrain.controlStrategies.autoDrive import AutoDrive
 from drivetrain.controlStrategies.autoSteer import AutoSteer
 from drivetrain.controlStrategies.trajectory import Trajectory
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.drivetrainControl import DrivetrainControl
+from drivetrain.drivetrainDependentConstants import drivetrainDepConstants
 from memes.ctreMusicPlayback import CTREMusicPlayback
 from humanInterface.driverInterface import DriverInterface
 from humanInterface.ledControl import LEDControl
 from humanInterface.operatorInterface import OperatorInterface
 from navigation.forceGenerators import PointObstacle
+from utils.robotIdentification import RobotIdentification
 from utils.segmentTimeTracker import SegmentTimeTracker
+from utils.signalLogging import logUpdate, getNowLogger
 from utils.calibration import CalibrationWrangler
 from utils.crashLogger import CrashLogger
 from utils.faults import FaultWrangler
 from utils.powerMonitor import PowerMonitor
 from utils.rioMonitor import RIOMonitor
+from utils.robotIdentification import RobotIdentification
 from utils.signalLogging import logUpdate
 from utils.singleton import destroyAllSingletonInstances
 from webserver.webserver import Webserver
-from fuelSystems.shooterControl import ShooterController
+#from fuelSystems.shooterControl import ShooterController
 import wpilib
 
 class MyRobot(wpilib.TimedRobot):
 
     def __init__(self):
-        super().__init__(period=0.02) #Doug says to makek this 0.02 
+        super().__init__(period=0.04) #Doug says to makek this 0.02 
 
     #########################################################
     ## Common init/update for all modes
     def robotInit(self):
+        print("robotInit has run")
         # Since we're defining a bunch of new things here, tell pylint
         # to ignore these instantiations in a method.
         # pylint: disable=attribute-defined-outside-init
         remoteRIODebugSupport()
+
+        print(f"robot type = {RobotIdentification().getRobotType()} serialNumber={RobotIdentification().serialNumber}")
 
         self.crashLogger = CrashLogger()
 
@@ -45,11 +56,13 @@ class MyRobot(wpilib.TimedRobot):
 
         self.webserver = Webserver()
 
-        self.driveTrain = DrivetrainControl()
-        #self.autodrive = AutoDrive()
-        #self.autosteer = AutoSteer()
+        self.driveTrain = None
+        if drivetrainDepConstants['HAS_DRIVETRAIN']:
+            print(f"drivetrainDepConstants['HAS_DRIVETRAIN']={drivetrainDepConstants['HAS_DRIVETRAIN']}")
+            self.driveTrain = DrivetrainControl()
 
-        self.stt = SegmentTimeTracker()
+
+        self.stt = SegmentTimeTracker(longLoopPrintEnable=False, epochTracerEnable=False)
 
         self.dInt = DriverInterface()
         self.oInt = OperatorInterface()
@@ -60,39 +73,50 @@ class MyRobot(wpilib.TimedRobot):
 
         self.dashboard = Dashboard()
 
-        self.shooterCtrl = ShooterController()
+        #self.shooterCtrl = ShooterController()
 
         self.rioMonitor = RIOMonitor()
         self.pwrMon = PowerMonitor()
 
         # Normal robot code updates every 20ms, but not everything needs to be that fast.
         # Register slower-update periodic functions
-        self.addPeriodic(self.pwrMon.update, 0.2, 0.0)
+        if self.pwrMon is not None:
+            self.addPeriodic(self.pwrMon.update, 0.2, 0.0)
         self.addPeriodic(self.crashLogger.update, 1.0, 0.0)
         self.addPeriodic(CalibrationWrangler().update, 0.5, 0.0)
         self.addPeriodic(FaultWrangler().update, 0.06, 0.0)
 
         self.autoHasRun = False
 
+        self.logger1 = getNowLogger('now1', 'sec')
+        self.logger2 = getNowLogger('now2', 'sec')
+        self.logger3 = getNowLogger('now3', 'sec')
+        self.count=0
+
     def robotPeriodic(self):
+        self.logger1.logNow(nt._now())
         self.stt.start()
 
+        #if self.count == 10:
+        #    gc.freeze()
         self.dInt.update()
         self.stt.mark("Driver Interface")
 
-        self.driveTrain.update()
-        self.stt.mark("Drivetrain")
+        if drivetrainDepConstants['HAS_DRIVETRAIN']:
+            self.driveTrain.update()
+            self.stt.mark("Drivetrain")
 
         self.oInt.update()
         self.stt.mark("Operator Interface")
 
-        self.shooterCtrl.update()
-        self.stt.mark("Shooter Update")
+        #self.shooterCtrl.update()
+        #self.stt.mark("Shooter Update")
 
         #self.autodrive.updateTelemetry()
         #self.driveTrain.poseEst._telemetry.setCurAutoDriveWaypoints(self.autodrive.getWaypoints())
         #self.driveTrain.poseEst._telemetry.setCurObstacles(self.autodrive.rfp.getObstacleStrengths())
         self.stt.mark("Telemetry")
+        self.logger2.logNow(nt._now())
 
 
         #self.ledCtrl.setAutoDriveActive(self.autodrive.isRunning())
@@ -102,11 +126,19 @@ class MyRobot(wpilib.TimedRobot):
         self.stt.mark("LED Ctrl")
 
         logUpdate()
+        self.count += 1
         self.stt.end()
+        self.logger3.logNow(nt._now())
+
 
     #########################################################
     ## Autonomous-Specific init and update
     def autonomousInit(self):
+        print("autonomousInit has run")
+
+        if drivetrainDepConstants['HAS_DRIVETRAIN']:
+            # Use the autonomous routines starting pose to init the pose estimator
+            self.driveTrain.poseEst.setKnownPose(self.autoSequencer.getStartingPose())  #position set.
 
         # Start up the autonomous sequencer
         self.autoSequencer.initialize()
@@ -117,7 +149,7 @@ class MyRobot(wpilib.TimedRobot):
             self.driveTrain.poseEst.setKnownPose(startPose)
 
         # Mark we at least started autonomous
-        self.autoHasRun = True
+        self.autoHasRun = True # pylint: disable=attribute-defined-outside-init
 
     def autonomousPeriodic(self):
 
@@ -144,16 +176,17 @@ class MyRobot(wpilib.TimedRobot):
     def teleopPeriodic(self):
 
         # TODO - this is technically one loop delayed, which could induce lag
-        self.driveTrain.setManualCmd(self.dInt.getCmd(), self.dInt.getRobotRelative())
+        if drivetrainDepConstants['HAS_DRIVETRAIN']:
+            self.driveTrain.setManualCmd(self.dInt.getCmd(), self.dInt.getRobotRelative())
 
 
-        # We're enabled as long as the driver is commanding it, and we're _not_ trying to control robot relative.
-        enableAutoSteer = not self.dInt.getRobotRelative() and self.dInt.getAutoSteerEnable()
-        #self.autosteer.setAutoSteerActiveCmd(enableAutoSteer)
-        #self.autosteer.setAlignToProcessor(self.dInt.getAutoSteerToAlgaeProcessor())
-        #self.autosteer.setAlignDownfield(self.dInt.getAutoSteerDownfield())
+            # We're enabled as long as the driver is commanding it, and we're _not_ trying to control robot relative.
+            enableAutoSteer = not self.dInt.getRobotRelative() and self.dInt.getAutoSteerEnable()
+            #self.autosteer.setAutoSteerActiveCmd(enableAutoSteer)
+            #self.autosteer.setAlignToProcessor(self.dInt.getAutoSteerToAlgaeProcessor())
+            #self.autosteer.setAlignDownfield(self.dInt.getAutoSteerDownfield())
         
-        #self.autodrive.setRequest(self.dInt.getAutoDrive())
+            #self.autodrive.setRequest(self.dInt.getAutoDrive())
 
         if self.dInt.getGyroResetCmd():
             self.driveTrain.resetGyro()
@@ -176,6 +209,8 @@ class MyRobot(wpilib.TimedRobot):
 
         # No trajectory in Teleop
         Trajectory().setCmd(None)
+        if motorDepConstants['HAS_MOTOR_TEST']:
+            self.motorCtrlFun.update(self.dInt.getMotorTestPowerRpm())
 
     #########################################################
     ## Disabled-Specific init and update
@@ -190,13 +225,14 @@ class MyRobot(wpilib.TimedRobot):
     ## Test-Specific init and update
     def testInit(self):
         wpilib.LiveWindow.setEnabled(False)
-        CTREMusicPlayback().play()
+        #CTREMusicPlayback().play()
 
     def testPeriodic(self):
         pass
 
     def testExit(self) -> None:
-        CTREMusicPlayback().stop()
+        #CTREMusicPlayback().stop()
+        pass
 
     #########################################################
     ## Cleanup
@@ -215,6 +251,7 @@ class MyRobot(wpilib.TimedRobot):
             self.rioMonitor.stopThreads()
 
         destroyAllSingletonInstances()
+        super().endCompetition()
 
 def remoteRIODebugSupport():
     if __debug__ and "run" in sys.argv:

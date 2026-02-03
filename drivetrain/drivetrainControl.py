@@ -1,6 +1,7 @@
-from wpimath.kinematics import ChassisSpeeds
+from wpimath.kinematics import ChassisSpeeds, SwerveModuleState
 from wpimath.geometry import Pose2d, Rotation2d
-from drivetrain.controlStrategies.autoSteer import AutoSteer
+from wpilib import Timer
+#from Autonomous.commands.driveForwardSlowCommand import DriveForwardSlowCommand
 from drivetrain.poseEstimation.drivetrainPoseEstimator import DrivetrainPoseEstimator
 from drivetrain.swerveModuleControl import SwerveModuleControl
 from drivetrain.swerveModuleGainSet import SwerveModuleGainSet
@@ -10,7 +11,14 @@ from drivetrain.drivetrainPhysical import (
     FR_ENCODER_MOUNT_OFFSET_RAD,
     BL_ENCODER_MOUNT_OFFSET_RAD,
     BR_ENCODER_MOUNT_OFFSET_RAD,
+    FL_INVERT_WHEEL_MOTOR,
+    FR_INVERT_WHEEL_MOTOR,
+    BL_INVERT_WHEEL_MOTOR,
+    BR_INVERT_WHEEL_MOTOR,
+    INVERT_AZMTH_MOTOR,
+    INVERT_AZMTH_ENCODER,
     kinematics,
+    WHEEL_MOTOR_WRAPPER,
 )
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.controlStrategies.autoDrive import AutoDrive
@@ -29,6 +37,8 @@ from utils.constants import (DT_FL_WHEEL_CANID,
                              DT_FR_AZMTH_ENC_PORT,
                              DT_BL_AZMTH_ENC_PORT,
                              DT_BR_AZMTH_ENC_PORT)
+from wrappers.wrapperedGyro import wrapperedGyro
+from utils.signalLogging import addLog
 
 class DrivetrainControl(metaclass=Singleton):
     """
@@ -36,24 +46,31 @@ class DrivetrainControl(metaclass=Singleton):
     """
 
     def __init__(self):
+        self.name = "dt"
+        self.gyro = wrapperedGyro()
         self.modules = []
         self.modules.append(
-            SwerveModuleControl("FL", DT_FL_WHEEL_CANID, DT_FL_AZMTH_CANID, DT_FL_AZMTH_ENC_PORT, 
-                                FL_ENCODER_MOUNT_OFFSET_RAD, False, True)
+            SwerveModuleControl(f"{self.name}/","FL", WHEEL_MOTOR_WRAPPER, DT_FL_WHEEL_CANID, DT_FL_AZMTH_CANID, DT_FL_AZMTH_ENC_PORT,
+                                FL_ENCODER_MOUNT_OFFSET_RAD,
+                                FL_INVERT_WHEEL_MOTOR, INVERT_AZMTH_MOTOR, INVERT_AZMTH_ENCODER)
         )
         self.modules.append(
-            SwerveModuleControl("FR", DT_FR_WHEEL_CANID, DT_FR_AZMTH_CANID, DT_FR_AZMTH_ENC_PORT, 
-                                FR_ENCODER_MOUNT_OFFSET_RAD, True, True)
+            SwerveModuleControl(f"{self.name}/","FR", WHEEL_MOTOR_WRAPPER, DT_FR_WHEEL_CANID, DT_FR_AZMTH_CANID, DT_FR_AZMTH_ENC_PORT,
+                                FR_ENCODER_MOUNT_OFFSET_RAD,
+                                FR_INVERT_WHEEL_MOTOR, INVERT_AZMTH_MOTOR, INVERT_AZMTH_ENCODER)
+        )
+        self.modules.append(
+            SwerveModuleControl(f"{self.name}/","BL", WHEEL_MOTOR_WRAPPER, DT_BL_WHEEL_CANID, DT_BL_AZMTH_CANID, DT_BL_AZMTH_ENC_PORT,
+                                BL_ENCODER_MOUNT_OFFSET_RAD,
+                                BL_INVERT_WHEEL_MOTOR, INVERT_AZMTH_MOTOR, INVERT_AZMTH_ENCODER)
+        )
+        self.modules.append(
+            SwerveModuleControl(f"{self.name}/","BR", WHEEL_MOTOR_WRAPPER, DT_BR_WHEEL_CANID, DT_BR_AZMTH_CANID, DT_BR_AZMTH_ENC_PORT,
+                                BR_ENCODER_MOUNT_OFFSET_RAD,
+                                BR_INVERT_WHEEL_MOTOR, INVERT_AZMTH_MOTOR, INVERT_AZMTH_ENCODER)
         )
 
-        self.modules.append(
-            SwerveModuleControl("BL", DT_BL_WHEEL_CANID, DT_BL_AZMTH_CANID, DT_BL_AZMTH_ENC_PORT, 
-                                BL_ENCODER_MOUNT_OFFSET_RAD, True, True)
-        )
-        self.modules.append(
-            SwerveModuleControl("BR", DT_BR_WHEEL_CANID, DT_BR_AZMTH_CANID, DT_BR_AZMTH_ENC_PORT, 
-                                BR_ENCODER_MOUNT_OFFSET_RAD, False, True)
-        )
+        self.coastCmd = False
 
         self.desChSpd = ChassisSpeeds()
         self.curDesPose = Pose2d()
@@ -70,11 +87,11 @@ class DrivetrainControl(metaclass=Singleton):
         self.gainsBR = SwerveModuleGainSet()
         #All swerve were can have independent power
 
-        self.poseEst = DrivetrainPoseEstimator(self.getModulePositions())
+        self.poseEst = DrivetrainPoseEstimator(self.getModulePositions(), self.gyro)
 
         self._updateAllCals()
 
-    def setManualCmd(self, cmd: DrivetrainCommand, robotRel):
+    def setManualCmd(self, cmd: DrivetrainCommand, robotRel=False):
         """Send commands to the robot for motion relative to the field
 
         Args:
@@ -83,6 +100,9 @@ class DrivetrainControl(metaclass=Singleton):
         """
         self.curManCmd = cmd
         self.useRobotRelative = robotRel
+
+    def setCoastCmd(self, coast:bool):
+        self.coastCmd = coast
 
     def update(self):
         """
@@ -113,8 +133,22 @@ class DrivetrainControl(metaclass=Singleton):
         self.poseEst._telemetry.setDesiredPose(self.curCmd.desPose)
         self.poseEst._telemetry.setAutoDriveGoalPose(AutoDrive().getGoal())
 
-        # Given the current desired chassis speeds, convert to module states
-        desModStates = kinematics.toSwerveModuleStates(self.desChSpd)
+        # pylint: disable=condition-evals-to-constant
+        if (False and
+            abs(self.desChSpd.vx) < 0.01 and
+            abs(self.desChSpd.vy) < 0.01 and
+            abs(self.desChSpd.omega) < 0.01 and
+            not self.coastCmd):
+
+            # When we're not moving, "toe in" the wheels to resist getting pushed around
+            flModState = SwerveModuleState(angle=Rotation2d.fromDegrees(45), speed=0)
+            frModState = SwerveModuleState(angle=Rotation2d.fromDegrees(-45), speed=0)
+            blModState = SwerveModuleState(angle=Rotation2d.fromDegrees(45), speed=0)
+            brModState = SwerveModuleState(angle=Rotation2d.fromDegrees(-45), speed=0)
+            desModStates = (flModState, frModState, blModState, brModState)
+        else:
+            # Given the current desired chassis speeds, convert to module states
+            desModStates = kinematics.toSwerveModuleStates(self.desChSpd)
 
         # Scale back commands if one corner of the robot is going too fast
         kinematics.desaturateWheelSpeeds(desModStates, MAX_FWD_REV_SPEED_MPS)

@@ -1,11 +1,47 @@
 #
 # Use this configuration file to control what RobotPy packages are installed
-# on your RoboRIO
+# in your project.
 #
+[project]
+name = "spiresRobot2026"
+version = "0.1.0"
+description = "FRC9106 - Spires - REBUILT Competioni Robot"
+readme = "README.md"
+requires-python = ">=3.13"
 
+dependencies = [
+    "wpilib>=2026.2.1",
+    "robotpy-pykit==1.0.3",
+    "robotpy-pykit-watch==1.0.0",
+    "robotpy-halsim-gui>=2026.2.1",
+    "robotpy>=2026.2.1",
+    "robotpy-cli",
+    "black>=25.9.8",
+    "pylint>=4.0.2",
+    "robotpy-pathplannerlib>=2026.1.1",
+    "phoenix6>=26.1.0",
+    "robotpy-navx>=2026.0.0",
+    "robotpy-rev>=2026.0.1",
+    "robotpy-commands-v2>=2026.2.1",
+    "robotpy-halsim-ws",
+    "robotpy-native-romi>=2026.2.1",
+    "robotpy-romi>=2026.2.1",
+    "sleipnirgroup-choreolib",
+    "coverage>=7.13.1",
+    "debugpy",
+    "opencv-python",
+    "photonlibpy",
+    "robotpy-apriltag",
+    "robotpy-cscore",
+    "robotpy-halsim-ds-socket",
+    "robotpy-native-apriltag",
+    "robotpy-playingwithfusion",
+]
 [tool.robotpy]
 
 # Version of robotpy this project depends on
+# to see what versions are available: https://pypi.org/pypi/robotpy/json
+
 robotpy_version = "2026.2.1"
 
 # Which extra RobotPy components should be installed
@@ -13,7 +49,7 @@ robotpy_version = "2026.2.1"
 components = [
     # "all"
     "apriltag",
-    # "commands2"
+    "commands2",
     "cscore",
     # "navx"
     # "pathplannerlib"
@@ -22,7 +58,7 @@ components = [
     #"playingwithfusion",
     #"rev",
     # "romi"
-    # "sim"
+    "sim"
 ]
 
 # Other pip packages to install

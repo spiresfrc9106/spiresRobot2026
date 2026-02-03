@@ -3,6 +3,7 @@
 # The math conversions are under units.py
 
 from wpimath.geometry import Translation2d
+from config import FRC_TEAM_NUMBER
 
 #######################################################################################
 ## FIELD DIMENSIONS
@@ -28,19 +29,36 @@ redTowerLocation = Translation2d(FIELD_X_M - _TOW_LOC_X_M, _TOW_LOC_Y_RED_M)
 ## CAN ID'S
 #######################################################################################
 # Reserved_CANID = 0
-CORAL_IN_CANID = 21
-DT_FR_WHEEL_CANID = 2
-DT_FR_AZMTH_CANID = 3
-DT_FL_WHEEL_CANID = 4
-DT_FL_AZMTH_CANID = 5
-DT_BR_WHEEL_CANID = 6
-DT_BR_AZMTH_CANID = 7
-DT_BL_WHEEL_CANID = 8
-DT_BL_AZMTH_CANID = 9
-TURRET_PITCH_CANID = 10
-TURRET_YAW_CANID = 11
-TOP_SHOOTER_CANID = 12
-BOTTOM_SHOOTER_CANID = 13
+# Reserved_CANID = 1
+if FRC_TEAM_NUMBER==1736:
+    DT_FR_WHEEL_CANID = 2
+    DT_FR_AZMTH_CANID = 3
+    DT_FL_WHEEL_CANID = 4
+    DT_FL_AZMTH_CANID = 5
+    DT_BR_WHEEL_CANID = 6
+    DT_BR_AZMTH_CANID = 7
+    DT_BL_AZMTH_CANID = 8
+    DT_BL_WHEEL_CANID = 9
+    CORAL_IN_CANID = 21
+    TURRET_PITCH_CANID = 10
+    TURRET_YAW_CANID = 11
+    TOP_SHOOTER_CANID = 12
+    BOTTOM_SHOOTER_CANID = 13
+else:
+    DT_FL_WHEEL_CANID = 2
+    DT_FL_AZMTH_CANID = 3
+    DT_FR_WHEEL_CANID = 4
+    DT_FR_AZMTH_CANID = 5
+    DT_BL_WHEEL_CANID = 6
+    DT_BL_AZMTH_CANID = 7
+    DT_BR_WHEEL_CANID = 8
+    DT_BR_AZMTH_CANID = 9
+    CORAL_IN_CANID = 21
+    TURRET_PITCH_CANID = 10
+    TURRET_YAW_CANID = 11
+    TOP_SHOOTER_CANID = 12
+    BOTTOM_SHOOTER_CANID = 13
+
 UNASSIGNED14 = 14
 UNASSIGNED15 = 15
 UNASSIGNED16 = 16
@@ -58,8 +76,8 @@ UNASSIGNED18 = 20
 # Unused = 4
 # Unused = 5
 # Unused = 6
-# Unused = 8
 # Unused = 7
+# Unused = 8
 LED_STACK_LIGHT_CTRL_PWM = 9
 
 
@@ -67,10 +85,16 @@ LED_STACK_LIGHT_CTRL_PWM = 9
 ## DIO Bank
 #######################################################################################
 
-DT_BR_AZMTH_ENC_PORT = 0
-DT_FL_AZMTH_ENC_PORT = 1
-DT_BL_AZMTH_ENC_PORT = 2
-DT_FR_AZMTH_ENC_PORT = 3
+if FRC_TEAM_NUMBER==1736:
+    DT_BR_AZMTH_ENC_PORT = 0
+    DT_FL_AZMTH_ENC_PORT = 1
+    DT_BL_AZMTH_ENC_PORT = 2
+    DT_FR_AZMTH_ENC_PORT = 3
+else:
+    DT_FL_AZMTH_ENC_PORT = 0
+    DT_FR_AZMTH_ENC_PORT = 1
+    DT_BL_AZMTH_ENC_PORT = 2
+    DT_BR_AZMTH_ENC_PORT = 3
 
 CORAL_GAME_PIECE_B_PORT = 4
 CORAL_GAME_PIECE_F_PORT = 5
