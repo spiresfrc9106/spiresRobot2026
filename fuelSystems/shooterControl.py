@@ -7,7 +7,7 @@ from wrappers.wrapperedKraken import WrapperedKraken
 from drivetrain.poseEstimation.drivetrainPoseEstimator import DrivetrainPoseEstimator
 from drivetrain.drivetrainControl import DrivetrainControl
 import math 
-from fuelSystems.fuelSystemConstants import GRAVITY, SHOOTER_WHEEL_RADIUS, SHOOTER_OFFSET, TURRET_MAX_YAW, TURRET_MIN_YAW
+from fuelSystems.fuelSystemConstants import GRAVITY, SHOOTER_WHEEL_RADIUS, SHOOTER_OFFSET, TURRET_MAX_YAW, TURRET_MIN_YAW, SHOOTER_ACTIVATOR_TARGET_PERCENT
 from utils.allianceTransformUtils import onRed, transform
 from wpilib import Field2d
 from wpimath import geometry 
@@ -168,8 +168,10 @@ class ShooterController(metaclass=Singleton):
             #and set the rotational velocity of the motors to self.neededShooterRotVelo (After compensating for gear of course)
             #and we'll be golden.
 
-            self.shooterTopMotor.setVelCmd(self.neededShooterRotVelo) 
-            self.shooterBottomMotor.setVelCmd(self.neededShooterRotVelo)
+            #only shoot if we are close enough angle to the hub:
+            if abs(self.yawMotor.getMotorPositionRad() - self.neededTurretYaw) / self.neededTurretPitch <= SHOOTER_ACTIVATOR_TARGET_PERCENT:
+                self.shooterTopMotor.setVelCmd(self.neededShooterRotVelo) 
+                self.shooterBottomMotor.setVelCmd(self.neededShooterRotVelo)
 
             #I need to check if we are turning past our limit.
             if self.neededTurretYaw < TURRET_MIN_YAW < self.yawMotor.getMotorPositionRad():

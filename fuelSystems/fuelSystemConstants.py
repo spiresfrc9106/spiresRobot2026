@@ -17,3 +17,5 @@ GRAVITY = -9.8 #Meters/second
 
 TURRET_MAX_YAW = math.pi #For now I'm assuming that facing in the same direction as the robot is zero? 
 TURRET_MIN_YAW = -math.pi #
+
+SHOOTER_ACTIVATOR_TARGET_PERCENT = 0.05
