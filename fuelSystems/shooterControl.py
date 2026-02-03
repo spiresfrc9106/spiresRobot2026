@@ -7,7 +7,7 @@ from wrappers.wrapperedKraken import WrapperedKraken
 from drivetrain.poseEstimation.drivetrainPoseEstimator import DrivetrainPoseEstimator
 from drivetrain.drivetrainControl import DrivetrainControl
 import math 
-from fuelSystems.fuelSystemConstants import GRAVITY, SHOOTER_WHEEL_RADIUS, SHOOTER_OFFSET
+from fuelSystems.fuelSystemConstants import GRAVITY, SHOOTER_WHEEL_RADIUS, SHOOTER_OFFSET, TURRET_MAX_YAW, TURRET_MIN_YAW
 from utils.allianceTransformUtils import onRed, transform
 from wpilib import Field2d
 from wpimath import geometry 
@@ -157,8 +157,9 @@ class ShooterController(metaclass=Singleton):
             self.neededBallPitch = math.atan((self.neededBallZVelo) / (self.neededBallXVelo)) 
 
             #Now we correct the yaw so it is relative to robot's current direction instead of our ideal trajectory axis
-            self.neededTurretYaw = (self.neededBallYaw - self.robotToTrajAxisAngleDiff) # + self.robotPosEst.getCurEstPose().rotation().radians()
-            self.neededTurretPitch = self.neededBallPitch
+            self.neededSimTurretYaw = (self.neededBallYaw - self.robotToTrajAxisAngleDiff) # + self.robotPosEst.getCurEstPose().rotation().radians()
+            self.neededTurretYaw = self.neededSimTurretYaw + self.curPos.rotation().radians()
+            self.neededTurretPitch = self.neededBallPitch #
 
             #Now all thats left is figure out the rotational velocity of the wheels:
             self.neededShooterRotVelo = self.neededBallVelo / SHOOTER_WHEEL_RADIUS 
@@ -167,12 +168,16 @@ class ShooterController(metaclass=Singleton):
             #and set the rotational velocity of the motors to self.neededShooterRotVelo (After compensating for gear of course)
             #and we'll be golden.
 
-            #i think?
-
-            #hopefully
-
             self.shooterTopMotor.setVelCmd(self.neededShooterRotVelo) 
             self.shooterBottomMotor.setVelCmd(self.neededShooterRotVelo)
+
+            #I need to check if we are turning past our limit.
+            if self.neededTurretYaw < TURRET_MIN_YAW < self.yawMotor.getMotorPositionRad():
+                #wrap around
+                self.neededTurretYaw += 2 * math.pi
+            elif self.yawMotor.getMotorPositionRad() < TURRET_MAX_YAW < self.neededTurretYaw:
+                #wrap around
+                self.neededTurretYaw -= 2 * math.pi
 
             self.pitchMotor.setPosCmd(self.neededTurretPitch) #Again not currently compensating for gearing?
             self.yawMotor.setPosCmd(self.neededTurretYaw)
@@ -182,7 +187,7 @@ class ShooterController(metaclass=Singleton):
             #way of testing this code and that's bound to go swell.
         
             self.robotPos = self.simField.getRobotPose()
-            self.simField.getObject("turret").setPose(geometry.Pose2d(geometry.Translation2d(self.turretPosX, self.turretPosY), geometry.Rotation2d(self.neededTurretYaw)))
+            self.simField.getObject("turret").setPose(geometry.Pose2d(geometry.Translation2d(self.turretPosX, self.turretPosY), geometry.Rotation2d(self.neededSimTurretYaw)))
 
             self.hoodLigament.setAngle((self.neededTurretPitch / math.pi) * 180)
             wpilib.SmartDashboard.putData("Mech2d", self.hoodMechanismView)
@@ -192,10 +197,13 @@ class ShooterController(metaclass=Singleton):
     def setTargetCmd(self, targetCommand):
         pass
 
-    def setShooting(self, shooterCommand):
-        self.toldToShoot = shooterCommand
+    def enableShooting(self):
+        self.toldToShoot = True
         pass
 
+    def disableShooting(self):
+        self.toldToShoot = False
+        
     def getIdealTrajectoryPitch(self):
         #return information
         pass

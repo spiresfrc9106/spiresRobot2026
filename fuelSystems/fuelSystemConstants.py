@@ -1,4 +1,5 @@
 from enum import Enum
+import math
 
 #Constants file
 
@@ -13,3 +14,6 @@ SHOOTER_OFFSET = .5 #How far the shooter is from the center of the robot in mete
 SHOOTER_WHEEL_RADIUS = 0.0254 # meters converted from 2 inches  
 
 GRAVITY = -9.8 #Meters/second
+
+TURRET_MAX_YAW = math.pi #For now I'm assuming that facing in the same direction as the robot is zero? 
+TURRET_MIN_YAW = -math.pi #

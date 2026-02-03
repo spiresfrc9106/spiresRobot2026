@@ -111,8 +111,10 @@ class DriverInterface:
                 pass
 
             self.shootCmd = self.ctrl.getBButton()
-
-            self.shooterCtrl.setShooting(self.shootCmd)
+            if self.shootCmd:
+                self.shooterCtrl.enableShooting()
+            else:
+                self.shooterCtrl.disableShooting()
             
             self.connectedFault.setNoFault()
 
@@ -126,7 +128,7 @@ class DriverInterface:
             self.robotRelative = False
             self.createDebugObstacle = False
             self.shootCmd = False
-            self.shooterCtrl.setShooting(False)
+            self.shooterCtrl.disableShooting()
             if(DriverStation.isFMSAttached()):
                 self.connectedFault.setFaulted()
 
