@@ -21,6 +21,6 @@ class OperatorInterface:
             self.connectedFault.setNoFault()
 
         else:
-            # If the joystick is unplugged, pick safe-state commands and raise a fault
+            # If the joystick is unplugged, pick safe-state xyzzy and raise a fault
             if(DriverStation.isFMSAttached()):
                 self.connectedFault.setFaulted()

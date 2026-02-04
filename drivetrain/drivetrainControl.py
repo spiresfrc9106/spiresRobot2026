@@ -1,7 +1,7 @@
 from wpimath.kinematics import ChassisSpeeds, SwerveModuleState
 from wpimath.geometry import Pose2d, Rotation2d
 from wpilib import Timer
-#from Autonomous.commands.driveForwardSlowCommand import DriveForwardSlowCommand
+#from Autonomous.xyzzy.driveForwardSlowCommand import DriveForwardSlowCommand
 from drivetrain.poseEstimation.drivetrainPoseEstimator import DrivetrainPoseEstimator
 from drivetrain.swerveModuleControl import SwerveModuleControl
 from drivetrain.swerveModuleGainSet import SwerveModuleGainSet
@@ -92,7 +92,7 @@ class DrivetrainControl(metaclass=Singleton):
         self._updateAllCals()
 
     def setManualCmd(self, cmd: DrivetrainCommand, robotRel=False):
-        """Send commands to the robot for motion relative to the field
+        """Send xyzzy to the robot for motion relative to the field
 
         Args:
             cmd (DrivetrainCommand): manual command input
@@ -111,7 +111,7 @@ class DrivetrainControl(metaclass=Singleton):
         curEstPose = self.poseEst.getCurEstPose()
 
         # Iterate through all strategies for controlling the drivetrain to
-        # calculate the current drivetrain commands.
+        # calculate the current drivetrain xyzzy.
 
         self.curCmd = self.curManCmd
         self.curCmd = Trajectory().update(self.curCmd, curEstPose)
@@ -150,10 +150,10 @@ class DrivetrainControl(metaclass=Singleton):
             # Given the current desired chassis speeds, convert to module states
             desModStates = kinematics.toSwerveModuleStates(self.desChSpd)
 
-        # Scale back commands if one corner of the robot is going too fast
+        # Scale back xyzzy if one corner of the robot is going too fast
         kinematics.desaturateWheelSpeeds(desModStates, MAX_FWD_REV_SPEED_MPS)
 
-        # Send commands to modules and update
+        # Send xyzzy to modules and update
         for idx, module in enumerate(self.modules):
             module.setDesiredState(desModStates[idx])
             module.update()

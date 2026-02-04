@@ -10,18 +10,21 @@ readme = "README.md"
 requires-python = ">=3.13"
 
 dependencies = [
-    "wpilib>=2026.2.1",
-    "robotpy-pykit==1.0.3",
-    "robotpy-pykit-watch==1.0.0",
-    "robotpy-halsim-gui>=2026.2.1",
-    "robotpy>=2026.2.1",
-    "robotpy-cli",
-    "black>=25.9.8",
-    "pylint>=4.0.2",
-    "robotpy-pathplannerlib>=2026.1.1",
+    "black~=26.1.0",
+    "mypy>=1.19.1",
     "phoenix6>=26.1.0",
+    "photonlibpy~=2026.1.1",
+    "pylint>=4.0.2",
+    "robotpy>=2026.2.1",
+    "robotpy-apriltag>=2026.2.1",
+    "robotpy-cli>=2026.0.1",
+    "robotpy-halsim-gui>=2026.2.1",
+    "robotpy-pathplannerlib>=2026.1.1",
+    "robotpy-pykit>=1.0.3",
+    "robotpy-pykit-watch>=1.0.0",
     "robotpy-navx>=2026.0.0",
     "robotpy-rev>=2026.0.1",
+    "wpilib>=2026.2.1",
     "robotpy-commands-v2>=2026.2.1",
     "robotpy-halsim-ws",
     "robotpy-native-romi>=2026.2.1",
@@ -31,7 +34,6 @@ dependencies = [
     "debugpy",
     "opencv-python",
     "photonlibpy",
-    "robotpy-apriltag",
     "robotpy-cscore",
     "robotpy-halsim-ds-socket",
     "robotpy-native-apriltag",
@@ -54,7 +56,7 @@ components = [
     # "navx"
     # "pathplannerlib"
     # "phoenix5",
-    #"phoenix6",
+    # "phoenix6",
     #"playingwithfusion",
     #"rev",
     # "romi"
@@ -70,3 +72,12 @@ requires = [
     "sleipnirgroup-choreolib",
     "robotpy-playingwithfusion",
 ]
+
+[tool.mypy]
+python_version = "3.13"
+warn_unused_configs = true
+explicit_package_bases = true
+mypy_path = "."
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_no_return = true

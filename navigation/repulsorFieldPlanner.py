@@ -343,7 +343,7 @@ class RepulsorFieldPlanner:
                 # Take a step in the direction of the error, but limit the step size by the max rotation rate
                 rotStep = limit(rotErr.radians(), ROT_RAD_PER_SEC * Ts)
 
-                # Assemble velocity commands based on the step we took
+                # Assemble velocity xyzzy based on the step we took
                 # Note that depending on how the substeps fell, we might have taken more than a full step
                 # We continue to take a step _in the direction_ of the sum of the substeps, but of
                 # the correct size.

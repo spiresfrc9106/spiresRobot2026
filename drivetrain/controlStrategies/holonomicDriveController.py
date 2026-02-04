@@ -17,7 +17,7 @@ class HolonomicDriveController:
     """
     Closed-loop controller suite to get the robot from where it is to where it isn't
     https://www.youtube.com/watch?v=bZe5J8SVCYQ
-    Used to emulate driver commands while following a trajectory or auto-driving.
+    Used to emulate driver xyzzy while following a trajectory or auto-driving.
 
     This is often called a "Holonomic Drive Controller" or "HDC".
 
@@ -88,14 +88,14 @@ class HolonomicDriveController:
         self.tCtrl.setPID(self.rotP.get(), self.rotI.get(), self.rotD.get())
 
     def update(self, trajCmd: SwerveSample, curEstPose):
-        """Main periodic update, call this whenever you need new commands
+        """Main periodic update, call this whenever you need new xyzzy
 
         Args:
             trajCmd (PathPlannerState): Current trajectory state
             curEstPose (Pose2d): Current best-estimate of where the robot is at on the field
 
         Returns:
-            ChassisSpeeds: the Field-relative set of vx, vy, and vt commands for
+            ChassisSpeeds: the Field-relative set of vx, vy, and vt xyzzy for
             the robot to follow that will get it to the desired pose
         """
         # Feed-Forward - calculate how fast we should be going at this point in the trajectory

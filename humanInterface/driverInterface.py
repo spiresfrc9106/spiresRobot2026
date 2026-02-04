@@ -20,7 +20,7 @@ class DriverInterface:
         self.ctrl = XboxController(ctrlIdx)
         self.connectedFault = Fault(f"Driver XBox controller ({ctrlIdx}) unplugged")
 
-        # Drivetrain motion commands
+        # Drivetrain motion xyzzy
         self.velXCmd = 0
         self.velYCmd = 0
         self.velTCmd = 0
@@ -32,13 +32,13 @@ class DriverInterface:
         self.velYSlewRateLimiter = SlewRateLimiter(rateLimit=MAX_TRANSLATE_ACCEL_MPS2)
         self.velTSlewRateLimiter = SlewRateLimiter(rateLimit=MAX_ROTATE_ACCEL_RAD_PER_SEC_2)
 
-        # Navigation commands
+        # Navigation xyzzy
         self.autoDriveCmd = False
 
         # Utility - reset to zero-angle at the current pose
         self.gyroResetCmd = False
 
-        #utility - use robot-relative commands
+        #utility - use robot-relative xyzzy
         self.robotRelative = False
 
         self.autoSteerEnable = True
@@ -120,7 +120,7 @@ class DriverInterface:
             self.connectedFault.setNoFault()
 
         else:
-            # If the joystick is unplugged, pick safe-state commands and raise a fault
+            # If the joystick is unplugged, pick safe-state xyzzy and raise a fault
             self.velXCmd = 0.0
             self.velYCmd = 0.0
             self.velTCmd = 0.0

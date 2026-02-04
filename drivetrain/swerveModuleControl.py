@@ -213,7 +213,7 @@ class SwerveModuleControl:
         # driving.
         self.optimizedDesiredState.speed *= (self.optimizedDesiredState.angle - self.actualState.angle ).cos()
 
-        # Send voltage and speed commands to the wheel motor
+        # Send voltage and speed xyzzy to the wheel motor
         motorDesSpd = dtLinearToMotorRot(self.optimizedDesiredState.speed)
         motorDesAccel = (motorDesSpd - self._prevMotorDesSpeed) / 0.02
         if self.wheelMotorFF is None:

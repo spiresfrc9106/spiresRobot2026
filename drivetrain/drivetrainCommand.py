@@ -16,7 +16,7 @@ class DrivetrainCommand:
 
     def scaleBy(self, scale:float):
         """
-        Scale all motion commands by a single factor
+        Scale all motion xyzzy by a single factor
         """
         self.velX *= scale
         self.velY *= scale
