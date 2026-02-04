@@ -1,10 +1,12 @@
 __pycache__
-simgui-window.json
+simgui*.json
 networktables.json
+networktables.json.bck
 simgui.json
 simgui-ds.json
 .coverage
 .simulationLogs
+.wpilib
 *.orig
 ctre_sim/
 memory_report.txt
