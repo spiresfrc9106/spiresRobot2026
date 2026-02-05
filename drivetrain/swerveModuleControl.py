@@ -11,13 +11,28 @@ from wpilib import TimedRobot
 from drivetrain.drivetrainPhysical import wrapperedSwerveDriveAzmthEncoder
 from drivetrain.swerveModuleGainSet import SwerveModuleGainSet
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
-from dashboardWidgets.swerveState import getAzmthDesTopicName, getAzmthActTopicName
-from dashboardWidgets.swerveState import getSpeedDesTopicName, getSpeedActTopicName
 from drivetrain.drivetrainPhysical import dtMotorRotToLinear
 from drivetrain.drivetrainPhysical import dtLinearToMotorRot
 from drivetrain.drivetrainPhysical import MAX_FWD_REV_SPEED_MPS
 from utils.units import rad2Deg
 from pykit.logger import Logger
+
+
+# Utility signal name calculation functions
+def getAzmthDesTopicName(modName):
+    return f"DtModule_{modName}_azmthDes"
+
+
+def getAzmthActTopicName(modName):
+    return f"DtModule_{modName}_azmthAct"
+
+
+def getSpeedDesTopicName(modName):
+    return f"DtModule_{modName}_speedDes"
+
+
+def getSpeedActTopicName(modName):
+    return f"DtModule_{modName}_speedAct"
 
 
 class SwerveModuleControl:
