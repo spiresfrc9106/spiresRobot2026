@@ -7,6 +7,7 @@ from wpimath.geometry import Pose3d, Transform3d, Translation3d, Rotation3d, Rot
 import wpilib
 
 from utils.robotIdentification import RobotIdentification, RobotTypes
+from utils.singleton import Singleton
 from wrappers.wrapperedPoseEstPhotonCamera import WrapperedPoseEstPhotonCamera
 from wrappers.wrapperedLimelightCamera import wrapperedLimilightCameraFactory
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
@@ -161,8 +162,10 @@ COMMON_CAMS = [
     },
 ]
 
-class DrivetrainDependentConstants:
+class DrivetrainDependentConstants(metaclass=Singleton):
     def __init__(self):
+        self.useCasseroleSwerve = True
+        self.useWestwoodSwerve = False
         self.drivetrainConstants = {
             RobotTypes.Spires2023: {
                 "WHEEL_MOTOR_WRAPPER": WrapperedSparkMax,
@@ -270,4 +273,11 @@ class DrivetrainDependentConstants:
         return self.drivetrainConstants[RobotIdentification().getRobotType()]
 
 
+
 drivetrainDepConstants = DrivetrainDependentConstants().get()
+
+def useCasseroleSwerve()->bool:
+    return drivetrainDepConstants["HAS_DRIVETRAIN"] and DrivetrainDependentConstants().useCasseroleSwerve
+
+def useWestwoodSwerve()->bool:
+    return drivetrainDepConstants["HAS_DRIVETRAIN"] and DrivetrainDependentConstants().useWestwoodSwerve

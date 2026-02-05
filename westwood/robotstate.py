@@ -237,7 +237,7 @@ class RobotState:
     def getSimPose(cls) -> Pose2d:
         if len(cls.simPoseRecieverConsumers) == 1:
             return cls.simPoseRecieverConsumers[0]()
-        print("getSimPose - This is not supposed to happen")
+        #print("getSimPose - This is not supposed to happen")
         return cls.getPose()
 
     @classmethod

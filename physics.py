@@ -61,16 +61,17 @@ class PhysicsEngine:
 
     # pylint: disable-next=unused-argument
     def __init__(self, physics_controller: PhysicsInterface, robot: MyRobot):
-        assert robot.container is not None
         self.physics_controller = physics_controller
         self.bot = robot
 
-        driveSubsystem: DriveSubsystem = robot.container.drive
+        driveSubsystem: DriveSubsystem|None = None
+        if robot.westwoodContainer is not None:
+            driveSubsystem: DriveSubsystem = robot.westwoodContainer.drive
 
-        if not isinstance(driveSubsystem.frontLeftModule.io, SwerveModuleIOCTRE):
+        if driveSubsystem is None or not isinstance(driveSubsystem.frontLeftModule.io, SwerveModuleIOCTRE):
             # do not simulation
             self.doSim = False
-            print("[Physics] WARNING: Not simulating")
+            print("[Physics] WARNING: Westwood Swerve is Not simulating")
             return
 
         self.doSim = True

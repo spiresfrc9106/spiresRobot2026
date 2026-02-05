@@ -7,7 +7,7 @@ name = "spiresRobot2026"
 version = "0.1.0"
 description = "FRC9106 - Spires - REBUILT Competioni Robot"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = "==3.12.*"
 
 dependencies = [
     "black~=26.1.0",
@@ -32,7 +32,8 @@ dependencies = [
     "sleipnirgroup-choreolib",
     "coverage>=7.13.1",
     "debugpy",
-    "opencv-python",
+    #"opencv-python",
+    "robotpy-opencv",
     "photonlibpy",
     "robotpy-cscore",
     "robotpy-halsim-ds-socket",
@@ -53,8 +54,6 @@ components = [
     "apriltag",
     "commands2",
     "cscore",
-    # "navx"
-    # "pathplannerlib"
     # "phoenix5",
     # "phoenix6",
     #"playingwithfusion",
@@ -65,13 +64,18 @@ components = [
 
 # Other pip packages to install
 requires = [
-    "photonlibpy==2026.1.1rc4",
+    "robotpy-pykit>=1.0.3",
+    "photonlibpy==2026.1.1",
+    "robotpy-pathplannerlib>=2026.1.1",
     "debugpy",
     "phoenix6",
     "robotpy-rev",
     "sleipnirgroup-choreolib",
     "robotpy-playingwithfusion",
+    "robotpy-opencv",
+    "robotpy-navx",
 ]
+
 
 [tool.mypy]
 python_version = "3.13"

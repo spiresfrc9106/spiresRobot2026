@@ -129,7 +129,7 @@ class RobotPoseEstimator:
             None
         """
         # check if measurement is valid enough to work with
-        if self.poseBuffer.getInternalBuffer()[-1][0] - 2.0 > measurement.timestamp:
+        if len(self.poseBuffer.getInternalBuffer())<1 or self.poseBuffer.getInternalBuffer()[-1][0] - 2.0 > measurement.timestamp:
             return
 
         sample = self.poseBuffer.sample(measurement.timestamp)

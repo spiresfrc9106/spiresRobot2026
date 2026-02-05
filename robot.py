@@ -8,6 +8,9 @@ import wpilib
 import ntcore as nt
 
 from commands2.commandscheduler import CommandScheduler
+
+import pathplannerlib
+import pathplannerlib.commands
 from pathplannerlib.commands import PathPlannerLogging
 import wpilib
 import commands2
@@ -20,7 +23,9 @@ from pykit.loggedrobot import LoggedRobot
 from pykit.logger import Logger
 
 import westwood.constants
-from westwood.robotcontainer import RobotContainer
+from drivetrain.drivetrainDependentConstants import useCasseroleSwerve, useWestwoodSwerve
+if useWestwoodSwerve():
+    from westwood.westwoodrobotcontainer import WestwoodRobotContainer
 from westwood.util.logtracer import LogTracer
 from westwood.util.phoenixutil import PhoenixUtil
 from wpimath.geometry import Translation2d, Pose2d, Rotation2d
@@ -32,7 +37,6 @@ from drivetrain.controlStrategies.autoSteer import AutoSteer
 from drivetrain.controlStrategies.trajectory import Trajectory
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.drivetrainControl import DrivetrainControl
-from drivetrain.drivetrainDependentConstants import drivetrainDepConstants
 from memes.ctreMusicPlayback import CTREMusicPlayback
 from humanInterface.driverInterface import DriverInterface
 from humanInterface.ledControl import LEDControl
@@ -67,7 +71,7 @@ class MyRobot(LoggedRobot):
         super().__init__()
         Logger.recordMetadata("Robot", type(self).__name__)
         match westwood.constants.kRobotMode:
-            case westwood.constants.RobotModes.REAL:
+            case westwood.constants.RobotModes.REAL|westwood.constants.RobotModes.SIMULATION:
                 deploy_config = wpilib.deployinfo.getDeployData()
                 if deploy_config is not None:
                     Logger.recordMetadata(
@@ -91,9 +95,6 @@ class MyRobot(LoggedRobot):
                     )
                 Logger.addDataReciever(NT4Publisher(True))
                 Logger.addDataReciever(WPILOGWriter())
-            case westwood.constants.RobotModes.SIMULATION:
-                Logger.addDataReciever(WPILOGWriter())
-                Logger.addDataReciever(NT4Publisher(True))
             case westwood.constants.RobotModes.REPLAY:
                 self.useTiming = (
                     False  # Disable timing in replay mode, run as fast as possible
@@ -104,7 +105,10 @@ class MyRobot(LoggedRobot):
                 Logger.setReplaySource(WPILOGReader(log_path))
                 Logger.addDataReciever(WPILOGWriter(log_path[:-7] + "_sim.wpilog"))
         Logger.start()
-        self.container = RobotContainer()
+
+        self.westwoodContainer = None
+        if useWestwoodSwerve():
+            self.westwoodContainer = WestwoodRobotContainer()
 
     #########################################################
     ## Common init/update for all modes
@@ -164,8 +168,8 @@ class MyRobot(LoggedRobot):
         self.webserver = Webserver()
 
         self.driveTrain = None
-        if drivetrainDepConstants['HAS_DRIVETRAIN']:
-            print(f"drivetrainDepConstants['HAS_DRIVETRAIN']={drivetrainDepConstants['HAS_DRIVETRAIN']}")
+        print(f"useCasseroleSwerve()={useCasseroleSwerve()}")
+        if useCasseroleSwerve():
             self.driveTrain = DrivetrainControl()
 
 
@@ -210,7 +214,8 @@ class MyRobot(LoggedRobot):
         LogTracer.resetOuter("RobotPeriodic")
         PhoenixUtil.updateSignals()
         LogTracer.record("PhoenixUpdate")
-        self.container.robotPeriodic()
+        if self.westwoodContainer is not None:
+            self.westwoodContainer.robotPeriodic()
         LogTracer.record("ContainerPeriodic")
         commands2.CommandScheduler.getInstance().run()
         LogTracer.record("CommandsPeriodic")
@@ -218,7 +223,7 @@ class MyRobot(LoggedRobot):
         self.dInt.update()
         self.stt.mark("Driver Interface")
 
-        if drivetrainDepConstants['HAS_DRIVETRAIN']:
+        if self.driveTrain is not None:
             self.driveTrain.update()
             self.stt.mark("Drivetrain")
 
@@ -258,12 +263,13 @@ class MyRobot(LoggedRobot):
         """This autonomous runs the autonomous command selected by your RobotContainer class."""
         print("autonomousInit has run")
 
-        self.autonomousCommand = self.container.getAutonomousCommand()
+        if self.westwoodContainer is not None:
+            self.autonomousCommand = self.westwoodContainer.getAutonomousCommand()
 
         if self.autonomousCommand:
             self.autonomousCommand.schedule()
 
-        if drivetrainDepConstants['HAS_DRIVETRAIN']:
+        if self.driveTrain is not None:
             # Use the autonomous routines starting pose to init the pose estimator
             self.driveTrain.poseEst.setKnownPose(self.autoSequencer.getStartingPose())  #position set.
 
@@ -303,7 +309,8 @@ class MyRobot(LoggedRobot):
             self.autonomousCommand.cancel()
 
         # clear existing telemetry trajectory
-        self.driveTrain.poseEst._telemetry.setCurAutoTrajectory(None)
+        if self.driveTrain is not None:
+            self.driveTrain.poseEst._telemetry.setCurAutoTrajectory(None)
         # Ensure auto-steer starts disabled, no motion without driver command
         #self.autosteer.setInhibited()
 
@@ -312,7 +319,7 @@ class MyRobot(LoggedRobot):
         """This function is called periodically when in teleop"""
 
         # TODO - this is technically one loop delayed, which could induce lag
-        if drivetrainDepConstants['HAS_DRIVETRAIN']:
+        if self.driveTrain is not None:
             self.driveTrain.setManualCmd(self.dInt.getCmd(), self.dInt.getRobotRelative())
 
 
