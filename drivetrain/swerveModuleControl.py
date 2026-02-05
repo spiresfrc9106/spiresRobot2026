@@ -8,22 +8,16 @@ from wpimath.kinematics import SwerveModulePosition
 from wpimath.geometry import Rotation2d
 from wpimath.filter import SlewRateLimiter
 from wpilib import TimedRobot
-
-from drivetrain.drivetrainPhysical import dtMotorRotToLinear
-from drivetrain.drivetrainPhysical import dtLinearToMotorRot
-from drivetrain.drivetrainPhysical import MAX_FWD_REV_SPEED_MPS
 from drivetrain.drivetrainPhysical import wrapperedSwerveDriveAzmthEncoder
 from drivetrain.swerveModuleGainSet import SwerveModuleGainSet
-from wrappers.wrapperedKraken import WrapperedKraken
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
-from wrappers.wrapperedSRXMagEncoder import WrapperedSRXMagEncoder
 from dashboardWidgets.swerveState import getAzmthDesTopicName, getAzmthActTopicName
 from dashboardWidgets.swerveState import getSpeedDesTopicName, getSpeedActTopicName
-from utils.signalLogging import addLog
 from drivetrain.drivetrainPhysical import dtMotorRotToLinear
 from drivetrain.drivetrainPhysical import dtLinearToMotorRot
 from drivetrain.drivetrainPhysical import MAX_FWD_REV_SPEED_MPS
 from utils.units import rad2Deg
+from pykit.logger import Logger
 
 
 class SwerveModuleControl:
@@ -104,28 +98,10 @@ class SwerveModuleControl:
 
         self._prevMotorDesSpeed = 0
 
-
-        addLog(
-            getAzmthDesTopicName(moduleName),
-            self.optimizedDesiredState.angle.degrees,
-            "deg",
-        )
-        addLog(
-            getAzmthActTopicName(moduleName),
-            self.actualState.angle.degrees,
-            "deg",
-        )
-        addLog(
-            getSpeedDesTopicName(moduleName),
-            lambda: (self.optimizedDesiredState.speed / MAX_FWD_REV_SPEED_MPS),
-            "frac",
-        )
-        addLog(
-            getSpeedActTopicName(moduleName),
-            lambda: ((self.actualState.speed) / MAX_FWD_REV_SPEED_MPS),
-            "frac",
-        )
-
+        self._azmthDesTopicName = getAzmthDesTopicName(moduleName)
+        self._azmthActTopicName = getAzmthActTopicName(moduleName)
+        self._speedDesTopicName = getSpeedDesTopicName(moduleName)
+        self._speedActTopicName = getSpeedActTopicName(moduleName)
 
         # Simulation Support Only
         self.wheelSimFilter = SlewRateLimiter(24.0)
@@ -236,3 +212,9 @@ class SwerveModuleControl:
             speed = self.wheelSimFilter.calculate(self.desiredState.speed)
             self.actualState.speed = speed + random.uniform(-0.0, 0.0)
             self.actualPosition.distance += self.actualState.speed * 0.04
+
+        Logger.recordOutput(f"{self._azmthDesTopicName}_deg", self.optimizedDesiredState.angle.degrees())
+        Logger.recordOutput(f"{self._azmthActTopicName}_deg", self.actualState.angle.degrees())
+        Logger.recordOutput(f"{self._speedDesTopicName}_frac", self.optimizedDesiredState.speed / MAX_FWD_REV_SPEED_MPS)
+        Logger.recordOutput(f"{self._speedActTopicName}_frac", self.actualState.speed / MAX_FWD_REV_SPEED_MPS)
+

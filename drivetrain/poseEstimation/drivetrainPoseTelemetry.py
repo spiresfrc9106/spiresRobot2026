@@ -13,7 +13,6 @@ from utils.allianceTransformUtils import transform
 from drivetrain.drivetrainPhysical import CAMS, robotToModuleTranslations
 from utils.autonomousTransformUtils import flip
 from wrappers.wrapperedPoseEstPhotonCamera import CameraPoseObservation
-from utils.signalLogging import addLog
 from ntcore import NetworkTableInstance
 
 

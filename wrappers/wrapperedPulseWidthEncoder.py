@@ -1,7 +1,6 @@
 import math
 from wpilib import DigitalInput, DutyCycle
 from utils.faults import Fault
-from utils.signalLogging import addLog
 from utils.calibration import Calibration
 from utils.units import wrapAngleRad
 
@@ -40,10 +39,6 @@ class WrapperedPulseWidthEncoder:
 
         self.freq = 0
         self.pulseTime = 0
-
-        addLog(f"{self.name}/encoder_freq", lambda: self.freq, "Hz")
-        addLog(f"{self.name}/pulseTime", lambda: self.pulseTime, "sec")
-        addLog(f"{self.name}/angle", lambda: self.curAngleRad, "rad")
 
     def update(self):
         """Return the raw angle reading from the sensor in radians"""

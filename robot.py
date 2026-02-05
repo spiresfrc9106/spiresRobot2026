@@ -4,17 +4,11 @@ import os
 import typing
 import sys
 import gc
-import wpilib
-import ntcore as nt
 
 from commands2.commandscheduler import CommandScheduler
 
-import pathplannerlib
-import pathplannerlib.commands
 from pathplannerlib.commands import PathPlannerLogging
-import wpilib
 import commands2
-from phoenix6.signal_logger import SignalLogger
 
 from pykit.wpilog.wpilogwriter import WPILOGWriter
 from pykit.wpilog.wpilogreader import WPILOGReader
@@ -28,35 +22,22 @@ if useWestwoodSwerve():
     from westwood.westwoodrobotcontainer import WestwoodRobotContainer
 from westwood.util.logtracer import LogTracer
 from westwood.util.phoenixutil import PhoenixUtil
-from wpimath.geometry import Translation2d, Pose2d, Rotation2d
+
 from AutoSequencerV2.autoSequencer import AutoSequencer
-from dashboard import Dashboard
 from testingMotors.motorCtrl import MotorControl, motorDepConstants
-from drivetrain.controlStrategies.autoDrive import AutoDrive
-from drivetrain.controlStrategies.autoSteer import AutoSteer
+
 from drivetrain.controlStrategies.trajectory import Trajectory
-from drivetrain.drivetrainCommand import DrivetrainCommand
+
 from drivetrain.drivetrainControl import DrivetrainControl
-from memes.ctreMusicPlayback import CTREMusicPlayback
 from humanInterface.driverInterface import DriverInterface
 from humanInterface.ledControl import LEDControl
 from humanInterface.operatorInterface import OperatorInterface
-from navigation.forceGenerators import PointObstacle
 from utils.robotIdentification import RobotIdentification
-from utils.segmentTimeTracker import SegmentTimeTracker
-from utils.signalLogging import logUpdate, getNowLogger
-from utils.calibration import CalibrationWrangler
-from utils.crashLogger import CrashLogger
-from utils.faults import FaultWrangler
-from utils.powerMonitor import PowerMonitor
-from utils.rioMonitor import RIOMonitor
-from utils.robotIdentification import RobotIdentification
-from utils.signalLogging import logUpdate
 from utils.singleton import destroyAllSingletonInstances
-from webserver.webserver import Webserver
-#from fuelSystems.shooterControl import ShooterController
+from wpilib import Timer
 import wpilib
 
+LoggedRobot.default_period = 0.10
 class MyRobot(LoggedRobot):
     """
     Our default robot class, pass it to wpilib.run
@@ -123,7 +104,6 @@ class MyRobot(LoggedRobot):
         # pylint: disable=attribute-defined-outside-init
         remoteRIODebugSupport()
 
-        SignalLogger.enable_auto_logging(False)
         wpilib.LiveWindow.disableAllTelemetry()
         CommandScheduler.getInstance().setPeriod(
             1
@@ -163,9 +143,6 @@ class MyRobot(LoggedRobot):
 
         # We do our own logging, we don't need additional logging in the background.
         # Both of these will increase CPU load by a lot, and we never use their output.
-        wpilib.LiveWindow.disableAllTelemetry()
-
-        self.webserver = Webserver()
 
         self.driveTrain = None
         print(f"useCasseroleSwerve()={useCasseroleSwerve()}")
@@ -173,16 +150,12 @@ class MyRobot(LoggedRobot):
             self.driveTrain = DrivetrainControl()
 
 
-        self.stt = SegmentTimeTracker(longLoopPrintEnable=False, epochTracerEnable=False)
-
         self.dInt = DriverInterface()
         self.oInt = OperatorInterface()
 
         self.ledCtrl = LEDControl()
 
         self.autoSequencer = AutoSequencer()
-
-        self.dashboard = Dashboard()
 
         #self.shooterCtrl = ShooterController()
 
@@ -198,15 +171,10 @@ class MyRobot(LoggedRobot):
         #self.addPeriodic(FaultWrangler().update, 0.06, 0.0)
 
         self.autoHasRun = False
-
-        self.logger1 = getNowLogger('now1', 'sec')
-        self.logger2 = getNowLogger('now2', 'sec')
-        self.logger3 = getNowLogger('now3', 'sec')
         self.count=0
 
     def robotPeriodic(self) -> None:
-        self.logger1.logNow(nt._now())
-        self.stt.start()
+
 
         #if self.count == 10:
         #    gc.freeze()
@@ -221,35 +189,31 @@ class MyRobot(LoggedRobot):
         LogTracer.record("CommandsPeriodic")
         LogTracer.recordTotal()
         self.dInt.update()
-        self.stt.mark("Driver Interface")
+
 
         if self.driveTrain is not None:
             self.driveTrain.update()
-            self.stt.mark("Drivetrain")
+
 
         self.oInt.update()
-        self.stt.mark("Operator Interface")
+
 
         #self.shooterCtrl.update()
-        #self.stt.mark("Shooter Update")
+
 
         #self.autodrive.updateTelemetry()
         #self.driveTrain.poseEst._telemetry.setCurAutoDriveWaypoints(self.autodrive.getWaypoints())
         #self.driveTrain.poseEst._telemetry.setCurObstacles(self.autodrive.rfp.getObstacleStrengths())
-        self.stt.mark("Telemetry")
-        self.logger2.logNow(nt._now())
+
 
 
         #self.ledCtrl.setAutoDriveActive(self.autodrive.isRunning())
         #self.ledCtrl.setAutoSteerActive(self.autosteer.isRunning())
         #self.ledCtrl.setStuck(self.autodrive.rfp.isStuck())
         self.ledCtrl.update()
-        self.stt.mark("LED Ctrl")
 
-        logUpdate()
         self.count += 1
-        self.stt.end()
-        self.logger3.logNow(nt._now())
+
 
     def disabledInit(self) -> None:
         """This function is called once each time the robot enters Disabled mode."""
@@ -318,6 +282,7 @@ class MyRobot(LoggedRobot):
     def teleopPeriodic(self) -> None:
         """This function is called periodically when in teleop"""
 
+        print(f"{Timer.getFPGATimestamp():.3f} Start of teleopPeriodic")
         # TODO - this is technically one loop delayed, which could induce lag
         if self.driveTrain is not None:
             self.driveTrain.setManualCmd(self.dInt.getCmd(), self.dInt.getRobotRelative())
@@ -354,6 +319,7 @@ class MyRobot(LoggedRobot):
         Trajectory().setCmd(None)
         if motorDepConstants['HAS_MOTOR_TEST']:
             self.motorCtrlFun.update(self.dInt.getMotorTestPowerRpm())
+        print(f"{Timer.getFPGATimestamp():.3f} ..End of teleopPeriodic")
 
     #########################################################
     ## Disabled-Specific init and update
@@ -398,6 +364,9 @@ class MyRobot(LoggedRobot):
 
         destroyAllSingletonInstances()
         super().endCompetition()
+
+def printOverrunMessage(self):
+    print(f"{Timer.getFPGATimestamp():.3f} Loop overrun detected!")
 
 def remoteRIODebugSupport():
     if __debug__ and "run" in sys.argv:

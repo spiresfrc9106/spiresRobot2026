@@ -7,7 +7,6 @@ from photonlibpy.targeting.photonTrackedTarget import PhotonTrackedTarget
 from photonlibpy.photonCamera import setVersionCheckEnabled
 from utils.fieldTagLayout import FieldTagLayout
 from utils.faults import Fault
-from utils.signalLogging import addLog
 
 # Describes one on-field pose estimate from the a camera at a specific time.
 @dataclass
@@ -40,16 +39,12 @@ class WrapperedPoseEstPhotonCamera:
         self.robotToCam = robotToCam
         self.lastLatency = 0.0
         self.updateDuration = 0.0
-        addLog(f"PoseCam {self.name} latency", lambda:self.lastLatency, "sec")
-        addLog(f"PoseCam {self.name} Duration", lambda:self.updateDuration, "ms")
         self.prevTimestampSec = 0.0
         self.singleTagModeTagList = None #not currently used
 
 
         self.lastCaptureTime = wpilib.Timer.getFPGATimestamp()
         self.CAP_PERIOD_SEC = 0.025
-        #addLog("Camera Only Position", self.poseEstimates)
-        #addLog("FPGA Timestamp", wpilib.Timer.getFPGATimestamp(), "sec")
 
     def setSingleTagMode(self, tag:list[int]|None):
         self.singleTagModeTagList = tag

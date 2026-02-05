@@ -11,7 +11,6 @@ from drivetrain.drivetrainPhysical import (
 from drivetrain.poseEstimation.drivetrainPoseTelemetry import DrivetrainPoseTelemetry
 # TODO-rms was:from navigation.autoDriveNavConstants import SCORE_DIST_FROM_REEF_CENTER
 from utils.faults import Fault
-from utils.signalLogging import addLog
 from wrappers.wrapperedPoseEstPhotonCamera import WrapperedPoseEstPhotonCamera
 from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
 #from utils.constants import blueReefLocation, redReefLocation #2025 code
@@ -62,8 +61,6 @@ class DrivetrainPoseEstimator:
         self._lastModulePositions = initialModulePositions
 
         # Logging and Telemetry
-        addLog("PE Vision Targets Seen", lambda: self._camTargetsVisible, "bool")
-        addLog("PE Gyro Angle", lambda:(self._curRawGyroAngle.degrees()), "deg")
         self._telemetry = DrivetrainPoseTelemetry()
         self.limelightPoseOfTarget = None
 

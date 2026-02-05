@@ -2,7 +2,6 @@ import time
 from rev import SparkFlex, SparkBase, SparkFlexConfig, REVLibError, ClosedLoopSlot, SparkBaseConfig, ResetMode, PersistMode
 from rev import SparkClosedLoopController
 from wpilib import TimedRobot
-from utils.signalLogging import addLog
 from utils.units import rev2Rad, rad2Rev, radPerSec2RPM, RPM2RadPerSec
 from utils.faults import Fault
 
@@ -43,16 +42,6 @@ class WrapperedSparkFlex:
         self.cfg.smartCurrentLimit(self.currentLimitA,0,5700)
 
         self._spark_config(retries=10, resetMode=ResetMode.kResetSafeParameters, persistMode=PersistMode.kPersistParameters, step="Initial Config")
-
-        addLog(self.name + "_outputCurrent", self.ctrl.getOutputCurrent, "A")
-        """
-        addLog(self.name + "_desVolt", lambda: self.desVolt, "V")
-        addLog(self.name + "_desPos", lambda: self.desPosRad, "rad")
-        addLog(self.name + "_desVel", lambda: self.desVelRadps, "radps")
-        addLog(self.name + "_actVolt", lambda: self.actVolt, "V")
-        addLog(self.name + "_actPos", lambda: self.actPosRad, "rad")
-        addLog(self.name + "_actVel", lambda: RPM2RadPerSec(self.encoder.getVelocity()), "radps")
-        """
 
         print(f"Init of SparkFlex {self.name} CANID={self.canID} is finished")
 

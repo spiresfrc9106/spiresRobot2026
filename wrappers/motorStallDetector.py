@@ -5,7 +5,6 @@
 
 from wpilib import Timer
 
-from utils.signalLogging import  addLog
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
 from wrappers.wrapperedSparkFlex import WrapperedSparkFlex
 from wrappers.wrapperedSparkCommon import MotorControlStates
@@ -21,7 +20,6 @@ class MotorPosStallDetector:
         self.stallCurrentLimitA = stallCurrentLimitA
         self.stallTimeLimitS = stallTimeLimitS
         self._stalled = False
-        addLog(f"{name}/stalled", lambda: self._stalled)
 
     def initialize(self)->None:
         self._clearMonitorState()

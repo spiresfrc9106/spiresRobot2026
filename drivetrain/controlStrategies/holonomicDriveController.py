@@ -1,4 +1,6 @@
 import math
+
+from pykit.autolog import autologgable_output
 from wpimath.controller import PIDController
 from wpimath.geometry import Pose2d
 from drivetrain.drivetrainCommand import DrivetrainCommand
@@ -9,9 +11,10 @@ from drivetrain.drivetrainPhysical import (
 #from drivetrain.controlStrategies.autoDrive import AutoDrive
 from choreo.trajectory import SwerveSample
 from utils.calibration import Calibration
-from utils.signalLogging import addLog
 from utils.mathUtils import limit
 from utils.units import m2in
+
+from pykit.logger import Logger
 
 class HolonomicDriveController:
     """
@@ -26,6 +29,7 @@ class HolonomicDriveController:
     """
 
     def __init__(self, name:str):
+        self.name = name
         self.curVx = 0
         self.curVy = 0
         self.curVtheta = 0
@@ -44,20 +48,13 @@ class HolonomicDriveController:
         self.yFB = 0.0
         self.tFB = 0.0
 
-        #addLog(f"{name} HDC xFF", lambda:self.xFF, "mps")
-        #addLog(f"{name} HDC yFF", lambda:self.yFF, "mps")
-        #addLog(f"{name} HDC tFF", lambda:self.tFF, "radpersec")
-        #addLog(f"{name} HDC xFB", lambda:self.xFB, "mps")
-        #addLog(f"{name} HDC yFB", lambda:self.yFB, "mps")
-        #addLog(f"{name} HDC tFB", lambda:self.tFB, "radpersec")
 
 
-        self.errX_in = 0
-        self.errY_in = 0
-        self.errT_deg = 0
-        addLog(f"{name} HDC err X", lambda:self.errX_in, "in")
-        addLog(f"{name} HDC err Y", lambda:self.errY_in, "in")
-        addLog(f"{name} HDC err T", lambda:self.errT_deg, "deg")
+
+        self.errX_in = 0.0
+        self.errY_in = 0.0
+        self.errT_deg = 0.0
+
 
         # Closed-loop control for the X position
         self.xCtrl = PIDController(
@@ -109,6 +106,9 @@ class HolonomicDriveController:
         self.errX_in = m2in(cmdPose.X() - curEstPose.X())
         self.errY_in = m2in(cmdPose.Y() - curEstPose.Y())
         self.errT_deg = (cmdPose.rotation() - curEstPose.rotation()).degrees()
+        Logger.recordOutput(f"{self.name} HDC X Error", self.errX_in)
+        Logger.recordOutput(f"{self.name} HDC Y Error", self.errY_in)
+        Logger.recordOutput(f"{self.name} HDC Theta Error", self.errT_deg)
 
         # Feed-Back - Apply additional correction if we're not quite yet at the spot on the field we
         #             want to be at.

@@ -1,16 +1,17 @@
+from pykit.autolog import autologgable_output, autolog_output
+
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.drivetrainPhysical import MAX_FWD_REV_SPEED_MPS,MAX_STRAFE_SPEED_MPS,\
 MAX_ROTATE_SPEED_RAD_PER_SEC,MAX_TRANSLATE_ACCEL_MPS2,MAX_ROTATE_ACCEL_RAD_PER_SEC_2
 from utils.allianceTransformUtils import onRed
 from utils.faults import Fault
-from utils.signalLogging import addLog
 from wpimath import applyDeadband
 from wpimath.filter import SlewRateLimiter
 from wpilib import XboxController
 from wpilib import DriverStation
 from utils.calibration import Calibration
-from fuelSystems.shooterControl import ShooterController 
 
+@autologgable_output
 class DriverInterface:
     """Class to gather input from the driver of the robot"""
 
@@ -21,9 +22,9 @@ class DriverInterface:
         self.connectedFault = Fault(f"Driver XBox controller ({ctrlIdx}) unplugged")
 
         # Drivetrain motion xyzzy
-        self.velXCmd = 0
-        self.velYCmd = 0
-        self.velTCmd = 0
+        self.velXCmd = 0.0
+        self.velYCmd = 0.0
+        self.velTCmd = 0.0
 
         self.robotRelativeSlowdown = Calibration(name="Robot Relative Slowdown", default=.5, units="%")
 
@@ -48,14 +49,18 @@ class DriverInterface:
 
         self.shootCmd = False
 
-        # Logging
-        addLog("DI FwdRev Cmd", lambda: self.velXCmd, "mps")
-        addLog("DI Strafe Cmd", lambda: self.velYCmd, "mps")
-        addLog("DI Rot Cmd", lambda: self.velTCmd, "radps")
-        addLog("DI AutoSteer Enable", lambda: self.autoSteerEnable, "radps")
-        #addLog("DI gyroResetCmd", lambda: self.gyroResetCmd, "bool")
-        #addLog("DI autoDriveToSpeaker", lambda: self.autoDriveToSpeaker, "bool")
-        #addLog("DI autoDriveToPickup", lambda: self.autoDriveToPickup, "bool")
+    @autolog_output(key="di/velXCmd_mps")
+    def getVelXCmd(self) -> float:
+        return self.velXCmd
+    @autolog_output(key="di/velYCmd_mps")
+    def getVelYCmd(self) -> float:
+        return self.velYCmd
+    @autolog_output(key="di/velTCmd_radps")
+    def getVelTCmd(self) -> float:
+        return self.velTCmd
+    @autolog_output(key="di/autoSteerEnable")
+    def getAutoSteerEnable(self) -> bool:
+        return self.autoSteerEnable
 
     def update(self):
         # value of contoller buttons

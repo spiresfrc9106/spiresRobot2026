@@ -5,7 +5,6 @@ from ntcore import NetworkTableInstance
 import wpilib
 from wpimath.geometry import Pose2d, Rotation2d, Transform3d, Pose3d, Translation3d
 
-from utils.signalLogging import addLog
 from wrappers.wrapperedPoseEstPhotonCamera import WrapperedPoseEstPhotonCamera
 
 from sensors.limelight import Limelight
@@ -59,8 +58,6 @@ class WrapperedPoseEstLimelight:
         self.targetInView = None
         self.targetLength = 0
         self.latency = 0
-        addLog("ytest_targets_limelight_seen", lambda: self.targetLength, "")
-        addLog(f"ytest_{camName}total_latency", lambda: self.latency, '')
 
     def update(self, prevEstPose:Pose2d):
         self.cam.update()

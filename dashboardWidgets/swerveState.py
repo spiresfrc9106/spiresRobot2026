@@ -1,6 +1,4 @@
 from dashboardWidgets.widgetConfig import WidgetConfig
-from utils.signalLogging import sigNameToNT4TopicName
-
 
 # Utility signal name calculation functions
 def getAzmthDesTopicName(modName):
@@ -26,10 +24,10 @@ class _ModuleTopicSet:
     # pylint: disable=line-too-long
 
     def __init__(self, modName, modIdx):
-        self.azmthDesTopic = sigNameToNT4TopicName(getAzmthDesTopicName(modName))
-        self.azmthActTopic = sigNameToNT4TopicName(getAzmthActTopicName(modName))
-        self.speedDesTopic = sigNameToNT4TopicName(getSpeedDesTopicName(modName))
-        self.speedActTopic = sigNameToNT4TopicName(getSpeedActTopicName(modName))
+        self.azmthDesTopic = getAzmthDesTopicName(modName)
+        self.azmthActTopic = getAzmthActTopicName(modName)
+        self.speedDesTopic = getSpeedDesTopicName(modName)
+        self.speedActTopic = getSpeedActTopicName(modName)
         self.modIdx = modIdx
 
     def getSubscriptionStrings(self):

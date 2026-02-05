@@ -3,11 +3,10 @@
 # It is definitely buggy and untested, but it gives us a great framework on how to control an elevator.
 
 
-
-from utils.signalLogging import log, getNowLogger
 from utils.singleton import Singleton
 from utils.robotIdentification import RobotTypes, RobotIdentification
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
+from pykit.logger import Logger
 
 class MotorDependentConstants:
     def __init__(self):
@@ -50,8 +49,6 @@ class MotorControl(metaclass=Singleton):
 
         # Set P gain on motor
         self.Rmotor.setPID(0.00005, 0.0, 0.0)
-        self.motorRpmLogger = getNowLogger(f"Test_Motor_DesRpm", "rpm")
-
 
 
     def update(self, desiredSpeedRpm):
@@ -62,9 +59,9 @@ class MotorControl(metaclass=Singleton):
         else:
             self.Rmotor.setVelCmd(0,0)
             self.Rmotor.setVoltage(0.0)
-        self.motorRpmLogger.logNow(desiredSpeedRpm)
         self.Rmotor.getMotorVelocityRadPerSec()
         self.Rmotor.getAppliedOutput()
+        Logger.recordOutput("Test_Motor_DesRpm_rpm",desiredSpeedRpm)
 
 
 

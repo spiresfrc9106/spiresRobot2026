@@ -1,5 +1,4 @@
 from utils.faults import Fault
-from utils.signalLogging import addLog
 from wpilib import DriverStation, XboxController
 from utils.mapLookup2d import MapLookup2D
 

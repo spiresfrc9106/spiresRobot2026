@@ -4,7 +4,6 @@ from wpimath.geometry import Pose2d, Translation2d, Rotation2d
 
 from utils.mapLookup2d import MapLookup2D
 from utils.mathUtils import limit
-from utils.signalLogging import addLog
 from collections import deque
 
 from drivetrain.drivetrainCommand import DrivetrainCommand
@@ -123,10 +122,6 @@ class RepulsorFieldPlanner:
         self.startSlowFactor = 0.0
 
         self.curState = RepulsorFieldPlannerState.INACTIVE
-
-        #addLog("PotentialField Num Obstacles", lambda: (len(self.fixedObstacles) + len(self.transientObstcales)))
-        #addLog("PotentialField Path Active", lambda: (self.goal is not None))
-        #addLog("PotentialField DistToGo", lambda: self.distToGo, "m")
 
     def setGoal(self, nextGoal:Pose2d|None):
         """
