@@ -1,3 +1,6 @@
+from typing import Callable
+
+from commands2 import Command
 from wpimath.kinematics import ChassisSpeeds, SwerveModuleState
 from wpimath.geometry import Pose2d, Rotation2d
 from wpilib import Timer
@@ -37,6 +40,7 @@ from utils.constants import (DT_FL_WHEEL_CANID,
                              DT_FR_AZMTH_ENC_PORT,
                              DT_BL_AZMTH_ENC_PORT,
                              DT_BR_AZMTH_ENC_PORT)
+from westwood.util.convenientmath import deadband
 from wrappers.wrapperedGyro import wrapperedGyro
 
 class DrivetrainControl(metaclass=Singleton):
@@ -215,6 +219,28 @@ class DrivetrainControl(metaclass=Singleton):
     
     def setElevLimiter(self, elevLimit):
         self.elevSpeedLimit = elevLimit
+"""
+def arcadeDriveClosedLoop(
+    drive: DrivetrainControl,
+    forward: Callable[[], float],
+    rotation: Callable[[], float],
+    slowMultiplier: Callable[[], float],
+    debugRunOpenLoopVolts: Callable[[], float]
+
+) -> Command:
+    def run():
+        fwd = deadband(forward(), 0.1) * slowMultiplier()
+        rot = deadband(rotation(), 0.1) * slowMultiplier()
+        bothSideOfChassisForwardSpeeds = DifferentialDrive.arcadeDriveIK(fwd, rot, False)
+
+
+            drive.runClosedLoopParameters(
+                bothSideOfChassisForwardSpeeds.left * driveconstants.kMaxSpeedMetersPerSecond,
+                bothSideOfChassisForwardSpeeds.right * driveconstants.kMaxSpeedMetersPerSecond,
+            )
+
+    return cmd.run(run, drive).withName("Arcade Drive Closed Loop")
+"""
 
 def _discretizeChSpd(chSpd):
     """See https://www.chiefdelphi.com/t/whitepaper-swerve-drive-skew-and-second-order-kinematics/416964/30
@@ -227,7 +253,7 @@ def _discretizeChSpd(chSpd):
     Returns:
         ChassisSpeeds: Adjusted ch speed
     """
-    dt = 0.04
+    dt = 0.04 # TODO rms adjust this to match robot update rate
     poseVel = Pose2d(chSpd.vx * dt, chSpd.vy * dt, Rotation2d(chSpd.omega * dt))
     twistVel = Pose2d().log(poseVel)
     return ChassisSpeeds(twistVel.dx / dt, twistVel.dy / dt, twistVel.dtheta / dt)

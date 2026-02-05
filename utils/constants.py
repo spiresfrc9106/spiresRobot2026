@@ -3,7 +3,7 @@
 # The math conversions are under units.py
 
 from wpimath.geometry import Translation2d
-from config import FRC_TEAM_NUMBER
+from teamNumber import FRC_TEAM_NUMBER
 
 #######################################################################################
 ## FIELD DIMENSIONS

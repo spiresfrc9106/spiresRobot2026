@@ -1,7 +1,7 @@
 import os
 import choreo
 import choreo.trajectory
-from wpilib import Timer
+from wpilib import Timer, getDeployDirectory
 from drivetrain.controlStrategies.trajectory import Trajectory
 from drivetrain.drivetrainControl import DrivetrainControl
 from AutoSequencerV2.command import Command
@@ -16,16 +16,7 @@ class DrivePathCommand(Command):
         self.trajCtrl = Trajectory()
 
         # Get the internal path file
-        absPath = os.path.abspath(
-            os.path.join(
-                os.path.dirname(__file__),
-                "..",
-                "..",
-                "deploy",
-                "choreo",
-                pathFile,
-            )
-        )
+        absPath = os.path.join(getDeployDirectory(), "choreo", pathFile)
 
         self.path = choreo.load_swerve_trajectory(absPath)
         self.done = False

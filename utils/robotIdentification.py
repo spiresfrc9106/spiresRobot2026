@@ -1,6 +1,6 @@
 from enum import Enum
 import wpilib
-from config import FRC_TEAM_NUMBER
+from teamNumber import FRC_TEAM_NUMBER
 from utils.faults import Fault
 from utils.singleton import Singleton
 

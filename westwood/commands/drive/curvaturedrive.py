@@ -4,7 +4,7 @@ maintains a constant curvature for a given rotation amount"""
 import typing
 from commands2 import Command
 
-from westwood.subsystems import DriveSubsystem
+from westwood.subsystems.drive.drivesubsystem import DriveSubsystem
 
 
 class CurvatureDrive(Command):  # Arcade drive is just robot relative, but no sideways
