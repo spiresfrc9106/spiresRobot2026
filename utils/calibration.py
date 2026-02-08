@@ -37,6 +37,9 @@ class Calibration:
     Defines a single calibration point.
     A calibration is any number which is constant normally on the robot, but will need to be tweaked
     empirically as part of robot development.
+
+    This version is different than the original RobotCasserole version in that it is designed to
+    accept values from an Elastic dashboard rather than the RobotCasserole webserver.
     """
 
     def __init__(
@@ -52,7 +55,7 @@ class Calibration:
         self._curValue = self._default
         self._changed = False
 
-        self.reset()
+        self._reset()
 
         # Set up nt
         table = nt.NetworkTableInstance.getDefault().getTable("Calibrations")
@@ -69,37 +72,32 @@ class Calibration:
         self.curValTopic.setProperty("default_val", float(self._default))
         self.curValTopic.setProperty("pending", False)
 
-        desValueTopic = table.getDoubleTopic(name + "/desValue")
+        desValueTopic = table.getDoubleTopic(name + "/curValue")
         self.desValueSubscriber = desValueTopic.subscribe(self._default)
 
         CalibrationWrangler().register(self)
 
     # Resets the value of the calibration back to its default
-    def reset(self):
+    def _reset(self):
         self._desValue = self._default
         self._curValue = self._default
         self._changed = False
 
-    # Provides a new value to the calibration. This value will be returned on the next
-    # call to `get()`. The `isChanged()` flag will return True until `get()` is called.
-    def set(self, newVal):
-        if self.max >= newVal >= self.min:
-            self._desValue = newVal
-            self._changed = True
-        else:
-            wpilib.reportWarning(
-                f"[Calibration] Skipping value update for {self.name},"
-                + " value {newVal} is out of range [{self.min},{self.max}]"
-            )
 
     # Periodic update to read from the desired value on NT, and publish the current value
     def update(self):
         val = self.desValueSubscriber.getAtomic()
         if val.time > self._lastUpdateTime:
-            self.set(val.value)
+            if self.max >= val.value >= self.min:
+                self._desValue = val.value
+                self._changed = True
+            else:
+                wpilib.reportWarning(
+                    f"[Calibration] Skipping value update for {self.name},"
+                    + f" value {val.value} is out of range [{self.min},{self.max}]"
+                )
             self._lastUpdateTime = val.time
-        self.curValuePublisher.set(self._curValue)
-        self.curValTopic.setProperty("pending", self._changed)
+            self.curValTopic.setProperty("pending", self._changed)
 
     # Returns True if the value is different than the last time `get()` was called. False otherwise.
     def isChanged(self):
@@ -111,4 +109,5 @@ class Calibration:
         if(self._changed):
             self._curValue = self._desValue
             self._changed = False
+            self.curValTopic.setProperty("pending", self._changed)
         return self._curValue

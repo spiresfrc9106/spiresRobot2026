@@ -18,6 +18,8 @@ from pykit.logger import Logger
 
 import westwood.constants
 from drivetrain.drivetrainDependentConstants import useCasseroleSwerve, useWestwoodSwerve
+from utils.calibration import CalibrationWrangler
+
 if useWestwoodSwerve():
     from westwood.westwoodrobotcontainer import WestwoodRobotContainer
 from westwood.util.logtracer import LogTracer
@@ -168,6 +170,7 @@ class MyRobot(LoggedRobot):
         #    self.addPeriodic(self.pwrMon.update, 0.2, 0.0)
         #self.addPeriodic(self.crashLogger.update, 1.0, 0.0)
         #self.addPeriodic(CalibrationWrangler().update, 0.5, 0.0)
+        self.cw = CalibrationWrangler()
         #self.addPeriodic(FaultWrangler().update, 0.06, 0.0)
 
         self.autoHasRun = False
@@ -196,6 +199,7 @@ class MyRobot(LoggedRobot):
 
 
         self.oInt.update()
+        self.cw.update()
 
 
         #self.shooterCtrl.update()
@@ -233,17 +237,15 @@ class MyRobot(LoggedRobot):
         if self.autonomousCommand:
             self.autonomousCommand.schedule()
 
-        if self.driveTrain is not None:
-            # Use the autonomous routines starting pose to init the pose estimator
-            self.driveTrain.poseEst.setKnownPose(self.autoSequencer.getStartingPose())  #position set.
-
         # Start up the autonomous sequencer
         self.autoSequencer.initialize()
 
         # Use the autonomous rouines starting pose to init the pose estimator
         startPose = self.autoSequencer.getStartingPose()
-        if(startPose is not None):
-            self.driveTrain.poseEst.setKnownPose(startPose)
+        if startPose is not None:
+            if self.driveTrain is not None:
+                # Use the autonomous routines starting pose to init the pose estimator
+                self.driveTrain.poseEst.setKnownPose(self.autoSequencer.getStartingPose())  # position set.
 
         # Mark we at least started autonomous
         self.autoHasRun = True # pylint: disable=attribute-defined-outside-init
@@ -282,7 +284,6 @@ class MyRobot(LoggedRobot):
     def teleopPeriodic(self) -> None:
         """This function is called periodically when in teleop"""
 
-        print(f"{Timer.getFPGATimestamp():.3f} Start of teleopPeriodic")
         # TODO - this is technically one loop delayed, which could induce lag
         if self.driveTrain is not None:
             self.driveTrain.setManualCmd(self.dInt.getCmd(), self.dInt.getRobotRelative())
@@ -299,27 +300,10 @@ class MyRobot(LoggedRobot):
         if self.dInt.getGyroResetCmd():
             self.driveTrain.resetGyro()
 
-        #if self.dInt.getCreateObstacle():
-        #    # For test purposes, inject a series of obstacles around the current pose
-        #    ct = self.driveTrain.poseEst.getCurEstPose().translation()
-        #    tfs = [
-        #        #Translation2d(1.7, -0.5),
-        #        #Translation2d(0.75, -0.75),
-        #        #Translation2d(1.7, 0.5),
-        #        Translation2d(0.75, 0.75),
-        #        Translation2d(2.0, 0.0),
-        #        Translation2d(0.0, 1.0),
-        #        Translation2d(0.0, -1.0),
-        #    ]
-        #    for tf in tfs:
-        #        obs = PointObstacle(location=(ct+tf), strength=0.5)
-        #        self.autodrive.rfp.addObstacleObservation(obs)
-
         # No trajectory in Teleop
         Trajectory().setCmd(None)
         if motorDepConstants['HAS_MOTOR_TEST']:
             self.motorCtrlFun.update(self.dInt.getMotorTestPowerRpm())
-        print(f"{Timer.getFPGATimestamp():.3f} ..End of teleopPeriodic")
 
     #########################################################
     ## Disabled-Specific init and update

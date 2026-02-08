@@ -14,16 +14,18 @@ class SwerveModuleGainSet:
     def __init__(self):
 
         #TODO rms Which value: self.wheelP = Calibration("Drivetrain Module Wheel kP", 0.03)
-        self.wheelP = Calibration("Drivetrain Module Wheel kP", 0.00005)
+        self.wheelP = Calibration("Drivetrain Module Wheel kP", 0.000_000_1)
         self.wheelI = Calibration("Drivetrain Module Wheel kI", 0.0)
         self.wheelD = Calibration("Drivetrain Module Wheel kD", 0.0)
         self.wheelA = Calibration(
             "Drivetrain Module Wheel kA", 0.000, "volts/radPerSecPerSec"
         )
         self.wheelV = Calibration(
-            "Drivetrain Module Wheel kV", 12.0 / MAX_DT_MOTOR_SPEED_RPS, "volts/radPerSec"
+            #was "Drivetrain Module Wheel kV", 12.0 / MAX_DT_MOTOR_SPEED_RPS, "volts/radPerSec"
+            "Drivetrain Module Wheel kV", 0.0 / MAX_DT_MOTOR_SPEED_RPS, "volts/radPerSec"
         )
-        self.wheelS = Calibration("Drivetrain Module Wheel kS", 0.15, "volts")
+        # was:self.wheelS = Calibration("Drivetrain Module Wheel kS", 0.15, "volts")
+        self.wheelS = Calibration("Drivetrain Module Wheel kS", 0.0, "volts")
         self.azmthP = Calibration("Drivetrain Module Azmth kP", 0.03)
         self.azmthI = Calibration("Drivetrain Module Azmth kI", 0.0)
         self.azmthD = Calibration("Drivetrain Module Azmth kD", 0.0000)
