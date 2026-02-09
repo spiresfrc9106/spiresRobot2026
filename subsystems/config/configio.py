@@ -1,5 +1,9 @@
 from enum import Enum
-import wpilib
+from dataclasses import dataclass, field
+from pykit.autolog import autolog
+
+from wpilib import RobotBase, RobotController
+
 from teamNumber import FRC_TEAM_NUMBER
 from utils.faults import Fault
 from utils.singleton import Singleton
@@ -17,41 +21,43 @@ RobotTypes = Enum('RobotTypes', [
     'SpiresMain',
     'SpiresPractice',
     'SpiresTestBoard',
-    'SpiresRoboRioV1'
+    'SpiresRoboRioV1',
+    'Spires2026Sim',
 ])
 
-class RobotIdentification(metaclass=Singleton):
+class _RobotIdentification(metaclass=Singleton):
     """
     While we strive for our practice robot and main/competition robots to be as identical as possible,
-    that's not always the case. 
+    that's not always the case.
     The goal of this class is to identify which robot is currently running the code.
-    The constants between practice and main robots may be different. 
+    The constants between practice and main robots may be different.
     """
 
     def __init__(self):
-        self.roboControl = wpilib.RobotController
-        self.robotType = None
+        self.roboControl = RobotController
+        self.robotType: RobotTypes|None = None
         self.serialFault = Fault("RoboRIO serial number not recognized")
-        self.serialNumber = None
+        self.serialNumber: str|None = None
         self._configureValue()
+
+        simulationStr = "Simulation" if RobotBase.isSimulation() else "Real"
+        print(f":::::::::::")
+        print(f"::::::::::: _RobotIdentification: {simulationStr} {self.getRobotType()} serialNumber:{self.serialNumber}")
+        print(f":::::::::::")
+
 
     def _configureValue(self):
 
         self.serialFault.setNoFault()
-        self.serialNumber = self._getRobotSerialNumber()
-        print(f"self.roboControl.getSerialNumber()={self.serialNumber}")
+        self.serialNumber = RobotController.getSerialNumber()
 
-        if FRC_TEAM_NUMBER == 9106 and wpilib.TimedRobot.isSimulation():
-            #self.robotType = RobotTypes.Spires2023
-            #self.robotType = RobotTypes.Spires2025
+        if FRC_TEAM_NUMBER == 9106 and RobotBase.isSimulation():
             self.robotType = RobotTypes.Spires2025Sim
-            #self.robotType = RobotTypes.SpiresTestBoard
-            #self.robotType = RobotTypes.SpiresRoboRioV1
         elif self.serialNumber == "030e2cb0":
             #Test to see if the RoboRio serial number is the main/"Production" bot.
-            self.robotType = RobotTypes.Main 
+            self.robotType = RobotTypes.Main
         elif self.serialNumber == "03064e3f" \
-                or FRC_TEAM_NUMBER==1736 and wpilib.TimedRobot.isSimulation():
+                or FRC_TEAM_NUMBER==1736 and RobotBase.isSimulation():
             #Test to see if the RoboRio serial number is the practice bot.
             self.robotType = RobotTypes.Practice
         elif self.serialNumber == "0316b37c":
@@ -66,15 +72,12 @@ class RobotIdentification(metaclass=Singleton):
         elif self.serialNumber == "03057ab7":
             self.robotType = RobotTypes.SpiresRoboRioV1
         else:
-            # If the Robo Rio's serial number is not equal to any of our known serial numbers, 
+            # If the Robo Rio's serial number is not equal to any of our known serial numbers,
             # assume we are the main robot. But, throw a fault, since this is something software
             # team needs to fix.
             self.robotType = RobotTypes.SpiresTestBoard
             self.serialFault.setFaulted()
             assert False
-
-    def _getRobotSerialNumber(self)->str:
-        return self.roboControl.getSerialNumber()
 
     def getRobotType(self)->RobotTypes:
         """
@@ -82,5 +85,35 @@ class RobotIdentification(metaclass=Singleton):
         """
         return self.robotType
 
-    def isSpiresRobot(self)->bool:
-        return str(self.robotType).startswith('RobotTypes.Spires')
+    def getRobotTypeStr(self)->RobotTypes:
+        """
+        Return which robot we're running on right now
+        """
+        return self.robotType.name
+
+    @classmethod
+    def isSpiresRobot(cls, robotType: RobotTypes)->bool:
+        return str(robotType).startswith('RobotTypes.Spires')
+
+class ConfigIO:
+    """A dataclass for holding I/O data for the drive subsystem."""
+
+    @autolog
+    @dataclass
+    class ConfigIOInputs:
+        robotTypeStr: str = field(default_factory=lambda: _RobotIdentification().getRobotTypeStr())
+
+    def updateInputs(self, inputs: ConfigIOInputs) -> None:
+        """Update the drive I/O inputs.
+
+        Args:
+            inputs (ConfigIOInputs): The drive I/O inputs to update.
+        """
+
+    @classmethod
+    def getRobotType(cls, inputs: ConfigIOInputs)->RobotTypes:
+        return RobotTypes[inputs.robotTypeStr]
+
+    @classmethod
+    def isSpiresRobot(cls, inputs: ConfigIOInputs)->bool:
+        return _RobotIdentification.isSpiresRobot(cls.getRobotType(inputs))

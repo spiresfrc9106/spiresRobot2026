@@ -1,8 +1,7 @@
 from pykit.autolog import autologgable_output, autolog_output
 
 from drivetrain.drivetrainCommand import DrivetrainCommand
-from drivetrain.drivetrainPhysical import MAX_FWD_REV_SPEED_MPS,MAX_STRAFE_SPEED_MPS,\
-MAX_ROTATE_SPEED_RAD_PER_SEC,MAX_TRANSLATE_ACCEL_MPS2,MAX_ROTATE_ACCEL_RAD_PER_SEC_2
+from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from utils.allianceTransformUtils import onRed
 from utils.faults import Fault
 from wpimath import applyDeadband
@@ -28,10 +27,19 @@ class DriverInterface:
 
         self.robotRelativeSlowdown = Calibration(name="Robot Relative Slowdown", default=.5, units="%")
 
+        p = DrivetrainPhysical()
+        self.MAX_FWD_REV_SPEED_MPS = p.MAX_FWD_REV_SPEED_MPS
+        self.MAX_STRAFE_SPEED_MPS = p.MAX_STRAFE_SPEED_MPS
+
+        self.MAX_ROTATE_SPEED_RAD_PER_SEC = p.MAX_ROTATE_SPEED_RAD_PER_SEC
+
+        self.MAX_TRANSLATE_ACCEL_MPS2 = p.MAX_TRANSLATE_ACCEL_MPS2
+        self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2 = p.MAX_ROTATE_ACCEL_RAD_PER_SEC_2
+
         # Driver motion rate limiters - enforce smoother driving
-        self.velXSlewRateLimiter = SlewRateLimiter(rateLimit=MAX_TRANSLATE_ACCEL_MPS2)
-        self.velYSlewRateLimiter = SlewRateLimiter(rateLimit=MAX_TRANSLATE_ACCEL_MPS2)
-        self.velTSlewRateLimiter = SlewRateLimiter(rateLimit=MAX_ROTATE_ACCEL_RAD_PER_SEC_2)
+        self.velXSlewRateLimiter = SlewRateLimiter(rateLimit=self.MAX_TRANSLATE_ACCEL_MPS2)
+        self.velYSlewRateLimiter = SlewRateLimiter(rateLimit=self.MAX_TRANSLATE_ACCEL_MPS2)
+        self.velTSlewRateLimiter = SlewRateLimiter(rateLimit=self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2)
 
         # Navigation xyzzy
         self.autoDriveCmd = False
@@ -87,9 +95,9 @@ class DriverInterface:
             slowMult = 1.0 if (self.ctrl.getRightBumper()) else 0.4
 
             # Shape velocity command
-            velCmdXRaw = vXJoyWithDeadband * MAX_STRAFE_SPEED_MPS * slowMult
-            velCmdYRaw = vYJoyWithDeadband * MAX_FWD_REV_SPEED_MPS * slowMult
-            velCmdRotRaw = vRotJoyWithDeadband * MAX_ROTATE_SPEED_RAD_PER_SEC * 0.8 * slowMult
+            velCmdXRaw = vXJoyWithDeadband * self.MAX_STRAFE_SPEED_MPS * slowMult
+            velCmdYRaw = vYJoyWithDeadband * self.MAX_FWD_REV_SPEED_MPS * slowMult
+            velCmdRotRaw = vRotJoyWithDeadband * self.MAX_ROTATE_SPEED_RAD_PER_SEC * 0.8 * slowMult
 
             if self.robotRelative:
                 velCmdXRaw *= self.robotRelativeSlowdown.get()

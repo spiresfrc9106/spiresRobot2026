@@ -10,7 +10,7 @@ from choreo.trajectory import SwerveTrajectory
 
 from drivetrain.controlStrategies.autoSteer import AutoSteer
 from utils.allianceTransformUtils import transform
-from drivetrain.drivetrainPhysical import CAMS, robotToModuleTranslations
+from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from utils.autonomousTransformUtils import flip
 from wrappers.wrapperedPoseEstPhotonCamera import CameraPoseObservation
 from ntcore import NetworkTableInstance
@@ -42,6 +42,9 @@ class DrivetrainPoseTelemetry:
         self.theInterestingValue = []
         self.interestingTracker = []
 
+        p = DrivetrainPhysical()
+        self.robotToModuleTranslations = p.robotToModuleTranslations
+        CAMS = p.CAMS
         icount = 0
         for camConfig in CAMS:
             self.camPublishers.append(camConfig['PUBLISHER'])
@@ -86,10 +89,10 @@ class DrivetrainPoseTelemetry:
         self.field.getRobotObject().setPose(estPose)
         self.field.getObject("ModulePoses").setPoses(
             [
-                estPose.transformBy(Transform2d(robotToModuleTranslations[0], moduleAngles[0])),
-                estPose.transformBy(Transform2d(robotToModuleTranslations[1], moduleAngles[1])),
-                estPose.transformBy(Transform2d(robotToModuleTranslations[2], moduleAngles[2])),
-                estPose.transformBy(Transform2d(robotToModuleTranslations[3], moduleAngles[3])),
+                estPose.transformBy(Transform2d(self.robotToModuleTranslations[0], moduleAngles[0])),
+                estPose.transformBy(Transform2d(self.robotToModuleTranslations[1], moduleAngles[1])),
+                estPose.transformBy(Transform2d(self.robotToModuleTranslations[2], moduleAngles[2])),
+                estPose.transformBy(Transform2d(self.robotToModuleTranslations[3], moduleAngles[3])),
             ]
         )
 

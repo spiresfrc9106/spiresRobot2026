@@ -2,15 +2,11 @@ from wpilib import Timer
 from wpimath.geometry import Pose2d, Translation2d
 from drivetrain.controlStrategies.holonomicDriveController import HolonomicDriveController
 from drivetrain.drivetrainCommand import DrivetrainCommand
-from navigation.autoDriveNavConstants import getTransformedGoalList
 from utils.singleton import Singleton
 from navigation.repulsorFieldPlanner import RepulsorFieldPlanner, RepulsorFieldPlannerState
-from drivetrain.drivetrainPhysical import MAX_DT_LINEAR_SPEED_MPS
+from drivetrain.drivetrainPhysical import DrivetrainPhysical
 
-# Maximum speed that we'll attempt to path plan at. Needs to be at least 
-# slightly less than the maximum physical speed, so the robot can "catch up" 
-# if it gets off the planned path
-MAX_PATHPLAN_SPEED_MPS = 0.35 * MAX_DT_LINEAR_SPEED_MPS
+
 
 class AutoDrive(metaclass=Singleton):
     def __init__(self):
@@ -30,6 +26,12 @@ class AutoDrive(metaclass=Singleton):
         self.LenList = []
         self.dashboardConversionList = [9, 11, 6, 8, 3, 5, 0, 2, 15, 17, 12, 14] #used by getDashTargetPositionIndex() to convert the target numbers from the python standard to the dashboard/JS standard
         #^ Bottom is the side facing our driver station.
+
+        p = DrivetrainPhysical()
+        # Maximum speed that we'll attempt to path plan at. Needs to be at least
+        # slightly less than the maximum physical speed, so the robot can "catch up"
+        # if it gets off the planned path
+        self.MAX_PATHPLAN_SPEED_MPS = 0.35 * p.MAX_DT_LINEAR_SPEED_MPS
 
     def getGoal(self) -> Pose2d | None:
         return self.rfp.goal
@@ -156,9 +158,9 @@ class AutoDrive(metaclass=Singleton):
             # repulsor field path planner
             if(self._prevCmd is None):
                 initCmd = DrivetrainCommand(0,0,0,curPose) # TODO - init this from current odometry vel
-                self._olCmd = self.rfp.update(initCmd, MAX_PATHPLAN_SPEED_MPS*Ts, Ts)
+                self._olCmd = self.rfp.update(initCmd, self.MAX_PATHPLAN_SPEED_MPS*Ts, Ts)
             else:
-                self._olCmd = self.rfp.update(self._prevCmd, MAX_PATHPLAN_SPEED_MPS*Ts, Ts=Ts)
+                self._olCmd = self.rfp.update(self._prevCmd, self.MAX_PATHPLAN_SPEED_MPS*Ts, Ts=Ts)
 
             # Add closed loop - use the trajectory controller to add in additional 
             # velocity if we're currently far away from the desired pose

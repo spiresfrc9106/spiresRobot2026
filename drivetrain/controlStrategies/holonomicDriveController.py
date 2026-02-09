@@ -4,10 +4,7 @@ from pykit.autolog import autologgable_output
 from wpimath.controller import PIDController
 from wpimath.geometry import Pose2d
 from drivetrain.drivetrainCommand import DrivetrainCommand
-from drivetrain.drivetrainPhysical import (
-    MAX_FWD_REV_SPEED_MPS,
-    MAX_ROTATE_SPEED_RAD_PER_SEC,
-)
+from drivetrain.drivetrainPhysical import DrivetrainPhysical
 #from drivetrain.controlStrategies.autoDrive import AutoDrive
 from choreo.trajectory import SwerveSample
 from utils.calibration import Calibration
@@ -40,6 +37,11 @@ class HolonomicDriveController:
         self.rotP = Calibration(f"{name} HDC Rotation kP", 8.0)
         self.rotI = Calibration(f"{name} HDC Rotation kI", 0.0)
         self.rotD = Calibration(f"{name} HDC Rotation kD", .05)
+
+        p = DrivetrainPhysical()
+
+        self.MAX_FWD_REV_SPEED_MPS = p.MAX_FWD_REV_SPEED_MPS
+        self.MAX_ROTATE_SPEED_RAD_PER_SEC = p.MAX_ROTATE_SPEED_RAD_PER_SEC
 
         self.xFF = 0.0
         self.yFF = 0.0
@@ -124,9 +126,9 @@ class HolonomicDriveController:
         self.tFF = tFF 
 
         retVal = DrivetrainCommand()
-        retVal.velX = limit(xFF + self.xFB, MAX_FWD_REV_SPEED_MPS)
-        retVal.velY = limit(yFF + self.yFB, MAX_FWD_REV_SPEED_MPS)
-        retVal.velT = limit(tFF + self.tFB, MAX_ROTATE_SPEED_RAD_PER_SEC)
+        retVal.velX = limit(xFF + self.xFB, self.MAX_FWD_REV_SPEED_MPS)
+        retVal.velY = limit(yFF + self.yFB, self.MAX_FWD_REV_SPEED_MPS)
+        retVal.velT = limit(tFF + self.tFB, self.MAX_ROTATE_SPEED_RAD_PER_SEC)
         retVal.desPose = cmdPose
 
         return retVal

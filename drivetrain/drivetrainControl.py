@@ -3,26 +3,12 @@ from typing import Callable
 from commands2 import Command
 from wpimath.kinematics import ChassisSpeeds, SwerveModuleState
 from wpimath.geometry import Pose2d, Rotation2d
-from wpilib import Timer
+
 #from Autonomous.xyzzy.driveForwardSlowCommand import DriveForwardSlowCommand
 from drivetrain.poseEstimation.drivetrainPoseEstimator import DrivetrainPoseEstimator
 from drivetrain.swerveModuleControl import SwerveModuleControl
 from drivetrain.swerveModuleGainSet import SwerveModuleGainSet
-from drivetrain.drivetrainPhysical import (
-    FL_ENCODER_MOUNT_OFFSET_RAD,
-    MAX_FWD_REV_SPEED_MPS,
-    FR_ENCODER_MOUNT_OFFSET_RAD,
-    BL_ENCODER_MOUNT_OFFSET_RAD,
-    BR_ENCODER_MOUNT_OFFSET_RAD,
-    FL_INVERT_WHEEL_MOTOR,
-    FR_INVERT_WHEEL_MOTOR,
-    BL_INVERT_WHEEL_MOTOR,
-    BR_INVERT_WHEEL_MOTOR,
-    INVERT_AZMTH_MOTOR,
-    INVERT_AZMTH_ENCODER,
-    kinematics,
-    WHEEL_MOTOR_WRAPPER,
-)
+from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.controlStrategies.autoDrive import AutoDrive
 from drivetrain.controlStrategies.trajectory import Trajectory
@@ -40,7 +26,6 @@ from utils.constants import (DT_FL_WHEEL_CANID,
                              DT_FR_AZMTH_ENC_PORT,
                              DT_BL_AZMTH_ENC_PORT,
                              DT_BR_AZMTH_ENC_PORT)
-from westwood.util.convenientmath import deadband
 from wrappers.wrapperedGyro import wrapperedGyro
 
 class DrivetrainControl(metaclass=Singleton):
@@ -52,26 +37,33 @@ class DrivetrainControl(metaclass=Singleton):
         self.name = "dt"
         self.gyro = wrapperedGyro()
         self.modules = []
+        p = DrivetrainPhysical()
+        self.kinematics = p.kinematics
         self.modules.append(
-            SwerveModuleControl(f"{self.name}/","FL", WHEEL_MOTOR_WRAPPER, DT_FL_WHEEL_CANID, DT_FL_AZMTH_CANID, DT_FL_AZMTH_ENC_PORT,
-                                FL_ENCODER_MOUNT_OFFSET_RAD,
-                                FL_INVERT_WHEEL_MOTOR, INVERT_AZMTH_MOTOR, INVERT_AZMTH_ENCODER)
+            SwerveModuleControl(f"{self.name}/", "FL", p.WHEEL_MOTOR_WRAPPER, DT_FL_WHEEL_CANID, DT_FL_AZMTH_CANID,
+                                DT_FL_AZMTH_ENC_PORT,
+                                p.FL_ENCODER_MOUNT_OFFSET_RAD,
+                                p.FL_INVERT_WHEEL_MOTOR, p.INVERT_AZMTH_MOTOR, p.INVERT_AZMTH_ENCODER)
         )
         self.modules.append(
-            SwerveModuleControl(f"{self.name}/","FR", WHEEL_MOTOR_WRAPPER, DT_FR_WHEEL_CANID, DT_FR_AZMTH_CANID, DT_FR_AZMTH_ENC_PORT,
-                                FR_ENCODER_MOUNT_OFFSET_RAD,
-                                FR_INVERT_WHEEL_MOTOR, INVERT_AZMTH_MOTOR, INVERT_AZMTH_ENCODER)
+            SwerveModuleControl(f"{self.name}/", "FR", p.WHEEL_MOTOR_WRAPPER, DT_FR_WHEEL_CANID, DT_FR_AZMTH_CANID,
+                                DT_FR_AZMTH_ENC_PORT,
+                                p.FR_ENCODER_MOUNT_OFFSET_RAD,
+                                p.FR_INVERT_WHEEL_MOTOR, p.INVERT_AZMTH_MOTOR, p.INVERT_AZMTH_ENCODER)
         )
         self.modules.append(
-            SwerveModuleControl(f"{self.name}/","BL", WHEEL_MOTOR_WRAPPER, DT_BL_WHEEL_CANID, DT_BL_AZMTH_CANID, DT_BL_AZMTH_ENC_PORT,
-                                BL_ENCODER_MOUNT_OFFSET_RAD,
-                                BL_INVERT_WHEEL_MOTOR, INVERT_AZMTH_MOTOR, INVERT_AZMTH_ENCODER)
+            SwerveModuleControl(f"{self.name}/", "BL", p.WHEEL_MOTOR_WRAPPER, DT_BL_WHEEL_CANID, DT_BL_AZMTH_CANID,
+                                DT_BL_AZMTH_ENC_PORT,
+                                p.BL_ENCODER_MOUNT_OFFSET_RAD,
+                                p.BL_INVERT_WHEEL_MOTOR, p.INVERT_AZMTH_MOTOR, p.INVERT_AZMTH_ENCODER)
         )
         self.modules.append(
-            SwerveModuleControl(f"{self.name}/","BR", WHEEL_MOTOR_WRAPPER, DT_BR_WHEEL_CANID, DT_BR_AZMTH_CANID, DT_BR_AZMTH_ENC_PORT,
-                                BR_ENCODER_MOUNT_OFFSET_RAD,
-                                BR_INVERT_WHEEL_MOTOR, INVERT_AZMTH_MOTOR, INVERT_AZMTH_ENCODER)
+            SwerveModuleControl(f"{self.name}/", "BR", p.WHEEL_MOTOR_WRAPPER, DT_BR_WHEEL_CANID, DT_BR_AZMTH_CANID,
+                                DT_BR_AZMTH_ENC_PORT,
+                                p.BR_ENCODER_MOUNT_OFFSET_RAD,
+                                p.BR_INVERT_WHEEL_MOTOR, p.INVERT_AZMTH_MOTOR, p.INVERT_AZMTH_ENCODER)
         )
+        self.MAX_FWD_REV_SPEED_MPS = p.MAX_FWD_REV_SPEED_MPS
 
         self.coastCmd = False
 
@@ -147,10 +139,10 @@ class DrivetrainControl(metaclass=Singleton):
             desModStates = (flModState, frModState, blModState, brModState)
         else:
             # Given the current desired chassis speeds, convert to module states
-            desModStates = kinematics.toSwerveModuleStates(self.desChSpd)
+            desModStates = self.kinematics.toSwerveModuleStates(self.desChSpd)
 
         # Scale back xyzzy if one corner of the robot is going too fast
-        kinematics.desaturateWheelSpeeds(desModStates, MAX_FWD_REV_SPEED_MPS)
+        self.kinematics.desaturateWheelSpeeds(desModStates, self.MAX_FWD_REV_SPEED_MPS)
 
         # Send xyzzy to modules and update
         for idx, module in enumerate(self.modules):

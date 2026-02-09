@@ -1,9 +1,7 @@
 from wpilib import ADIS16470_IMU
 from wpimath.geometry import Rotation2d
 import navx
-from drivetrain.drivetrainDependentConstants import drivetrainDepConstants
-
-from utils.robotIdentification import RobotIdentification
+from subsystems.config.configsubsystem import ConfigSubsystem
 
 class WrapperedNoGyro():
     def __init__(self):
@@ -31,12 +29,13 @@ class WrapperedAdis16470Imu(ADIS16470_IMU):
         return Rotation2d().fromDegrees(self.getAngle(self.getYawAxis()))
 
 def wrapperedGyro():
+    c = ConfigSubsystem()
     result = None
-    if RobotIdentification().isSpiresRobot():
-        print(f'GYRO is {drivetrainDepConstants["GYRO"]}')
-        if drivetrainDepConstants["GYRO"] == "NAVX":
+    if c.isSpiresRobot():
+        print(f'GYRO is {c.drivetrainDepConstants["GYRO"]}')
+        if c.drivetrainDepConstants["GYRO"] == "NAVX":
             result = WrapperedNavx()
-        elif drivetrainDepConstants["GYRO"] == "ADIS16470_IMU":
+        elif c.drivetrainDepConstants["GYRO"] == "ADIS16470_IMU":
             result = WrapperedAdis16470Imu()
         else:
             result = WrapperedNoGyro()

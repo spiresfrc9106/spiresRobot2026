@@ -4,10 +4,7 @@ from wpilib import ADIS16470_IMU
 import wpilib
 from wpimath.estimator import SwerveDrive4PoseEstimator
 from wpimath.geometry import Pose2d, Rotation2d, Twist2d, Translation2d, Transform2d
-from drivetrain.drivetrainPhysical import (
-    kinematics,
-    CAMS,
-)
+from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.poseEstimation.drivetrainPoseTelemetry import DrivetrainPoseTelemetry
 # TODO-rms was:from navigation.autoDriveNavConstants import SCORE_DIST_FROM_REEF_CENTER
 from utils.faults import Fault
@@ -46,6 +43,7 @@ class DrivetrainPoseEstimator:
         self.cams = []
         self.posEstLogs = []
         self.includeInFilter = []
+        CAMS = DrivetrainPhysical().CAMS
         for camConfig in CAMS:
             self.cams.append(camConfig['CAM'])
             #self.posEstLogs.append(YTestForPosition(camConfig['POSE_EST_LOG_NAME']))
@@ -55,9 +53,11 @@ class DrivetrainPoseEstimator:
 
         # The kalman filter to fuse all sources of information together into a single
         # best-estimate of the pose of the field
+        self.kinematics = DrivetrainPhysical().kinematics
         self._poseEst = SwerveDrive4PoseEstimator(
-            kinematics, self._getGyroAngle(), initialModulePositions, self._curEstPose
+            self.kinematics, self._getGyroAngle(), initialModulePositions, self._curEstPose
         )
+
         self._lastModulePositions = initialModulePositions
 
         # Logging and Telemetry
@@ -114,7 +114,7 @@ class DrivetrainPoseEstimator:
         if wpilib.TimedRobot.isSimulation():
             # Simulated Gyro
             # Simulate an angle based on (simulated) motor speeds with some noise
-            chSpds = kinematics.toChassisSpeeds(curModuleSpeeds)
+            chSpds = self.kinematics.toChassisSpeeds(curModuleSpeeds)
             self._simPose = self._simPose.exp(
                 Twist2d(chSpds.vx * 0.04, chSpds.vy * 0.04, chSpds.omega * 0.04)
             )

@@ -3,8 +3,10 @@
 # It is definitely buggy and untested, but it gives us a great framework on how to control an elevator.
 
 
+from subsystems.config.configio import RobotTypes
+from subsystems.config.configsubsystem import ConfigSubsystem
+
 from utils.singleton import Singleton
-from utils.robotIdentification import RobotTypes, RobotIdentification
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
 from pykit.logger import Logger
 
@@ -31,10 +33,14 @@ class MotorDependentConstants:
                 "HAS_MOTOR_TEST": False,
                 "TEST_MOTOR_CANID": None,
             },
+            RobotTypes.Spires2026Sim: {
+                "HAS_MOTOR_TEST": False,
+                "TEST_MOTOR_CANID": None,
+            },
         }
 
     def get(self):
-        return self.motorDepConstants[RobotIdentification().getRobotType()]
+        return self.motorDepConstants[ConfigSubsystem().getRobotType()]
 
 motorDepConstants = MotorDependentConstants().get()
 

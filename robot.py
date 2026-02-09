@@ -16,11 +16,14 @@ from pykit.networktables.nt4Publisher import NT4Publisher
 from pykit.loggedrobot import LoggedRobot
 from pykit.logger import Logger
 
+from drivetrain.drivetrainDependentConstants import DrivetrainDependentConstants
 import westwood.constants
-from drivetrain.drivetrainDependentConstants import useCasseroleSwerve, useWestwoodSwerve
+
+from robotcontainer import RobotContainer
+from subsystems.config.configsubsystem import ConfigSubsystem
 from utils.calibration import CalibrationWrangler
 
-if useWestwoodSwerve():
+if DrivetrainDependentConstants().useWestwoodSwerve:
     from westwood.westwoodrobotcontainer import WestwoodRobotContainer
 from westwood.util.logtracer import LogTracer
 from westwood.util.phoenixutil import PhoenixUtil
@@ -34,7 +37,6 @@ from drivetrain.drivetrainControl import DrivetrainControl
 from humanInterface.driverInterface import DriverInterface
 from humanInterface.ledControl import LEDControl
 from humanInterface.operatorInterface import OperatorInterface
-from utils.robotIdentification import RobotIdentification
 from utils.singleton import destroyAllSingletonInstances
 from wpilib import Timer
 import wpilib
@@ -85,12 +87,14 @@ class MyRobot(LoggedRobot):
                 log_path = os.environ["LOG_PATH"]
                 log_path = os.path.abspath(log_path)
                 print(f"Starting log from {log_path}")
-                Logger.setReplaySource(WPILOGReader(log_path))
+                replaySource = WPILOGReader(log_path)
+                Logger.setReplaySource(replaySource)
                 Logger.addDataReciever(WPILOGWriter(log_path[:-7] + "_sim.wpilog"))
         Logger.start()
 
+        self.container = RobotContainer()
         self.westwoodContainer = None
-        if useWestwoodSwerve():
+        if ConfigSubsystem().useWestwoodSwerve():
             self.westwoodContainer = WestwoodRobotContainer()
 
     #########################################################
@@ -139,7 +143,6 @@ class MyRobot(LoggedRobot):
             lambda poses: Logger.recordOutput("PathPlanner/CurrentPath", poses)
         )
 
-        print(f"robot type = {RobotIdentification().getRobotType()} serialNumber={RobotIdentification().serialNumber}")
 
         #self.crashLogger = CrashLogger()
 
@@ -147,8 +150,8 @@ class MyRobot(LoggedRobot):
         # Both of these will increase CPU load by a lot, and we never use their output.
 
         self.driveTrain = None
-        print(f"useCasseroleSwerve()={useCasseroleSwerve()}")
-        if useCasseroleSwerve():
+        print(f"useCasseroleSwerve()={ConfigSubsystem().useCasseroleSwerve()}")
+        if ConfigSubsystem().useCasseroleSwerve():
             self.driveTrain = DrivetrainControl()
 
 
@@ -183,7 +186,7 @@ class MyRobot(LoggedRobot):
         #    gc.freeze()
 
         LogTracer.resetOuter("RobotPeriodic")
-        PhoenixUtil.updateSignals()
+        PhoenixUtil.updateSignals() #TODO rms - eventually remove this
         LogTracer.record("PhoenixUpdate")
         if self.westwoodContainer is not None:
             self.westwoodContainer.robotPeriodic()
@@ -201,19 +204,6 @@ class MyRobot(LoggedRobot):
         self.oInt.update()
         self.cw.update()
 
-
-        #self.shooterCtrl.update()
-
-
-        #self.autodrive.updateTelemetry()
-        #self.driveTrain.poseEst._telemetry.setCurAutoDriveWaypoints(self.autodrive.getWaypoints())
-        #self.driveTrain.poseEst._telemetry.setCurObstacles(self.autodrive.rfp.getObstacleStrengths())
-
-
-
-        #self.ledCtrl.setAutoDriveActive(self.autodrive.isRunning())
-        #self.ledCtrl.setAutoSteerActive(self.autosteer.isRunning())
-        #self.ledCtrl.setStuck(self.autodrive.rfp.isStuck())
         self.ledCtrl.update()
 
         self.count += 1

@@ -8,12 +8,10 @@ from wpimath.kinematics import SwerveModulePosition
 from wpimath.geometry import Rotation2d
 from wpimath.filter import SlewRateLimiter
 from wpilib import TimedRobot
+from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.drivetrainPhysical import wrapperedSwerveDriveAzmthEncoder
 from drivetrain.swerveModuleGainSet import SwerveModuleGainSet
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
-from drivetrain.drivetrainPhysical import dtMotorRotToLinear
-from drivetrain.drivetrainPhysical import dtLinearToMotorRot
-from drivetrain.drivetrainPhysical import MAX_FWD_REV_SPEED_MPS
 from utils.units import rad2Deg
 from pykit.logger import Logger
 
@@ -82,6 +80,11 @@ class SwerveModuleControl:
             invertAzmthMotor (bool): Inverts the steering direction of the azimuth motor
             invertAzmthEncoder (bool): Inverts the direction of the steering azimuth encoder
         """
+        p = DrivetrainPhysical()
+        self.dtMotorRotToLinear = p.dtMotorRotToLinear
+        self.dtLinearToMotorRot = p.dtLinearToMotorRot
+        self.MAX_FWD_REV_SPEED_MPS = p.MAX_FWD_REV_SPEED_MPS
+
         print(f"{moduleName} azmthOffset={rad2Deg(azmthOffset):7.1f} deg")
         self.wheelMotor = wheelMotorWrapper(
             wheelMotorCanID, subsystemName + moduleName + "/wheelMotor", False
@@ -182,10 +185,10 @@ class SwerveModuleControl:
             # Real Robot. Use the actual sensors to get data about the module.
             # Update this module's actual state with measurements from the sensors
             self.actualState.angle = Rotation2d(self.azmthEnc.getAngleRad())
-            self.actualState.speed = dtMotorRotToLinear(
+            self.actualState.speed = self.dtMotorRotToLinear(
                 self.wheelMotor.getMotorVelocityRadPerSec()
             )
-            self.actualPosition.distance = dtMotorRotToLinear(
+            self.actualPosition.distance = self.dtMotorRotToLinear(
                 self.wheelMotor.getMotorPositionRad()
             )
             self.actualPosition.angle = self.actualState.angle
@@ -205,7 +208,7 @@ class SwerveModuleControl:
         self.optimizedDesiredState.speed *= (self.optimizedDesiredState.angle - self.actualState.angle ).cos()
 
         # Send voltage and speed xyzzy to the wheel motor
-        motorDesSpd = dtLinearToMotorRot(self.optimizedDesiredState.speed)
+        motorDesSpd = self.dtLinearToMotorRot(self.optimizedDesiredState.speed)
         motorDesAccel = (motorDesSpd - self._prevMotorDesSpeed) / 0.02
         if self.wheelMotorFF is None:
             motorVoltageFF = 0
@@ -230,6 +233,6 @@ class SwerveModuleControl:
 
         Logger.recordOutput(f"{self._azmthDesTopicName}_deg", self.optimizedDesiredState.angle.degrees())
         Logger.recordOutput(f"{self._azmthActTopicName}_deg", self.actualState.angle.degrees())
-        Logger.recordOutput(f"{self._speedDesTopicName}_frac", self.optimizedDesiredState.speed / MAX_FWD_REV_SPEED_MPS)
-        Logger.recordOutput(f"{self._speedActTopicName}_frac", self.actualState.speed / MAX_FWD_REV_SPEED_MPS)
+        Logger.recordOutput(f"{self._speedDesTopicName}_frac", self.optimizedDesiredState.speed / self.MAX_FWD_REV_SPEED_MPS)
+        Logger.recordOutput(f"{self._speedActTopicName}_frac", self.actualState.speed / self.MAX_FWD_REV_SPEED_MPS)
 

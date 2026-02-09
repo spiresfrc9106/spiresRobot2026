@@ -6,7 +6,7 @@ from wpimath.system.plant import DCMotor
 from wpimath.geometry import Pose3d, Transform3d, Translation3d, Rotation3d, Rotation2d
 import wpilib
 
-from utils.robotIdentification import RobotIdentification, RobotTypes
+from subsystems.config.configio import RobotTypes
 from utils.singleton import Singleton
 from wrappers.wrapperedPoseEstPhotonCamera import WrapperedPoseEstPhotonCamera
 from wrappers.wrapperedLimelightCamera import wrapperedLimilightCameraFactory
@@ -49,9 +49,9 @@ ROBOT_TO_LIME_1 = Transform3d(
 #     ROBOT_TO_LIME_1 = Pose3d(Translation3d(0,0,0), Rotation3d(Rotation2d(0)))
 
 
-class CameraDependentConstants:
+class CameraDependentConstants(metaclass=Singleton):
     def __init__(self):
-        self.drivetrainConstants = {
+        self.limelightPipelineConstants = {
             RobotTypes.Spires2023: {
                 "LL_PIPELINE": 2,
             },
@@ -67,106 +67,59 @@ class CameraDependentConstants:
             RobotTypes.SpiresRoboRioV1: {
                 "LL_PIPELINE": 1,
             },
+            RobotTypes.Spires2026Sim: {
+                "LL_PIPELINE": 1,
+            },
         }
 
-    def get(self):
-        return self.drivetrainConstants[RobotIdentification().getRobotType()]
+    def get(self, robotType: RobotTypes):
+        return self.limelightPipelineConstants[robotType]
 
-
-cameraDepConstants = CameraDependentConstants().get()
-
-COMMON_CAMS = [
-    # {
-    #     "CAM": WrapperedPoseEstPhotonCamera("RIGHT_CAM", ROBOT_TO_RIGHT_CAM),
-    #     "POSE_EST_LOG_NAME": "photonR",
-    #     "PUBLISHER":
-    #         (
-    #             NetworkTableInstance.getDefault()
-    #             .getStructTopic("/RightCamPose", Pose3d)
-    #             .publish()
-    #         ),
-    #     "ROBOT_TO_CAM": ROBOT_TO_RIGHT_CAM,
-    #     "WEIGH_IN_FILTER": False,
-    #     "USE_IN_TC_FRONT": False,
-    #     "USE_IN_TC_BACK": False,
-    # },
-    # {
-    #     "CAM": WrapperedPoseEstPhotonCamera("LEFT_CAM", ROBOT_TO_LEFT_CAM),
-    #     "POSE_EST_LOG_NAME": "photonL",
-    #     "PUBLISHER":
-    #         (
-    #             NetworkTableInstance.getDefault()
-    #             .getStructTopic("/LeftCamPose", Pose3d)
-    #             .publish()
-    #         ),
-    #     "ROBOT_TO_CAM": ROBOT_TO_LEFT_CAM,
-    #     "WEIGH_IN_FILTER": False,
-    #     "USE_IN_TC_FRONT": False,
-    #     "USE_IN_TC_BACK": False,
-    # },
-    # {
-    #     "CAM": WrapperedPoseEstPhotonCamera("FRONT_CAM", ROBOT_TO_FRONT_CAM),
-    #     "POSE_EST_LOG_NAME": "photonF",
-    #     "PUBLISHER":
-    #         (
-    #             NetworkTableInstance.getDefault()
-    #             .getStructTopic("/FrontCamPose", Pose3d)
-    #             .publish()
-    #         ),
-    #     "ROBOT_TO_CAM": ROBOT_TO_FRONT_CAM,
-    #     "WEIGH_IN_FILTER": False,
-    #     "USE_IN_TC_FRONT": False,
-    #     "USE_IN_TC_BACK": False,
-    # },
-    # {
-    #     "CAM": wrapperedLimilightCameraFactory("limelight-br", ROBOT_TO_LIME_1, cameraDepConstants['LL_PIPELINE']),
-    #     "POSE_EST_LOG_NAME": "limeli-br",
-    #     "PUBLISHER":
-    #         (
-    #             NetworkTableInstance.getDefault()
-    #             .getStructTopic("/Limili-brPose", Pose3d)
-    #             .publish()
-    #         ),
-    #     "ROBOT_TO_CAM": ROBOT_TO_LIME_1,
-    #     "WEIGH_IN_FILTER": True,
-    #     "USE_IN_TC_FRONT": False,
-    #     "USE_IN_TC_BACK": True,
-    # },
-    {
-        "CAM": wrapperedLimilightCameraFactory("limelight-fl", ROBOT_TO_LIME_1, cameraDepConstants['LL_PIPELINE']),
-        "POSE_EST_LOG_NAME": "limeli-fl",
-        "PUBLISHER":
-            (
-                NetworkTableInstance.getDefault()
-                .getStructTopic("/Limili-flPose", Pose3d)
-                .publish()
-            ),
-        "ROBOT_TO_CAM": ROBOT_TO_LIME_1,
-        "WEIGH_IN_FILTER": True,
-        "USE_IN_TC_FRONT": True,
-        "USE_IN_TC_BACK": False,
-    },
-    {
-        "CAM": wrapperedLimilightCameraFactory("limelight-fr", ROBOT_TO_LIME_1, cameraDepConstants['LL_PIPELINE']),
-        "POSE_EST_LOG_NAME": "limeli-fr",
-        "PUBLISHER":
-            (
-                NetworkTableInstance.getDefault()
-                .getStructTopic("/Limili-frPose", Pose3d)
-                .publish()
-            ),
-        "ROBOT_TO_CAM": ROBOT_TO_LIME_1,
-        "WEIGH_IN_FILTER": True,
-        "USE_IN_TC_FRONT": True,
-        "USE_IN_TC_BACK": False,
-    },
-]
 
 class DrivetrainDependentConstants(metaclass=Singleton):
     def __init__(self):
         self.useCasseroleSwerve = True
         self.useWestwoodSwerve = False
-        self.drivetrainConstants = {
+        self.cameraDepConstants = CameraDependentConstants()
+        print(f"DrivetrainDependentConstants __init__ self={id(self)}")
+
+    def getCommonCams(self, robotType: RobotTypes):
+        COMMON_CAMS = [
+            {
+                "CAM": wrapperedLimilightCameraFactory("limelight-fl", ROBOT_TO_LIME_1,
+                                                       self.cameraDepConstants.get(robotType)['LL_PIPELINE']),
+                "POSE_EST_LOG_NAME": "limeli-fl",
+                "PUBLISHER":
+                    (
+                        NetworkTableInstance.getDefault()
+                        .getStructTopic("/Limili-flPose", Pose3d)
+                        .publish()
+                    ),
+                "ROBOT_TO_CAM": ROBOT_TO_LIME_1,
+                "WEIGH_IN_FILTER": True,
+                "USE_IN_TC_FRONT": True,
+                "USE_IN_TC_BACK": False,
+            },
+            {
+                "CAM": wrapperedLimilightCameraFactory("limelight-fr", ROBOT_TO_LIME_1,
+                                                       self.cameraDepConstants.get(robotType)['LL_PIPELINE']),
+                "POSE_EST_LOG_NAME": "limeli-fr",
+                "PUBLISHER":
+                    (
+                        NetworkTableInstance.getDefault()
+                        .getStructTopic("/Limili-frPose", Pose3d)
+                        .publish()
+                    ),
+                "ROBOT_TO_CAM": ROBOT_TO_LIME_1,
+                "WEIGH_IN_FILTER": True,
+                "USE_IN_TC_FRONT": True,
+                "USE_IN_TC_BACK": False,
+            },
+        ]
+        return COMMON_CAMS
+
+    def getDivetrainConstants(self, robotType: RobotTypes):
+        drivetrainConstants = {
             RobotTypes.Spires2023: {
                 "WHEEL_MOTOR_WRAPPER": WrapperedSparkMax,
                 "SWERVE_WHEEL_GEAR_RATIO": 5.50,   # Base Low
@@ -182,7 +135,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "BL_OFFSET_DEG": -56.2+180,
                 "BR_OFFSET_DEG": -11.2-90+180,
                 "GYRO": "NAVX", # "NAVX", # "ADIS16470_IMU",
-                "CAMS": COMMON_CAMS,
+                "CAMS": self.getCommonCams(RobotTypes.Spires2023),
                 "HAS_DRIVETRAIN": True,
                 "USE_PHOTON_NAV": False,
                 "SPEED_MULTIPLIER": 3,
@@ -202,7 +155,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "BL_OFFSET_DEG": 125.4-180-2,
                 "BR_OFFSET_DEG": 117.5-90-180-155,
                 "GYRO": "ADIS16470_IMU",
-                "CAMS": COMMON_CAMS,
+                "CAMS": self.getCommonCams(RobotTypes.Spires2025),
                 "HAS_DRIVETRAIN": True,
                 "USE_PHOTON_NAV": True,
                 "SPEED_MULTIPLIER": 2,
@@ -221,7 +174,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "FR_OFFSET_DEG": 0,
                 "BL_OFFSET_DEG": 0,
                 "BR_OFFSET_DEG": 0,
-                "CAMS": COMMON_CAMS,
+                "CAMS": self.getCommonCams(RobotTypes.Spires2025Sim),
                 "GYRO": "ADIS16470_IMU",
                 "HAS_DRIVETRAIN": True,
                 "USE_PHOTON_NAV": True,
@@ -267,17 +220,34 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "USE_PHOTON_NAV": False,
                 "SPEED_MULTIPLIER": 2,
             },
+            RobotTypes.Spires2026Sim: {
+                "WHEEL_MOTOR_WRAPPER": WrapperedSparkFlex,
+                # "SWERVE_WHEEL_GEAR_RATIO": 5.50, # Base Low
+                # "SWERVE_WHEEL_GEAR_RATIO": 5.08, # Base Medium
+                "SWERVE_WHEEL_GEAR_RATIO": 4.71,  # Base High
+                "SWERVE_WHEEL_DIAMETER_IN": 3.0,
+                "SWERVE_WHEEL_MAX_SPEED_RPS": DCMotor.neoVortex(1).freeSpeed,
+                "WIDTH": 22.5,
+                "LENGTH": 26.5,
+                "MASS_LBS": 60,
+                "FL_OFFSET_DEG": 0,
+                "FR_OFFSET_DEG": 0,
+                "BL_OFFSET_DEG": 0,
+                "BR_OFFSET_DEG": 0,
+                "CAMS": self.getCommonCams(RobotTypes.SpiresTestBoard),
+                "GYRO": "ADIS16470_IMU",
+                "HAS_DRIVETRAIN": True,
+                "USE_PHOTON_NAV": True,
+                "SPEED_MULTIPLIER": 2,
+            },
         }
+        return drivetrainConstants
 
-    def get(self):
-        return self.drivetrainConstants[RobotIdentification().getRobotType()]
+    def get(self, robotType: RobotTypes):
+        x = self.getDivetrainConstants(robotType)
+        z = robotType
+        y = x[z]
+        return y
 
 
 
-drivetrainDepConstants = DrivetrainDependentConstants().get()
-
-def useCasseroleSwerve()->bool:
-    return drivetrainDepConstants["HAS_DRIVETRAIN"] and DrivetrainDependentConstants().useCasseroleSwerve
-
-def useWestwoodSwerve()->bool:
-    return drivetrainDepConstants["HAS_DRIVETRAIN"] and DrivetrainDependentConstants().useWestwoodSwerve

@@ -1,8 +1,9 @@
 from wpimath.geometry import Pose2d, Rotation2d, Transform2d
 from utils.constants import blueTowerLocation, redTowerLocation
 from wpimath.units import inchesToMeters
-from drivetrain.drivetrainPhysical import WHEEL_BASE_HALF_LENGTH_M, BUMPER_THICKNESS_M
+from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from utils.allianceTransformUtils import onRed
+from utils.singleton import Singleton
 
 """
 Constants related to navigation
@@ -81,66 +82,69 @@ TOWER_HALF_LENGTH = inchesToMeters(23.00)
 # Distance needed to position climbing mechanism
 CLIMBER_DIST_IN_ROBOT = inchesToMeters(12) # Needs to be measured when robot is built
 
-# Distance we want to be from the tower while scoring
-# Sum of tower over hang and robot size.
-# This might need to change since I don't know how exactly the climb
-# works at time of writing
-CLIMB_DIST_FROM_TOWER_CENTER = \
-    TOWER_HALF_LENGTH + \
-    WHEEL_BASE_HALF_LENGTH_M + \
-    BUMPER_THICKNESS_M
+class AutoDriveNavConstants(metaclass=Singleton):
+    def __init__(self):
+        # Distance we want to be from the tower while scoring
+        # Sum of tower over hang and robot size.
+        # This might need to change since I don't know how exactly the climb
+        # works at time of writing
+        p = DrivetrainPhysical()
+        CLIMB_DIST_FROM_TOWER_CENTER = \
+            TOWER_HALF_LENGTH + \
+            p.WHEEL_BASE_HALF_LENGTH_M + \
+            p.BUMPER_THICKNESS_M
 
-# Pre-calculate blue tower positions
-_goalListCacheBlue = []
-for idx, rot in enumerate(TOWER_ROTS):
-    # start at the reef location, pointed in the right direction.
-    tmp = Pose2d(blueTowerLocation, rot)
-    # Transform to the score locations
+        # Pre-calculate blue tower positions
+        self._goalListCacheBlue = []
+        for idx, rot in enumerate(TOWER_ROTS):
+            # start at the reef location, pointed in the right direction.
+            tmp = Pose2d(blueTowerLocation, rot)
+            # Transform to the score locations
 
-    # Nominal Y distance from center of tower
-    yOffset = -1.0 * CLIMB_DIST_FROM_TOWER_CENTER
+            # Nominal Y distance from center of tower
+            yOffset = -1.0 * CLIMB_DIST_FROM_TOWER_CENTER
 
-    # Fudged
-    yOffset += FUDGE_DIST_Y_BLUE_TOW
+            # Fudged
+            yOffset += FUDGE_DIST_Y_BLUE_TOW
 
-    # Nominal X distance
-    xOffset = CLIMBER_DIST_IN_ROBOT
+            # Nominal X distance
+            xOffset = CLIMBER_DIST_IN_ROBOT
 
-    # Fudge the climber mechanism distance
-    xOffset += FUDGE_DIST_X_BLUE_TOW
+            # Fudge the climber mechanism distance
+            xOffset += FUDGE_DIST_X_BLUE_TOW
 
-    # Does this need to just be a translation?
-    tmp = tmp.transformBy(Transform2d(xOffset, yOffset, Rotation2d()))
-    _goalListCacheBlue.append(tmp)
+            # Does this need to just be a translation?
+            tmp = tmp.transformBy(Transform2d(xOffset, yOffset, Rotation2d()))
+            self._goalListCacheBlue.append(tmp)
 
 
-# Pre-calculate red tower positions
-_goalListCacheRed = []
-for idx, rot in enumerate(TOWER_ROTS):
-    # start at the reef location, pointed in the right direction.
-    rot = Rotation2d.fromDegrees(180) + rot # Invert for other side of the field
-    tmp = Pose2d(redTowerLocation, rot)
-    # Transform to the score locations
+        # Pre-calculate red tower positions
+        self._goalListCacheRed = []
+        for idx, rot in enumerate(TOWER_ROTS):
+            # start at the reef location, pointed in the right direction.
+            rot = Rotation2d.fromDegrees(180) + rot # Invert for other side of the field
+            tmp = Pose2d(redTowerLocation, rot)
+            # Transform to the score locations
 
-    # Nominal distance from center
-    yOffset = -1.0 * CLIMB_DIST_FROM_TOWER_CENTER
+            # Nominal distance from center
+            yOffset = -1.0 * CLIMB_DIST_FROM_TOWER_CENTER
 
-    # Fudged
-    yOffset += FUDGE_DIST_Y_RED_TOW
+            # Fudged
+            yOffset += FUDGE_DIST_Y_RED_TOW
 
-    # Nominal X distance
-    xOffset = CLIMBER_DIST_IN_ROBOT
+            # Nominal X distance
+            xOffset = CLIMBER_DIST_IN_ROBOT
 
-    # Fudge the left/right distance
-    xOffset += FUDGE_DIST_X_RED_TOW
+            # Fudge the left/right distance
+            xOffset += FUDGE_DIST_X_RED_TOW
 
-    tmp = tmp.transformBy(Transform2d(xOffset, yOffset, Rotation2d()))
-    _goalListCacheRed.append(tmp)
+            tmp = tmp.transformBy(Transform2d(xOffset, yOffset, Rotation2d()))
+            self._goalListCacheRed.append(tmp)
 
-# NOTE - This function returns goals ALREADY transformed to the correct side.
-# You do NOT need to call transform again on the result of poses
-def getTransformedGoalList() -> list[Pose2d]:
-    if(onRed()):
-        return _goalListCacheRed
-    else:
-        return _goalListCacheBlue
+    # NOTE - This function returns goals ALREADY transformed to the correct side.
+    # You do NOT need to call transform again on the result of poses
+    def getTransformedGoalList(self) -> list[Pose2d]:
+        if(onRed()):
+            return self._goalListCacheRed
+        else:
+            return self._goalListCacheBlue
