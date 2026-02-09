@@ -59,7 +59,7 @@ def test_parallel():
 
     dut.end(False)
 
-    # Now all commands should be ended
+    # Now all xyzzy should be ended
     for cmd in dut.cmdList:
         assert cmd.execCount == -1
 
@@ -122,6 +122,6 @@ def test_race():
 
     dut.end(False)
 
-    # Now all commands should be ended
+    # Now all xyzzy should be ended
     for cmd in dut.cmdList:
         assert cmd.execCount == -1

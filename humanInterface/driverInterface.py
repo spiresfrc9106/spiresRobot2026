@@ -1,16 +1,15 @@
+from pykit.autolog import autologgable_output, autolog_output
+
 from drivetrain.drivetrainCommand import DrivetrainCommand
-from drivetrain.drivetrainPhysical import MAX_FWD_REV_SPEED_MPS,MAX_STRAFE_SPEED_MPS,\
-MAX_ROTATE_SPEED_RAD_PER_SEC,MAX_TRANSLATE_ACCEL_MPS2,MAX_ROTATE_ACCEL_RAD_PER_SEC_2
+from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from utils.allianceTransformUtils import onRed
 from utils.faults import Fault
-from utils.signalLogging import addLog
 from wpimath import applyDeadband
 from wpimath.filter import SlewRateLimiter
-from wpilib import XboxController
-from wpilib import DriverStation
+from wpilib import DriverStation, RobotController, XboxController
 from utils.calibration import Calibration
-from fuelSystems.shooterControl import ShooterController 
 
+@autologgable_output
 class DriverInterface:
     """Class to gather input from the driver of the robot"""
 
@@ -20,42 +19,55 @@ class DriverInterface:
         self.ctrl = XboxController(ctrlIdx)
         self.connectedFault = Fault(f"Driver XBox controller ({ctrlIdx}) unplugged")
 
-        # Drivetrain motion commands
-        self.velXCmd = 0
-        self.velYCmd = 0
-        self.velTCmd = 0
+        # Drivetrain motion xyzzy
+        self.velXCmd = 0.0
+        self.velYCmd = 0.0
+        self.velTCmd = 0.0
 
         self.robotRelativeSlowdown = Calibration(name="Robot Relative Slowdown", default=.5, units="%")
 
-        # Driver motion rate limiters - enforce smoother driving
-        self.velXSlewRateLimiter = SlewRateLimiter(rateLimit=MAX_TRANSLATE_ACCEL_MPS2)
-        self.velYSlewRateLimiter = SlewRateLimiter(rateLimit=MAX_TRANSLATE_ACCEL_MPS2)
-        self.velTSlewRateLimiter = SlewRateLimiter(rateLimit=MAX_ROTATE_ACCEL_RAD_PER_SEC_2)
+        p = DrivetrainPhysical()
+        self.MAX_FWD_REV_SPEED_MPS = p.MAX_FWD_REV_SPEED_MPS
+        self.MAX_STRAFE_SPEED_MPS = p.MAX_STRAFE_SPEED_MPS
 
-        # Navigation commands
+        self.MAX_ROTATE_SPEED_RAD_PER_SEC = p.MAX_ROTATE_SPEED_RAD_PER_SEC
+
+        self.MAX_TRANSLATE_ACCEL_MPS2 = p.MAX_TRANSLATE_ACCEL_MPS2
+        self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2 = p.MAX_ROTATE_ACCEL_RAD_PER_SEC_2
+
+        # Driver motion rate limiters - enforce smoother driving
+        self.velXSlewRateLimiter = SlewRateLimiter(rateLimit=self.MAX_TRANSLATE_ACCEL_MPS2)
+        self.velYSlewRateLimiter = SlewRateLimiter(rateLimit=self.MAX_TRANSLATE_ACCEL_MPS2)
+        self.velTSlewRateLimiter = SlewRateLimiter(rateLimit=self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2)
+
+        # Navigation xyzzy
         self.autoDriveCmd = False
 
         # Utility - reset to zero-angle at the current pose
         self.gyroResetCmd = False
 
-        #utility - use robot-relative commands
+        #utility - use robot-relative xyzzy
         self.robotRelative = False
 
         self.autoSteerEnable = True
 
         #Shooter stuff
-        self.shooterCtrl = ShooterController()
+        #self.shooterCtrl = ShooterController()
 
         self.shootCmd = False
 
-        # Logging
-        addLog("DI FwdRev Cmd", lambda: self.velXCmd, "mps")
-        addLog("DI Strafe Cmd", lambda: self.velYCmd, "mps")
-        addLog("DI Rot Cmd", lambda: self.velTCmd, "radps")
-        addLog("DI AutoSteer Enable", lambda: self.autoSteerEnable, "radps")
-        #addLog("DI gyroResetCmd", lambda: self.gyroResetCmd, "bool")
-        #addLog("DI autoDriveToSpeaker", lambda: self.autoDriveToSpeaker, "bool")
-        #addLog("DI autoDriveToPickup", lambda: self.autoDriveToPickup, "bool")
+    @autolog_output(key="di/velXCmd_mps")
+    def getVelXCmd(self) -> float:
+        return self.velXCmd
+    @autolog_output(key="di/velYCmd_mps")
+    def getVelYCmd(self) -> float:
+        return self.velYCmd
+    @autolog_output(key="di/velTCmd_radps")
+    def getVelTCmd(self) -> float:
+        return self.velTCmd
+    @autolog_output(key="di/autoSteerEnable")
+    def getAutoSteerEnable(self) -> bool:
+        return self.autoSteerEnable
 
     def update(self):
         # value of contoller buttons
@@ -75,17 +87,16 @@ class DriverInterface:
                     vYJoyRaw *= -1.0
 
             # deadband
-            vXJoyWithDeadband = applyDeadband(vXJoyRaw, 0.1)
+            vXJoyWithDeadband = applyDeadband(vXJoyRaw, 0.05)
             vYJoyWithDeadband = applyDeadband(vYJoyRaw, 0.05)
             vRotJoyWithDeadband = applyDeadband(vRotJoyRaw, 0.05)
 
-            # TODO - if the driver wants a slow or sprint button, add it here.
-            slowMult = 1.0 if (self.ctrl.getRightBumper()) else 0.47
+            slowMult = 1.0 if (self.ctrl.getRightBumper()) else 0.4
 
             # Shape velocity command
-            velCmdXRaw = vXJoyWithDeadband * MAX_STRAFE_SPEED_MPS * slowMult
-            velCmdYRaw = vYJoyWithDeadband * MAX_FWD_REV_SPEED_MPS * slowMult
-            velCmdRotRaw = vRotJoyWithDeadband * MAX_ROTATE_SPEED_RAD_PER_SEC * 0.8
+            velCmdXRaw = vXJoyWithDeadband * self.MAX_STRAFE_SPEED_MPS * slowMult
+            velCmdYRaw = vYJoyWithDeadband * self.MAX_FWD_REV_SPEED_MPS * slowMult
+            velCmdRotRaw = vRotJoyWithDeadband * self.MAX_ROTATE_SPEED_RAD_PER_SEC * 0.8 * slowMult
 
             if self.robotRelative:
                 velCmdXRaw *= self.robotRelativeSlowdown.get()
@@ -111,15 +122,16 @@ class DriverInterface:
                 pass
 
             self.shootCmd = self.ctrl.getBButton()
+            """
             if self.shootCmd:
                 self.shooterCtrl.enableShooting()
             else:
                 self.shooterCtrl.disableShooting()
-            
+            """
             self.connectedFault.setNoFault()
 
         else:
-            # If the joystick is unplugged, pick safe-state commands and raise a fault
+            # If the joystick is unplugged, pick safe-state xyzzy and raise a fault
             self.velXCmd = 0.0
             self.velYCmd = 0.0
             self.velTCmd = 0.0
@@ -128,9 +140,10 @@ class DriverInterface:
             self.robotRelative = False
             self.createDebugObstacle = False
             self.shootCmd = False
-            self.shooterCtrl.disableShooting()
+            #self.shooterCtrl.disableShooting()
             if(DriverStation.isFMSAttached()):
                 self.connectedFault.setFaulted()
+        print(f"Driver Interface:{RobotController.getFPGATime()/1e6:7.3f} {self.velXCmd:7.2f} {self.velYCmd:7.2f} {self.velTCmd:7.2f}")
 
     def getCmd(self) -> DrivetrainCommand:
         retval = DrivetrainCommand()

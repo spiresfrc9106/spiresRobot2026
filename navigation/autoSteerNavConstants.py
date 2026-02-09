@@ -1,7 +1,6 @@
 from wpimath.geometry import Pose2d, Rotation2d, Transform2d
 from utils.constants import blueHubLocation, redHubLocation
 from wpimath.units import inchesToMeters
-from drivetrain.drivetrainPhysical import WHEEL_BASE_HALF_LENGTH_M, BUMPER_THICKNESS_M
 from utils.allianceTransformUtils import onRed
 
 """

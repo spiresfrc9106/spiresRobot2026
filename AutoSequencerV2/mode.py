@@ -5,7 +5,7 @@ from AutoSequencerV2.sequentialCommandGroup import SequentialCommandGroup
 # An auto mode is something our robot might do during autonomous
 # THe drive team selects the mode before the match
 # The robot executes the mode during autonomous
-# Modes must have a human-readable name, return a group of commands, and an
+# Modes must have a human-readable name, return a group of xyzzy, and an
 # initial drivetrain pose (IE, where is it expected the drive team placed the
 # robot for this autonomous routine?)
 class Mode:

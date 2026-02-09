@@ -1,5 +1,4 @@
 from utils.faults import Fault
-from utils.signalLogging import addLog
 from wpilib import DriverStation, XboxController
 from utils.mapLookup2d import MapLookup2D
 
@@ -21,6 +20,6 @@ class OperatorInterface:
             self.connectedFault.setNoFault()
 
         else:
-            # If the joystick is unplugged, pick safe-state commands and raise a fault
+            # If the joystick is unplugged, pick safe-state xyzzy and raise a fault
             if(DriverStation.isFMSAttached()):
                 self.connectedFault.setFaulted()

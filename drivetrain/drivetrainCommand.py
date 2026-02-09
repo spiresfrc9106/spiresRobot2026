@@ -10,13 +10,13 @@ class DrivetrainCommand:
     Usually comes from a human driver, but could be from an autonomous momde or assist feature.
     """
     velX:float = 0.0  # Field X velocity in meters/sec
-    velY:float = 0.0  # Field Y velocity in meters/secS
+    velY:float = 0.0  # Field Y velocity in meters/sec
     velT:float = 0.0  # Rotational speed in rad/sec
     desPose:Pose2d = field(default_factory = lambda: Pose2d())  # Current desired pose of the drivetrain
 
     def scaleBy(self, scale:float):
         """
-        Scale all motion commands by a single factor
+        Scale all motion xyzzy by a single factor
         """
         self.velX *= scale
         self.velY *= scale

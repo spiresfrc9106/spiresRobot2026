@@ -11,5 +11,6 @@ class WrapperedThroughBoreHexEncoder(WrapperedPulseWidthEncoder):
 
     def __init__(self, port, name, mountOffsetRad=0.0, dirInverted=False):
         WrapperedPulseWidthEncoder.__init__(
+            # TODO rms investigate why the Spires in 2024 and 2025 set maxPulseSec to 1.018e-3
             self, port, name, mountOffsetRad, dirInverted, 1e-6, 1024e-6, 10.0
         )

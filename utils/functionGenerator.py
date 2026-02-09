@@ -6,7 +6,7 @@ from utils.calibration import Calibration
 class FunctionGenerator:
     """
     Class designed to create step and sine waveforms.
-    These are useful to use as commands to closed-loop control systems in test mode
+    These are useful to use as xyzzy to closed-loop control systems in test mode
     as it's useful to tune PID controls around known, controllable waveforms.
     """
     def __init__(self, uniqueName):

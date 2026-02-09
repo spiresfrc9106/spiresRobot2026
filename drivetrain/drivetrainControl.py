@@ -1,17 +1,14 @@
-from wpimath.kinematics import ChassisSpeeds
+from typing import Callable
+
+from commands2 import Command
+from wpimath.kinematics import ChassisSpeeds, SwerveModuleState
 from wpimath.geometry import Pose2d, Rotation2d
-from drivetrain.controlStrategies.autoSteer import AutoSteer
+
+#from Autonomous.xyzzy.driveForwardSlowCommand import DriveForwardSlowCommand
 from drivetrain.poseEstimation.drivetrainPoseEstimator import DrivetrainPoseEstimator
 from drivetrain.swerveModuleControl import SwerveModuleControl
 from drivetrain.swerveModuleGainSet import SwerveModuleGainSet
-from drivetrain.drivetrainPhysical import (
-    FL_ENCODER_MOUNT_OFFSET_RAD,
-    MAX_FWD_REV_SPEED_MPS,
-    FR_ENCODER_MOUNT_OFFSET_RAD,
-    BL_ENCODER_MOUNT_OFFSET_RAD,
-    BR_ENCODER_MOUNT_OFFSET_RAD,
-    kinematics,
-)
+from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.controlStrategies.autoDrive import AutoDrive
 from drivetrain.controlStrategies.trajectory import Trajectory
@@ -29,6 +26,7 @@ from utils.constants import (DT_FL_WHEEL_CANID,
                              DT_FR_AZMTH_ENC_PORT,
                              DT_BL_AZMTH_ENC_PORT,
                              DT_BR_AZMTH_ENC_PORT)
+from wrappers.wrapperedGyro import wrapperedGyro
 
 class DrivetrainControl(metaclass=Singleton):
     """
@@ -36,24 +34,38 @@ class DrivetrainControl(metaclass=Singleton):
     """
 
     def __init__(self):
+        self.name = "dt"
+        self.gyro = wrapperedGyro()
         self.modules = []
+        p = DrivetrainPhysical()
+        self.kinematics = p.kinematics
         self.modules.append(
-            SwerveModuleControl("FL", DT_FL_WHEEL_CANID, DT_FL_AZMTH_CANID, DT_FL_AZMTH_ENC_PORT, 
-                                FL_ENCODER_MOUNT_OFFSET_RAD, False, True)
+            SwerveModuleControl(f"{self.name}/", "FL", p.WHEEL_MOTOR_WRAPPER, DT_FL_WHEEL_CANID, DT_FL_AZMTH_CANID,
+                                DT_FL_AZMTH_ENC_PORT,
+                                p.FL_ENCODER_MOUNT_OFFSET_RAD,
+                                p.FL_INVERT_WHEEL_MOTOR, p.INVERT_AZMTH_MOTOR, p.INVERT_AZMTH_ENCODER)
         )
         self.modules.append(
-            SwerveModuleControl("FR", DT_FR_WHEEL_CANID, DT_FR_AZMTH_CANID, DT_FR_AZMTH_ENC_PORT, 
-                                FR_ENCODER_MOUNT_OFFSET_RAD, True, True)
+            SwerveModuleControl(f"{self.name}/", "FR", p.WHEEL_MOTOR_WRAPPER, DT_FR_WHEEL_CANID, DT_FR_AZMTH_CANID,
+                                DT_FR_AZMTH_ENC_PORT,
+                                p.FR_ENCODER_MOUNT_OFFSET_RAD,
+                                p.FR_INVERT_WHEEL_MOTOR, p.INVERT_AZMTH_MOTOR, p.INVERT_AZMTH_ENCODER)
         )
+        self.modules.append(
+            SwerveModuleControl(f"{self.name}/", "BL", p.WHEEL_MOTOR_WRAPPER, DT_BL_WHEEL_CANID, DT_BL_AZMTH_CANID,
+                                DT_BL_AZMTH_ENC_PORT,
+                                p.BL_ENCODER_MOUNT_OFFSET_RAD,
+                                p.BL_INVERT_WHEEL_MOTOR, p.INVERT_AZMTH_MOTOR, p.INVERT_AZMTH_ENCODER)
+        )
+        self.modules.append(
+            SwerveModuleControl(f"{self.name}/", "BR", p.WHEEL_MOTOR_WRAPPER, DT_BR_WHEEL_CANID, DT_BR_AZMTH_CANID,
+                                DT_BR_AZMTH_ENC_PORT,
+                                p.BR_ENCODER_MOUNT_OFFSET_RAD,
+                                p.BR_INVERT_WHEEL_MOTOR, p.INVERT_AZMTH_MOTOR, p.INVERT_AZMTH_ENCODER)
+        )
+        self.MAX_FWD_REV_SPEED_MPS = p.MAX_FWD_REV_SPEED_MPS
 
-        self.modules.append(
-            SwerveModuleControl("BL", DT_BL_WHEEL_CANID, DT_BL_AZMTH_CANID, DT_BL_AZMTH_ENC_PORT, 
-                                BL_ENCODER_MOUNT_OFFSET_RAD, True, True)
-        )
-        self.modules.append(
-            SwerveModuleControl("BR", DT_BR_WHEEL_CANID, DT_BR_AZMTH_CANID, DT_BR_AZMTH_ENC_PORT, 
-                                BR_ENCODER_MOUNT_OFFSET_RAD, False, True)
-        )
+        self.coastCmd = False
 
         self.desChSpd = ChassisSpeeds()
         self.curDesPose = Pose2d()
@@ -64,18 +76,14 @@ class DrivetrainControl(metaclass=Singleton):
 
         self.useRobotRelative = False
 
-        self.gainsFL = SwerveModuleGainSet()
-        self.gainsFR = SwerveModuleGainSet()
-        self.gainsBL = SwerveModuleGainSet()
-        self.gainsBR = SwerveModuleGainSet()
-        #All swerve were can have independent power
+        self.gainsSwerveModule = SwerveModuleGainSet()
 
-        self.poseEst = DrivetrainPoseEstimator(self.getModulePositions())
+        self.poseEst = DrivetrainPoseEstimator(self.getModulePositions(), self.gyro)
 
         self._updateAllCals()
 
-    def setManualCmd(self, cmd: DrivetrainCommand, robotRel):
-        """Send commands to the robot for motion relative to the field
+    def setManualCmd(self, cmd: DrivetrainCommand, robotRel=False):
+        """Send xyzzy to the robot for motion relative to the field
 
         Args:
             cmd (DrivetrainCommand): manual command input
@@ -84,6 +92,9 @@ class DrivetrainControl(metaclass=Singleton):
         self.curManCmd = cmd
         self.useRobotRelative = robotRel
 
+    def setCoastCmd(self, coast:bool):
+        self.coastCmd = coast
+
     def update(self):
         """
         Main periodic update, should be called every 40ms
@@ -91,7 +102,7 @@ class DrivetrainControl(metaclass=Singleton):
         curEstPose = self.poseEst.getCurEstPose()
 
         # Iterate through all strategies for controlling the drivetrain to
-        # calculate the current drivetrain commands.
+        # calculate the current drivetrain xyzzy.
 
         self.curCmd = self.curManCmd
         self.curCmd = Trajectory().update(self.curCmd, curEstPose)
@@ -113,13 +124,27 @@ class DrivetrainControl(metaclass=Singleton):
         self.poseEst._telemetry.setDesiredPose(self.curCmd.desPose)
         self.poseEst._telemetry.setAutoDriveGoalPose(AutoDrive().getGoal())
 
-        # Given the current desired chassis speeds, convert to module states
-        desModStates = kinematics.toSwerveModuleStates(self.desChSpd)
+        # pylint: disable=condition-evals-to-constant
+        if (False and
+            abs(self.desChSpd.vx) < 0.01 and
+            abs(self.desChSpd.vy) < 0.01 and
+            abs(self.desChSpd.omega) < 0.01 and
+            not self.coastCmd):
 
-        # Scale back commands if one corner of the robot is going too fast
-        kinematics.desaturateWheelSpeeds(desModStates, MAX_FWD_REV_SPEED_MPS)
+            # When we're not moving, "toe in" the wheels to resist getting pushed around
+            flModState = SwerveModuleState(angle=Rotation2d.fromDegrees(45), speed=0)
+            frModState = SwerveModuleState(angle=Rotation2d.fromDegrees(-45), speed=0)
+            blModState = SwerveModuleState(angle=Rotation2d.fromDegrees(45), speed=0)
+            brModState = SwerveModuleState(angle=Rotation2d.fromDegrees(-45), speed=0)
+            desModStates = (flModState, frModState, blModState, brModState)
+        else:
+            # Given the current desired chassis speeds, convert to module states
+            desModStates = self.kinematics.toSwerveModuleStates(self.desChSpd)
 
-        # Send commands to modules and update
+        # Scale back xyzzy if one corner of the robot is going too fast
+        self.kinematics.desaturateWheelSpeeds(desModStates, self.MAX_FWD_REV_SPEED_MPS)
+
+        # Send xyzzy to modules and update
         for idx, module in enumerate(self.modules):
             module.setDesiredState(desModStates[idx])
             module.update()
@@ -128,22 +153,13 @@ class DrivetrainControl(metaclass=Singleton):
         self.poseEst.update(self.getModulePositions(), self.getModuleStates())
 
         # Update calibration values if they've changed
-        if self.gainsFL.hasChanged():
-            self._updateAllCals()
-        if self.gainsFR.hasChanged():
-            self._updateAllCals()
-        if self.gainsBL.hasChanged():
-            self._updateAllCals()
-        if self.gainsBR.hasChanged():
+        if self.gainsSwerveModule.hasChanged():
             self._updateAllCals()
 
     def _updateAllCals(self):
         # Helper function - updates all calibration on request
         for module in self.modules:
-            module.setClosedLoopGains(self.gainsFL)
-            module.setClosedLoopGains(self.gainsFR)
-            module.setClosedLoopGains(self.gainsBL)
-            module.setClosedLoopGains(self.gainsBR)
+            module.setClosedLoopGains(self.gainsSwerveModule)
 
     def getModulePositions(self):
         """
@@ -182,6 +198,28 @@ class DrivetrainControl(metaclass=Singleton):
     
     def setElevLimiter(self, elevLimit):
         self.elevSpeedLimit = elevLimit
+"""
+def arcadeDriveClosedLoop(
+    drive: DrivetrainControl,
+    forward: Callable[[], float],
+    rotation: Callable[[], float],
+    slowMultiplier: Callable[[], float],
+    debugRunOpenLoopVolts: Callable[[], float]
+
+) -> Command:
+    def run():
+        fwd = deadband(forward(), 0.1) * slowMultiplier()
+        rot = deadband(rotation(), 0.1) * slowMultiplier()
+        bothSideOfChassisForwardSpeeds = DifferentialDrive.arcadeDriveIK(fwd, rot, False)
+
+
+            drive.runClosedLoopParameters(
+                bothSideOfChassisForwardSpeeds.left * driveconstants.kMaxSpeedMetersPerSecond,
+                bothSideOfChassisForwardSpeeds.right * driveconstants.kMaxSpeedMetersPerSecond,
+            )
+
+    return cmd.run(run, drive).withName("Arcade Drive Closed Loop")
+"""
 
 def _discretizeChSpd(chSpd):
     """See https://www.chiefdelphi.com/t/whitepaper-swerve-drive-skew-and-second-order-kinematics/416964/30
@@ -194,7 +232,7 @@ def _discretizeChSpd(chSpd):
     Returns:
         ChassisSpeeds: Adjusted ch speed
     """
-    dt = 0.04
+    dt = 0.04 # TODO rms adjust this to match robot update rate
     poseVel = Pose2d(chSpd.vx * dt, chSpd.vy * dt, Rotation2d(chSpd.omega * dt))
     twistVel = Pose2d().log(poseVel)
     return ChassisSpeeds(twistVel.dx / dt, twistVel.dy / dt, twistVel.dtheta / dt)

@@ -1,0 +1,136 @@
+{
+  "hubs": [
+    {
+      "x": 141,
+      "y": 56,
+      "width": 1221,
+      "height": 849,
+      "state": {
+        "sidebar": {
+          "width": 300,
+          "expanded": [
+            "/Vision",
+            "/Vision/Camera0",
+            "/Drive",
+            "/RealOutputs/Robot",
+            "/RealOutputs/Robot/Pose",
+            "/LiveWindow",
+            "/SmartDashboard/DT Pose 2D",
+            "/SmartDashboard/DT Pose 2D/Robot",
+            "/AdvantageKit",
+            "/AdvantageKit/Drive",
+            "/AdvantageKit/RealOutputs",
+            "/AdvantageKit/RealOutputs/Robot",
+            "/AdvantageKit/RealOutputs/Robot/Pose"
+          ]
+        },
+        "tabs": {
+          "selected": 2,
+          "tabs": [
+            {
+              "type": 0,
+              "title": "",
+              "controller": null,
+              "controllerUUID": "hrwwvcxg3djocha43oe38d08kuim89x7",
+              "renderer": "",
+              "controlsHeight": 0
+            },
+            {
+              "type": 1,
+              "title": "Line Graph",
+              "controller": {
+                "leftSources": [],
+                "rightSources": [],
+                "discreteSources": [],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "autoTarget": null,
+                  "preset": null
+                },
+                "rightUnitConversion": {
+                  "autoTarget": null,
+                  "preset": null
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "rmiyhx5ymtr8lccgrxm9hxa82kjg1p3f",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 2,
+              "title": "2D Field",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robotLegacy",
+                    "logKey": "NT:/SmartDashboard/DT Pose 2D/Robot",
+                    "logType": "NumberArray",
+                    "visible": true,
+                    "options": {
+                      "bumpers": "",
+                      "format": "Pose2d",
+                      "units": "degrees"
+                    }
+                  },
+                  {
+                    "type": "robot",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Robot/Pose/EstimatorPose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "bumpers": ""
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Robot/Pose/OdometryPose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ff00"
+                    }
+                  }
+                ],
+                "field": "FRC:2026 Field",
+                "orientation": 0,
+                "size": "large"
+              },
+              "controllerUUID": "anksmblbfbch04tibyl6xalzg99fhbq1",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 3,
+              "title": "3D Field",
+              "controller": {
+                "sources": [],
+                "game": "FRC:2026 Field"
+              },
+              "controllerUUID": "6bxraaxbvja52jurf2ozns3urls8gev4",
+              "renderer": {
+                "cameraIndex": -1,
+                "orbitFov": 50,
+                "cameraPosition": [
+                  1.4695761589768238e-15,
+                  5.999999999999999,
+                  -12
+                ],
+                "cameraTarget": [
+                  0,
+                  0.5,
+                  0
+                ]
+              },
+              "controlsHeight": 200
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "satellites": [],
+  "version": "26.0.0"
+}

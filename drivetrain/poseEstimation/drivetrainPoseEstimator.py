@@ -1,20 +1,13 @@
 import random
-
+from typing import Tuple
 from wpilib import ADIS16470_IMU
 import wpilib
 from wpimath.estimator import SwerveDrive4PoseEstimator
 from wpimath.geometry import Pose2d, Rotation2d, Twist2d, Translation2d, Transform2d
-from drivetrain.drivetrainPhysical import (
-    kinematics,
-    ROBOT_TO_LEFTFRONT_CAM,
-    ROBOT_TO_RIGHTFRONT_CAM,
-    ROBOT_TO_LEFTBACK_CAM,
-    ROBOT_TO_RIGHTBACK_CAM
-)
+from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.poseEstimation.drivetrainPoseTelemetry import DrivetrainPoseTelemetry
-from navigation.autoDriveNavConstants import SCORE_DIST_FROM_REEF_CENTER
+# TODO-rms was:from navigation.autoDriveNavConstants import SCORE_DIST_FROM_REEF_CENTER
 from utils.faults import Fault
-from utils.signalLogging import addLog
 from wrappers.wrapperedPoseEstPhotonCamera import WrapperedPoseEstPhotonCamera
 from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
 #from utils.constants import blueReefLocation, redReefLocation #2025 code
@@ -27,52 +20,56 @@ from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
 # Wheel position is preferred for odometry, since errors in velocity don't accumulate over time
 # This is especially important with Rev motors which filter their velocity by a huge amount
 # but the position is fairly accurate. 
-posTuple_t = tuple[SwerveModulePosition,SwerveModulePosition,SwerveModulePosition,SwerveModulePosition]
-stateTuple_t = tuple[SwerveModuleState,SwerveModuleState,SwerveModuleState,SwerveModuleState]
+PosTupleType = Tuple[SwerveModulePosition,SwerveModulePosition,SwerveModulePosition,SwerveModulePosition]
+StateTupleType = Tuple[SwerveModuleState,SwerveModuleState,SwerveModuleState,SwerveModuleState]
 
 class DrivetrainPoseEstimator:
     """Wrapper class for all sensors and logic responsible for estimating where the robot is on the field"""
 
-    def __init__(self, initialModulePositions:posTuple_t):
+    def __init__(self, initialModulePositions:PosTupleType, gyro):
 
         # Represents our current best-guess as to our location on the field.
         self._curEstPose = Pose2d()
 
         # Gyroscope - measures our rotational velocity.
         # Fairly accurate and trustworthy, but not a full pose estimate
-        self._gyro = ADIS16470_IMU()
+        self._gyro = gyro
         self._gyroDisconFault = Fault("Gyroscope not sending data")
         self._curRawGyroAngle = Rotation2d()
 
         # Cameras - measure our position on the field from apriltags
         # Generally accurate, but slow and laggy. Might need to be disabled
         # if the robot isn't flat on the ground for some reason.
-        self.cams = [
-            WrapperedPoseEstPhotonCamera("ACAM4", ROBOT_TO_LEFTFRONT_CAM),
-            WrapperedPoseEstPhotonCamera("ACAM1", ROBOT_TO_RIGHTFRONT_CAM),
-            WrapperedPoseEstPhotonCamera("ACAM3", ROBOT_TO_LEFTBACK_CAM),
-            WrapperedPoseEstPhotonCamera("ACAM2", ROBOT_TO_RIGHTBACK_CAM),
-
-        ]
+        self.cams = []
+        self.posEstLogs = []
+        self.includeInFilter = []
+        CAMS = DrivetrainPhysical().CAMS
+        for camConfig in CAMS:
+            self.cams.append(camConfig['CAM'])
+            #self.posEstLogs.append(YTestForPosition(camConfig['POSE_EST_LOG_NAME']))
+            self.includeInFilter.append(camConfig['WEIGH_IN_FILTER'])
         self._camTargetsVisible = False
         self._useAprilTags = True
 
         # The kalman filter to fuse all sources of information together into a single
         # best-estimate of the pose of the field
+        self.kinematics = DrivetrainPhysical().kinematics
         self._poseEst = SwerveDrive4PoseEstimator(
-            kinematics, self._getGyroAngle(), initialModulePositions, self._curEstPose
+            self.kinematics, self._getGyroAngle(), initialModulePositions, self._curEstPose
         )
+
         self._lastModulePositions = initialModulePositions
 
         # Logging and Telemetry
-        addLog("PE Vision Targets Seen", lambda: self._camTargetsVisible, "bool")
-        addLog("PE Gyro Angle", lambda:(self._curRawGyroAngle.degrees()), "deg")
         self._telemetry = DrivetrainPoseTelemetry()
+        self.limelightPoseOfTarget = None
 
         # Simulation Only - maintain a rough estimate of pose from velocities
         # Using just inverse kinematics, no kalman filter. This is used only
         # to produce a reasonable-looking simulated gyroscope.
         self._simPose = Pose2d()
+        self.lastCamEstRobotPos = Pose2d()
+
 
     def setKnownPose(self, knownPose:Pose2d):
         """Reset the robot's estimated pose to some specific position. This is useful if we know with certanty
@@ -89,7 +86,7 @@ class DrivetrainPoseEstimator:
             self._curRawGyroAngle, self._lastModulePositions, knownPose
         )
 
-    def update(self, curModulePositions:posTuple_t, curModuleSpeeds:stateTuple_t):
+    def update(self, curModulePositions:PosTupleType, curModuleSpeeds:StateTupleType):
         """Periodic update, call this every 20ms.
 
         Args:
@@ -117,7 +114,7 @@ class DrivetrainPoseEstimator:
         if wpilib.TimedRobot.isSimulation():
             # Simulated Gyro
             # Simulate an angle based on (simulated) motor speeds with some noise
-            chSpds = kinematics.toChassisSpeeds(curModuleSpeeds)
+            chSpds = self.kinematics.toChassisSpeeds(curModuleSpeeds)
             self._simPose = self._simPose.exp(
                 Twist2d(chSpds.vx * 0.04, chSpds.vy * 0.04, chSpds.omega * 0.04)
             )
@@ -162,10 +159,11 @@ class DrivetrainPoseEstimator:
 
     # Local helper to wrap the real hardware angle into a Rotation2d
     def _getGyroAngle(self)->Rotation2d:
-        return Rotation2d().fromDegrees(self._gyro.getAngle(self._gyro.getPitchAxis()))
+         return self._gyro.getGyroAngleRotation2d()
     
     def _adjustOutsideReef(self, poseIn: Pose2d, reefTrans: Translation2d) -> Pose2d:
-        if (poseIn.translation().distance(reefTrans) < SCORE_DIST_FROM_REEF_CENTER):
+        # TODO-rms was:if (poseIn.translation().distance(reefTrans) < SCORE_DIST_FROM_REEF_CENTER):
+        if False:
             # We predicted we're inside the reef. Not ok, so let's project back outside the reef.
 
             # Get a unit vector in the direction of the center of the reef to our pose

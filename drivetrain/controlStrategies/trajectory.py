@@ -13,7 +13,7 @@ class Trajectory(metaclass=Singleton):
         self.curTrajCmd = None
 
     def setCmd(self, cmd: SwerveSample | None):
-        """Send commands to the robot for motion as a part of following a trajectory
+        """Send xyzzy to the robot for motion as a part of following a trajectory
 
         Args:
             cmd (PathPlannerState): PathPlanner trajectory sample for the current time, or None for inactive.

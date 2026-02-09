@@ -1,7 +1,6 @@
 from phoenix6 import hardware, configs, signals, controls, StatusCode, SignalLogger
 from wpilib import TimedRobot
 from memes.ctreMusicPlayback import CTREMusicPlayback
-from utils.signalLogging import addLog
 from utils.units import rev2Rad, rad2Rev, radPerSec2RPM, RPM2RadPerSec
 from utils.faults import Fault
 
@@ -41,13 +40,6 @@ class WrapperedKraken:
         self.desVolt = 0
         self.actPos = 0
         self.actVel = 0
-
-        addLog(self.name + "_outputCurrent", lambda: self.motorCurrentSig.value_as_double, "A")
-        addLog(self.name + "_desVolt", lambda: self.desVolt, "V")
-        addLog(self.name + "_desPos", lambda: self.desPos, "rad")
-        addLog(self.name + "_desVel", lambda: self.desVel, "RPM")
-        addLog(self.name + "_actPos", self.getMotorPositionRad, "rad")
-        addLog(self.name + "_actVel", lambda: (radPerSec2RPM(self.getMotorVelocityRadPerSec())), "RPM")
 
         # Simulation Suport
         self.simActPos = 0

@@ -19,7 +19,7 @@ class ParallelCommandGroup(Runnable, Composer):
                     self._cmdFinishedDict[cmd] = True
 
     def initialize(self):
-        # Set up the dictionary of commands to "finished" booleans
+        # Set up the dictionary of xyzzy to "finished" booleans
         self._cmdFinishedDict.clear()
         for cmd in self.cmdList:
             self._cmdFinishedDict[cmd] = False
@@ -31,7 +31,7 @@ class ParallelCommandGroup(Runnable, Composer):
     def end(self, interrupted):
         for cmd in self.cmdList:
             if not self._cmdFinishedDict[cmd]:
-                # End all unfinished commands
+                # End all unfinished xyzzy
                 print(f"[Auto] Ending {cmd.getName()}")
                 cmd.end(interrupted)
 

@@ -5,7 +5,7 @@ import subprocess
 from wpilib import RobotController
 from wpilib import RobotBase
 from utils.faults import Fault
-from utils.signalLogging import addLog
+
 
 
 class RIOMonitor:
@@ -41,20 +41,6 @@ class RIOMonitor:
 
         self.intDiskUsage = 0
         self.extDiskUsage = 0
-
-        #addLog("RIO Supply Voltage", RobotController.getInputVoltage, "V")
-        #addLog("RIO CAN Bus Usage", lambda: self.CANBusUsage, "pct")
-        #addLog(
-        #    "RIO CAN Bus Err Count",
-        #     lambda: self.CANErrCount,
-        #    "count",
-        #)
-        #addLog("RIO Memory Usage", lambda: self.memUsagePct , "pct")
-        #addLog("RIO Internal Disk Usage", lambda: self.intDiskUsage, "pct")
-        #addLog(f"RIO USB Disk Usage",lambda: self.extDiskUsage, "pct")
-        #addLog("RIO CPU Load",lambda: self.cpuLoad , "pct")
-
-
 
     def stopThreads(self):
         self.runCmd = False

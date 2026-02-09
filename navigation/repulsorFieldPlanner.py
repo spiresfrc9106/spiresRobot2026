@@ -4,7 +4,6 @@ from wpimath.geometry import Pose2d, Translation2d, Rotation2d
 
 from utils.mapLookup2d import MapLookup2D
 from utils.mathUtils import limit
-from utils.signalLogging import addLog
 from collections import deque
 
 from drivetrain.drivetrainCommand import DrivetrainCommand
@@ -123,10 +122,6 @@ class RepulsorFieldPlanner:
         self.startSlowFactor = 0.0
 
         self.curState = RepulsorFieldPlannerState.INACTIVE
-
-        #addLog("PotentialField Num Obstacles", lambda: (len(self.fixedObstacles) + len(self.transientObstcales)))
-        #addLog("PotentialField Path Active", lambda: (self.goal is not None))
-        #addLog("PotentialField DistToGo", lambda: self.distToGo, "m")
 
     def setGoal(self, nextGoal:Pose2d|None):
         """
@@ -343,7 +338,7 @@ class RepulsorFieldPlanner:
                 # Take a step in the direction of the error, but limit the step size by the max rotation rate
                 rotStep = limit(rotErr.radians(), ROT_RAD_PER_SEC * Ts)
 
-                # Assemble velocity commands based on the step we took
+                # Assemble velocity xyzzy based on the step we took
                 # Note that depending on how the substeps fell, we might have taken more than a full step
                 # We continue to take a step _in the direction_ of the sum of the substeps, but of
                 # the correct size.

@@ -1,11 +1,50 @@
 #
 # Use this configuration file to control what RobotPy packages are installed
-# on your RoboRIO
+# in your project.
 #
+[project]
+name = "spiresRobot2026"
+version = "0.1.0"
+description = "FRC9106 - Spires - REBUILT Competioni Robot"
+readme = "README.md"
+requires-python = "==3.12.*"
 
+dependencies = [
+    "black~=26.1.0",
+    "mypy>=1.19.1",
+    "phoenix6>=26.1.0",
+    "photonlibpy~=2026.1.1",
+    "pylint>=4.0.2",
+    "robotpy>=2026.2.1",
+    "robotpy-apriltag>=2026.2.1",
+    "robotpy-cli>=2026.0.1",
+    "robotpy-halsim-gui>=2026.2.1",
+    "robotpy-pathplannerlib>=2026.1.1",
+    "robotpy-pykit>=1.0.3",
+    "robotpy-pykit-watch>=1.0.0",
+    "robotpy-navx>=2026.0.0",
+    "robotpy-rev>=2026.0.1",
+    "wpilib>=2026.2.1",
+    "robotpy-commands-v2>=2026.2.1",
+    "robotpy-halsim-ws",
+    "robotpy-native-romi>=2026.2.1",
+    "robotpy-romi>=2026.2.1",
+    "sleipnirgroup-choreolib",
+    "coverage>=7.13.1",
+    "debugpy",
+    #"opencv-python",
+    "robotpy-opencv",
+    "photonlibpy",
+    "robotpy-cscore",
+    "robotpy-halsim-ds-socket",
+    "robotpy-native-apriltag",
+    "robotpy-playingwithfusion",
+]
 [tool.robotpy]
 
 # Version of robotpy this project depends on
+# to see what versions are available: https://pypi.org/pypi/robotpy/json
+
 robotpy_version = "2026.2.1"
 
 # Which extra RobotPy components should be installed
@@ -13,24 +52,36 @@ robotpy_version = "2026.2.1"
 components = [
     # "all"
     "apriltag",
-    # "commands2"
+    "commands2",
     "cscore",
-    # "navx"
-    # "pathplannerlib"
     # "phoenix5",
-    #"phoenix6",
+    # "phoenix6",
     #"playingwithfusion",
     #"rev",
     # "romi"
-    # "sim"
+    "sim"
 ]
 
 # Other pip packages to install
 requires = [
-    "photonlibpy==2026.1.1rc4",
+    "robotpy-pykit>=1.0.3",
+    "photonlibpy==2026.1.1",
+    "robotpy-pathplannerlib>=2026.1.1",
     "debugpy",
     "phoenix6",
     "robotpy-rev",
     "sleipnirgroup-choreolib",
     "robotpy-playingwithfusion",
+    "robotpy-opencv",
+    "robotpy-navx",
 ]
+
+
+[tool.mypy]
+python_version = "3.13"
+warn_unused_configs = true
+explicit_package_bases = true
+mypy_path = "."
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_no_return = true
