@@ -83,6 +83,7 @@ class MyRobot(LoggedRobot):
             case westwood.constants.RobotModes.REPLAY:
                 self.useTiming = (
                     False  # Disable timing in replay mode, run as fast as possible
+                    #True # replay with timing
                 )
                 log_path = os.environ["LOG_PATH"]
                 log_path = os.path.abspath(log_path)

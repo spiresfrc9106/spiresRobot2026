@@ -8,7 +8,13 @@ Main 2026 Robot Code for FRC Team 9106 - Spires
 
 Thank you to our sponsors!
 
-This repository started as a fork of [RobotCasserole202](https://github.com/RobotCasserole1736/RobotCasserole2026). We are grateful to Team #1736 for the inspiration.
+This repository started as a fork of [FRC#1736 RobotCasserole2026](https://github.com/RobotCasserole1736/RobotCasserole2026). 
+Then PyKit logging from [FRC#1757 Westwood Robotics 2026-Rebuilt](https://github.com/1757WestwoodRobotics/2026-Rebuilt).
+We think we might see if the software can be configured to use either Robot Casserole Swerve or Westwood Robotics Swerve
+
+We are grateful to Teams #1736 and #1757 for the inspiration!
+
+
 
 ![Dev CI Status](https://github.com/spiresfrc9106/spiresRobot2025/actions/workflows/ci.yml/badge.svg?branch=main)
 
