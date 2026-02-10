@@ -36,7 +36,7 @@ class WrapperedSparkMax:
         self.cfg.smartCurrentLimit(round(currentLimitA))
 
         # Perform motor configuration, tracking errors and retrying until we have success
-        # Clear previous configuration, and persist anything set in this config.
+        # Clear previous configuration, and persist anything set in this state.
         retryCounter = 0
         while not self.configSuccess and retryCounter < 10:
             retryCounter += 1

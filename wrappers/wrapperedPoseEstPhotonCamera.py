@@ -3,7 +3,7 @@ import wpilib
 from wpimath.units import feetToMeters, degreesToRadians
 from wpimath.geometry import Pose2d
 
-from subsystems.config.robottopsubsystem import RobotTopSubsystem
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from wrappers.casserolePhotonCamera import PhotonCamera
 from photonlibpy.targeting.photonTrackedTarget import PhotonTrackedTarget
 from photonlibpy.photonCamera import setVersionCheckEnabled

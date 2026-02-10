@@ -10,7 +10,7 @@ from wpimath.geometry import (
     Translation3d,
 )
 
-from subsystems.config.robottopsubsystem import RobotTopSubsystem
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from westwood.subsystems.vision.visionio import (
     ObservationType,
     VisionSubsystemIO,

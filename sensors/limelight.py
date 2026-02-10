@@ -410,10 +410,10 @@ class Limelight:
         latency:float = 0
 
         botpose = self.botpose
-        #if config.active_team == config.Team.RED:
+        #if state.active_team == state.Team.RED:
         #    botpose = self.botpose_red
         #    latency = self.botpose_red_l
-        #elif config.active_team == config.Team.BLUE:
+        #elif state.active_team == state.Team.BLUE:
         #    botpose = self.botpose_blue
         #    latency = self.botpose_blue_l
         #else:
@@ -473,7 +473,7 @@ class LimelightController():
                     degrees = math.degrees(radians)
 
                     #todo xyzzy in 2025 limelight is always blue oriented.
-                    #if config.active_team == config.Team.RED:
+                    #if state.active_team == state.Team.RED:
                     #    degrees -= 180
                         
                     return degrees

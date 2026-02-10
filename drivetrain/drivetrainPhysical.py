@@ -14,9 +14,9 @@ from wrappers.wrapperedLimelightCamera import wrapperedLimilightCameraFactory
 from wrappers.wrapperedPoseEstPhotonCamera import WrapperedPoseEstPhotonCamera
 from sensors.limelight import Limelight
 from utils.singleton import Singleton
-from subsystems.config.configio import RobotTypes
-from subsystems.config.configsubsystem import ConfigSubsystem
-from subsystems.config.robottopsubsystem import RobotTopSubsystem
+from subsystems.state.configio import RobotTypes
+from subsystems.state.configsubsystem import ConfigSubsystem
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 
 """
 Defines the physical dimensions and characteristics of the drivetrain

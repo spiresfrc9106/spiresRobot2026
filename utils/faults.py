@@ -1,7 +1,7 @@
 import math
 import wpilib
 
-from subsystems.config.robottopsubsystem import RobotTopSubsystem
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from utils.constants import FIX_ME_LED_PIN, HEARTBEAT_LED_PIN
 from utils.singleton import Singleton
 

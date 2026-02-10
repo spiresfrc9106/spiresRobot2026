@@ -1,5 +1,5 @@
-from subsystems.config.configsubsystem import ConfigSubsystem
-from subsystems.config.robottopsubsystem import RobotTopSubsystem
+from subsystems.state.configsubsystem import ConfigSubsystem
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 
 from westwood.constants import RobotModes, kRobotMode
 

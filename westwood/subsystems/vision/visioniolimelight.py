@@ -3,7 +3,7 @@ from ntcore import NetworkTableInstance
 from wpilib import RobotController
 from wpimath.geometry import Pose3d, Rotation2d, Rotation3d, Transform3d
 
-from subsystems.config.robottopsubsystem import RobotTopSubsystem
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from westwood.subsystems.vision.visionio import (
     ObservationType,
     VisionSubsystemIO,

@@ -5,7 +5,7 @@ from wpimath.system.plant import DCMotor
 from wpimath.geometry import Pose3d, Transform3d, Translation3d, Rotation3d
 
 
-from subsystems.config.configio import RobotTypes
+from subsystems.state.configio import RobotTypes
 from utils.singleton import Singleton
 from wrappers.wrapperedLimelightCamera import wrapperedLimilightCameraFactory
 from wrappers.wrapperedSparkMax import WrapperedSparkMax

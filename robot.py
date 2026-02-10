@@ -37,7 +37,7 @@ from humanInterface.driverInterface import DriverInterface
 from humanInterface.ledControl import LEDControl
 from humanInterface.operatorInterface import OperatorInterface
 from utils.singleton import destroyAllSingletonInstances
-from subsystems.config.configsubsystem import ConfigSubsystem
+from subsystems.state.configsubsystem import ConfigSubsystem
 from wpilib import Timer
 import wpilib
 
