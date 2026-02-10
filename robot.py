@@ -41,7 +41,7 @@ from subsystems.state.configsubsystem import ConfigSubsystem
 from wpilib import Timer
 import wpilib
 
-LoggedRobot.default_period = 0.10
+LoggedRobot.default_period = 0.04
 class MyRobot(LoggedRobot):
     """
     Our default robot class, pass it to wpilib.run

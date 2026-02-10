@@ -113,7 +113,7 @@ class DrivetrainPhysical(metaclass=Singleton):
         # Accelerations - also a total guess
         self.MAX_TRANSLATE_ACCEL_MPS2 = (
             # self.MAX_FWD_REV_SPEED_MPS / 0.50
-                self.MAX_FWD_REV_SPEED_MPS / 0.10
+                self.MAX_FWD_REV_SPEED_MPS / 0.5
         )  # 0-full time of 0.5 second - this is a guestimate xyzzy - investigate making this smaller
         self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2 = (
                 self.MAX_ROTATE_SPEED_RAD_PER_SEC / 0.25

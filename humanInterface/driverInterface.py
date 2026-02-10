@@ -92,7 +92,7 @@ class DriverInterface:
             vYJoyWithDeadband = applyDeadband(vYJoyRaw, 0.05)
             vRotJoyWithDeadband = applyDeadband(vRotJoyRaw, 0.05)
 
-            slowMult = 1.0 if (self.ctrl.getRightBumper()) else 0.4
+            slowMult = 1.0 if (self.ctrl.getRightBumper()) else 0.2
 
             # Shape velocity command
             velCmdXRaw = vXJoyWithDeadband * self.MAX_STRAFE_SPEED_MPS * slowMult
@@ -144,7 +144,7 @@ class DriverInterface:
             #self.shooterCtrl.disableShooting()
             if(DriverStation.isFMSAttached()):
                 self.connectedFault.setFaulted()
-        print(f"Driver Interface:{RobotTopSubsystem().getFPGATimestampS():7.3f} {self.velXCmd:7.2f} {self.velYCmd:7.2f} {self.velTCmd:7.2f}")
+        #print(f"Driver Interface:{RobotTopSubsystem().getFPGATimestampS():7.3f} {self.velXCmd:7.2f} {self.velYCmd:7.2f} {self.velTCmd:7.2f}")
 
     def getCmd(self) -> DrivetrainCommand:
         retval = DrivetrainCommand()
