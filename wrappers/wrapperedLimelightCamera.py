@@ -3,8 +3,9 @@ import math
 
 from ntcore import NetworkTableInstance
 import wpilib
-from wpimath.geometry import Pose2d, Rotation2d, Transform3d, Pose3d, Translation3d
+from wpimath.geometry import Pose2d, Rotation2d,Translation3d
 
+from subsystems.config.robottopsubsystem import RobotTopSubsystem
 from wrappers.wrapperedPoseEstPhotonCamera import WrapperedPoseEstPhotonCamera
 
 from sensors.limelight import Limelight
@@ -73,7 +74,7 @@ class WrapperedPoseEstLimelight:
         # broken in photonvision 2.4.2. Hack with the non-broken latency calcualtion
         self.latency = self.cam.get_latency_total()
         latency = self.latency # a total guess
-        obsTime = wpilib.Timer.getFPGATimestamp() - latency
+        obsTime = RobotTopSubsystem().getFPGATimestampS() - latency
 
         # Update our disconnected fault since we have something from the camera
         self.disconFault.setNoFault()

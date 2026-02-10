@@ -3,12 +3,11 @@
 # It is definitely buggy and untested, but it gives us a great framework on how to control an elevator.
 
 
+from pykit.logger import Logger
+from utils.singleton import Singleton
 from subsystems.config.configio import RobotTypes
 from subsystems.config.configsubsystem import ConfigSubsystem
-
-from utils.singleton import Singleton
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
-from pykit.logger import Logger
 
 class MotorDependentConstants:
     def __init__(self):

@@ -2,6 +2,8 @@ from typing import Callable
 from ntcore import NetworkTableInstance
 from wpilib import RobotController
 from wpimath.geometry import Pose3d, Rotation2d, Rotation3d, Transform3d
+
+from subsystems.config.robottopsubsystem import RobotTopSubsystem
 from westwood.subsystems.vision.visionio import (
     ObservationType,
     VisionSubsystemIO,
@@ -47,7 +49,7 @@ class VisionSubsystemIOLimelight(VisionSubsystemIO):
 
     def updateInputs(self, inputs: VisionSubsystemIO.VisionSubsystemIOInputs):
         inputs.connected = (
-            (RobotController.getFPGATime() - self.latencySubscriber.getLastChange())
+            (RobotTopSubsystem().getFPGATimeUS() - self.latencySubscriber.getLastChange())
             / 1000
         ) < 250
         self.orientationPublisher.set(

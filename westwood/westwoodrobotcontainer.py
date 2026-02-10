@@ -10,7 +10,8 @@ import commands2
 import commands2.cmd as Commands
 from pathplannerlib.auto import PathPlannerAuto
 
-from drivetrain.drivetrainDependentConstants import useWestwoodSwerve
+from subsystems.config.robottopsubsystem import RobotTopSubsystem
+from subsystems.config.configsubsystem import ConfigSubsystem
 
 from westwood.commands.drive.fieldrelativedrive import FieldRelativeDrive
 from westwood.commands.drive.anglealign import AngleAlignDrive
@@ -95,7 +96,7 @@ class WestwoodRobotContainer:
         self.vision = None
         match kRobotMode:
             case RobotModes.REAL:
-                if useWestwoodSwerve():
+                if ConfigSubsystem().useWestwoodSwerve():
                     self.drive = DriveSubsystem(
                         DriveIOPigeon(),
                         (
@@ -176,7 +177,7 @@ class WestwoodRobotContainer:
                 #self.turrent = TurretSubsystem(TurretSubsystemIOTalon())
 
             case RobotModes.SIMULATION:
-                if useWestwoodSwerve():
+                if ConfigSubsystem().useWestwoodSwerve:
                     self.drive = DriveSubsystem(
                         DriveIO(),
                         (
@@ -259,7 +260,7 @@ class WestwoodRobotContainer:
                 #self.turrent = TurretSubsystem(TurretSubsystemIOSim())
 
             case _:
-                if useWestwoodSwerve():
+                if ConfigSubsystem().useWestwoodSwerve():
                     self.drive = DriveSubsystem(
                         DriveIO(),
                         (
@@ -344,12 +345,12 @@ class WestwoodRobotContainer:
         if self.drive is not None:
             RobotState.periodic(
                 self.drive.getRawRotation(),
-                wpilib.RobotController.getFPGATime() / 1e6,
+                RobotTopSubsystem().getFPGATimeS(),
                 self.drive.getAngularVelocity(),
                 self.drive.getFieldRelativeSpeeds(),
                 self.drive.getModulePositions(),
                 Rotation2d(
-                    wpilib.Timer.getTimestamp() / 20
+                    RobotTopSubsystem().getFPGATimeS() / 20
                 ),  # Simulated turret rotation, just go spin
             )
         self.updateAlerts()

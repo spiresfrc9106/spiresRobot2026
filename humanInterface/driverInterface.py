@@ -2,11 +2,12 @@ from pykit.autolog import autologgable_output, autolog_output
 
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
+from subsystems.config.robottopsubsystem import RobotTopSubsystem
 from utils.allianceTransformUtils import onRed
 from utils.faults import Fault
 from wpimath import applyDeadband
 from wpimath.filter import SlewRateLimiter
-from wpilib import DriverStation, RobotController, XboxController
+from wpilib import DriverStation, XboxController
 from utils.calibration import Calibration
 
 @autologgable_output
@@ -143,7 +144,7 @@ class DriverInterface:
             #self.shooterCtrl.disableShooting()
             if(DriverStation.isFMSAttached()):
                 self.connectedFault.setFaulted()
-        print(f"Driver Interface:{RobotController.getFPGATime()/1e6:7.3f} {self.velXCmd:7.2f} {self.velYCmd:7.2f} {self.velTCmd:7.2f}")
+        print(f"Driver Interface:{RobotTopSubsystem().getFPGATimestampS():7.3f} {self.velXCmd:7.2f} {self.velYCmd:7.2f} {self.velTCmd:7.2f}")
 
     def getCmd(self) -> DrivetrainCommand:
         retval = DrivetrainCommand()
