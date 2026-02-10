@@ -16,6 +16,7 @@ from sensors.limelight import Limelight
 from utils.singleton import Singleton
 from subsystems.config.configio import RobotTypes
 from subsystems.config.configsubsystem import ConfigSubsystem
+from subsystems.config.robottopsubsystem import RobotTopSubsystem
 
 """
 Defines the physical dimensions and characteristics of the drivetrain

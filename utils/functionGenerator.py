@@ -1,5 +1,7 @@
 import math
 import wpilib
+
+from subsystems.config.robottopsubsystem import RobotTopSubsystem
 from utils.calibration import Calibration
 
 
@@ -23,7 +25,7 @@ class FunctionGenerator:
         self.ampCal = Calibration(name="fg_" + uniqueName + "_amp", default=1.0)
         self.offsetCal = Calibration(name="fg_" + uniqueName + "_offset")
 
-        self.startTime = wpilib.Timer.getFPGATimestamp()
+        self.startTime = RobotTopSubsystem().getFPGATimestampS()
         self.active = False
 
     # Main periodic update. Expected to be called whenever the user wants another value
@@ -31,12 +33,12 @@ class FunctionGenerator:
         # Update the actie flag, recording the time at activation
         nextActive = self.activeCal.get()
         if not self.active and nextActive:
-            self.startTime = wpilib.Timer.getFPGATimestamp()
+            self.startTime = RobotTopSubsystem().getFPGATimestampS()
         self.active = nextActive
 
         if self.active:
             # Active, calculate an output
-            curTime = wpilib.Timer.getFPGATimestamp() - self.startTime
+            curTime = RobotTopSubsystem().getFPGATimestampS() - self.startTime
             baseOutput = math.sin(2 * math.pi * self.freqCal.get() * curTime)
 
             curType = self.typeCal.get()

@@ -30,6 +30,8 @@ from photonlibpy.targeting.photonPipelineResult import PhotonPipelineResult
 from photonlibpy.timesync.timeSyncServer import inst
 from photonlibpy.version import PHOTONLIB_VERSION  # type: ignore[import-untyped]
 
+from subsystems.config.robottopsubsystem import RobotTopSubsystem
+
 
 class VisionLEDMode(Enum):
     kDefault = -1
@@ -150,7 +152,7 @@ class PhotonCamera:
 
         self._versionCheck()
 
-        now = RobotController.getFPGATime()
+        now = RobotTopSubsystem().getFPGATimeUS()
         packetWithTimestamp = self._rawBytesEntry.getAtomic()
         byteList = packetWithTimestamp.value
         packetWithTimestamp.time

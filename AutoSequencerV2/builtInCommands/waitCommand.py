@@ -1,6 +1,7 @@
 import wpilib
 
 from AutoSequencerV2.command import Command
+from subsystems.config.robottopsubsystem import RobotTopSubsystem
 
 
 class WaitCommand(Command):
@@ -11,10 +12,10 @@ class WaitCommand(Command):
 
     def initialize(self):
         #this happens when we actually start running this command
-        self.endTime = wpilib.Timer.getFPGATimestamp() + self.waitDur
+        self.endTime = RobotTopSubsystem().getFPGATimestampS() + self.waitDur
 
     def isDone(self):
-        return wpilib.Timer.getFPGATimestamp() >= self.endTime
+        return RobotTopSubsystem().getFPGATimestampS() >= self.endTime
 
     def getName(self):
         return f"Wait {self.waitDur}s"

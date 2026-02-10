@@ -5,7 +5,6 @@ from pykit.autolog import autolog
 from wpilib import RobotBase, RobotController
 
 from teamNumber import FRC_TEAM_NUMBER
-from utils.faults import Fault
 from utils.singleton import Singleton
 
 """
@@ -36,6 +35,10 @@ class _RobotIdentification(metaclass=Singleton):
     def __init__(self):
         self.roboControl = RobotController
         self.robotType: RobotTypes|None = None
+
+        # Deferred import to avoid circular dependency
+        from utils.faults import Fault
+
         self.serialFault = Fault("RoboRIO serial number not recognized")
         self.serialNumber: str|None = None
         self._configureValue()
@@ -96,19 +99,21 @@ class _RobotIdentification(metaclass=Singleton):
         return str(robotType).startswith('RobotTypes.Spires')
 
 class ConfigIO:
-    """A dataclass for holding I/O data for the drive subsystem."""
+    """Process I/O data for the robot high-level state subsystem."""
 
     @autolog
     @dataclass
     class ConfigIOInputs:
+        """Hold I/O data for the robot high-level state subsystem."""
         robotTypeStr: str = field(default_factory=lambda: _RobotIdentification().getRobotTypeStr())
 
     def updateInputs(self, inputs: ConfigIOInputs) -> None:
-        """Update the drive I/O inputs.
+        """Update the robot high-level state I/O inputs.
 
         Args:
-            inputs (ConfigIOInputs): The drive I/O inputs to update.
+            inputs (ConfigIOInputs): The robot high-level state I/O inputs to update.
         """
+
 
     @classmethod
     def getRobotType(cls, inputs: ConfigIOInputs)->RobotTypes:

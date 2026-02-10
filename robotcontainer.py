@@ -1,6 +1,5 @@
-
-from subsystems.config.configio import ConfigIO
 from subsystems.config.configsubsystem import ConfigSubsystem
+from subsystems.config.robottopsubsystem import RobotTopSubsystem
 
 from westwood.constants import RobotModes, kRobotMode
 
@@ -17,6 +16,7 @@ class RobotContainer:
     def __init__(self) -> None:
         # The robot's subsystems
         self.config = ConfigSubsystem()
+        self.robotop = RobotTopSubsystem()
         match kRobotMode:
             case RobotModes.REAL:
                 pass

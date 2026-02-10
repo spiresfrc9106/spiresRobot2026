@@ -2,6 +2,8 @@ from dataclasses import dataclass
 import wpilib
 from wpimath.units import feetToMeters, degreesToRadians
 from wpimath.geometry import Pose2d
+
+from subsystems.config.robottopsubsystem import RobotTopSubsystem
 from wrappers.casserolePhotonCamera import PhotonCamera
 from photonlibpy.targeting.photonTrackedTarget import PhotonTrackedTarget
 from photonlibpy.photonCamera import setVersionCheckEnabled
@@ -43,7 +45,7 @@ class WrapperedPoseEstPhotonCamera:
         self.singleTagModeTagList = None #not currently used
 
 
-        self.lastCaptureTime = wpilib.Timer.getFPGATimestamp()
+        self.lastCaptureTime = RobotTopSubsystem().getFPGATimestampS()
         self.CAP_PERIOD_SEC = 0.025
 
     def setSingleTagMode(self, tag:list[int]|None):
@@ -51,7 +53,7 @@ class WrapperedPoseEstPhotonCamera:
 
     def update(self, prevEstPose:Pose2d):
 
-        startTime = wpilib.Timer.getFPGATimestamp()
+        startTime = RobotTopSubsystem().getFPGATimestampS()
 
         self.poseEstimates = []
         self.lastLatency = 0.0
@@ -75,7 +77,7 @@ class WrapperedPoseEstPhotonCamera:
             resIdx = 0
             self.prevTimestampSec = res.getTimestampSeconds()
             obsTime = res.getTimestampSeconds()
-            self.lastLatency = wpilib.Timer.getFPGATimestamp() - obsTime
+            self.lastLatency = RobotTopSubsystem().getFPGATimestampS() - obsTime
             self.disconFault.setNoFault()
 
 
@@ -154,7 +156,7 @@ class WrapperedPoseEstPhotonCamera:
                             )
 
 
-        endTime = wpilib.Timer.getFPGATimestamp()
+        endTime = RobotTopSubsystem().getFPGATimestampS()
         self.updateDuration = (endTime - startTime)*1000.0
 
     def getPoseEstimates(self):

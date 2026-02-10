@@ -1,6 +1,7 @@
 import math
 import wpilib
 
+from subsystems.config.robottopsubsystem import RobotTopSubsystem
 from utils.constants import FIX_ME_LED_PIN, HEARTBEAT_LED_PIN
 from utils.singleton import Singleton
 
@@ -91,7 +92,7 @@ class FaultStatusLEDs(metaclass=Singleton):
     # Returns a time-varying blink intensity to drive the LED
     # at a given frequency
     def _blinkPattern(self, freq):
-        return abs(math.sin(2 * math.pi * wpilib.Timer.getFPGATimestamp() * freq / 2.0))
+        return abs(math.sin(2 * math.pi * RobotTopSubsystem().getFPGATimestampS() * freq / 2.0))
 
 
 ###########################################
