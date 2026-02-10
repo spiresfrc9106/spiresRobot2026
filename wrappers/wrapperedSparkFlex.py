@@ -47,7 +47,7 @@ class WrapperedSparkFlex:
 
     def _spark_config(self, retries, resetMode, persistMode, printResults=True, step=""):
         # Perform motor configuration, tracking errors and retrying until we have success
-        # Clear previous configuration, and persist anything set in this config.
+        # Clear previous configuration, and persist anything set in this state.
         retryCounter = 0
         success=False
         while not success and retryCounter < retries:

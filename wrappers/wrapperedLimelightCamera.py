@@ -5,7 +5,7 @@ from ntcore import NetworkTableInstance
 import wpilib
 from wpimath.geometry import Pose2d, Rotation2d,Translation3d
 
-from subsystems.config.robottopsubsystem import RobotTopSubsystem
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from wrappers.wrapperedPoseEstPhotonCamera import WrapperedPoseEstPhotonCamera
 
 from sensors.limelight import Limelight

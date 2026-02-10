@@ -2,7 +2,7 @@ from pykit.autolog import autologgable_output, autolog_output
 
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
-from subsystems.config.robottopsubsystem import RobotTopSubsystem
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from utils.allianceTransformUtils import onRed
 from utils.faults import Fault
 from wpimath import applyDeadband

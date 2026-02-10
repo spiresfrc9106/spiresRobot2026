@@ -30,7 +30,7 @@ from photonlibpy.targeting.photonPipelineResult import PhotonPipelineResult
 from photonlibpy.timesync.timeSyncServer import inst
 from photonlibpy.version import PHOTONLIB_VERSION  # type: ignore[import-untyped]
 
-from subsystems.config.robottopsubsystem import RobotTopSubsystem
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 
 
 class VisionLEDMode(Enum):

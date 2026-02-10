@@ -1,7 +1,7 @@
 from wpilib import ADIS16470_IMU
 from wpimath.geometry import Rotation2d
 import navx
-from subsystems.config.configsubsystem import ConfigSubsystem
+from subsystems.state.configsubsystem import ConfigSubsystem
 
 class WrapperedNoGyro():
     def __init__(self):

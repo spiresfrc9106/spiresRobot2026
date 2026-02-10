@@ -1,7 +1,7 @@
 import wpilib
 
 from AutoSequencerV2.command import Command
-from subsystems.config.robottopsubsystem import RobotTopSubsystem
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 
 
 class WaitCommand(Command):

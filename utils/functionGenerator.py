@@ -1,7 +1,7 @@
 import math
 import wpilib
 
-from subsystems.config.robottopsubsystem import RobotTopSubsystem
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from utils.calibration import Calibration
 
 

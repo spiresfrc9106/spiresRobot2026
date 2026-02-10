@@ -10,8 +10,8 @@ import commands2
 import commands2.cmd as Commands
 from pathplannerlib.auto import PathPlannerAuto
 
-from subsystems.config.robottopsubsystem import RobotTopSubsystem
-from subsystems.config.configsubsystem import ConfigSubsystem
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
+from subsystems.state.configsubsystem import ConfigSubsystem
 
 from westwood.commands.drive.fieldrelativedrive import FieldRelativeDrive
 from westwood.commands.drive.anglealign import AngleAlignDrive

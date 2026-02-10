@@ -5,8 +5,8 @@
 
 from pykit.logger import Logger
 from utils.singleton import Singleton
-from subsystems.config.configio import RobotTypes
-from subsystems.config.configsubsystem import ConfigSubsystem
+from subsystems.state.configio import RobotTypes
+from subsystems.state.configsubsystem import ConfigSubsystem
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
 
 class MotorDependentConstants:
