@@ -3,7 +3,6 @@
 import os
 import typing
 import sys
-import gc
 
 from commands2.commandscheduler import CommandScheduler
 
@@ -16,8 +15,8 @@ from pykit.networktables.nt4Publisher import NT4Publisher
 from pykit.loggedrobot import LoggedRobot
 from pykit.logger import Logger
 
+import constants
 from drivetrain.drivetrainDependentConstants import DrivetrainDependentConstants
-import westwood.constants
 
 from robotcontainer import RobotContainer
 from utils.calibration import CalibrationWrangler
@@ -28,7 +27,7 @@ from westwood.util.logtracer import LogTracer
 from westwood.util.phoenixutil import PhoenixUtil
 
 from AutoSequencerV2.autoSequencer import AutoSequencer
-from testingMotors.motorCtrl import MotorControl, motorDepConstants
+from testingMotors.motorCtrl import motorDepConstants, MotorControl
 
 from drivetrain.controlStrategies.trajectory import Trajectory
 
@@ -41,7 +40,7 @@ from subsystems.state.configsubsystem import ConfigSubsystem
 from wpilib import Timer
 import wpilib
 
-LoggedRobot.default_period = 0.04
+LoggedRobot.default_period = constants.kRobotUpdatePeriodS
 class MyRobot(LoggedRobot):
     """
     Our default robot class, pass it to wpilib.run
@@ -55,8 +54,8 @@ class MyRobot(LoggedRobot):
     def __init__(self):
         super().__init__()
         Logger.recordMetadata("Robot", type(self).__name__)
-        match westwood.constants.kRobotMode:
-            case westwood.constants.RobotModes.REAL|westwood.constants.RobotModes.SIMULATION:
+        match constants.kRobotMode:
+            case constants.RobotModes.REAL|constants.RobotModes.SIMULATION:
                 deploy_config = wpilib.deployinfo.getDeployData()
                 if deploy_config is not None:
                     Logger.recordMetadata(
@@ -80,7 +79,7 @@ class MyRobot(LoggedRobot):
                     )
                 Logger.addDataReciever(NT4Publisher(True))
                 Logger.addDataReciever(WPILOGWriter())
-            case westwood.constants.RobotModes.REPLAY:
+            case constants.RobotModes.REPLAY:
                 self.useTiming = (
                     False  # Disable timing in replay mode, run as fast as possible
                     #True # replay with timing
@@ -105,7 +104,8 @@ class MyRobot(LoggedRobot):
         This function is run when the robot is first started up and should be used for any
         initialization code.
         """
-        print("robotInit has run")
+        self.count=0
+        #print(f"{self.count} robotInit has run")
         # Since we're defining a bunch of new things here, tell pylint
         # to ignore these instantiations in a method.
         # pylint: disable=attribute-defined-outside-init
@@ -151,7 +151,7 @@ class MyRobot(LoggedRobot):
         # Both of these will increase CPU load by a lot, and we never use their output.
 
         self.driveTrain = None
-        print(f"useCasseroleSwerve()={ConfigSubsystem().useCasseroleSwerve()}")
+        #print(f"useCasseroleSwerve()={ConfigSubsystem().useCasseroleSwerve()}")
         if ConfigSubsystem().useCasseroleSwerve():
             self.driveTrain = DrivetrainControl()
 
@@ -162,6 +162,9 @@ class MyRobot(LoggedRobot):
         self.ledCtrl = LEDControl()
 
         self.autoSequencer = AutoSequencer()
+
+        if motorDepConstants['HAS_MOTOR_TEST']:
+            self.motorCtrlFun = MotorControl()
 
         #self.shooterCtrl = ShooterController()
 
@@ -178,10 +181,9 @@ class MyRobot(LoggedRobot):
         #self.addPeriodic(FaultWrangler().update, 0.06, 0.0)
 
         self.autoHasRun = False
-        self.count=0
 
     def robotPeriodic(self) -> None:
-
+        #print(f"{self.count} robotPeriodic")
 
         #if self.count == 10:
         #    gc.freeze()
@@ -220,7 +222,7 @@ class MyRobot(LoggedRobot):
     ## Autonomous-Specific init and update
     def autonomousInit(self) -> None:
         """This autonomous runs the autonomous command selected by your RobotContainer class."""
-        print("autonomousInit has run")
+        #print("autonomousInit has run")
 
         if self.westwoodContainer is not None:
             self.autonomousCommand = self.westwoodContainer.getAutonomousCommand()
@@ -258,6 +260,7 @@ class MyRobot(LoggedRobot):
     #########################################################
     ## Teleop-Specific init and update
     def teleopInit(self) -> None:
+        #print(f"{self.count} teleopInit")
         # This makes sure that the autonomous stops running when
         # teleop starts running. If you want the autonomous to
         # continue until interrupted by another command, remove
@@ -274,6 +277,7 @@ class MyRobot(LoggedRobot):
 
     def teleopPeriodic(self) -> None:
         """This function is called periodically when in teleop"""
+        #print(f"{self.count} teleopPeriodic")
 
         # TODO - this is technically one loop delayed, which could induce lag
         if self.driveTrain is not None:
@@ -294,7 +298,7 @@ class MyRobot(LoggedRobot):
         # No trajectory in Teleop
         Trajectory().setCmd(None)
         if motorDepConstants['HAS_MOTOR_TEST']:
-            self.motorCtrlFun.update(self.dInt.getMotorTestPowerRpm())
+            self.motorCtrlFun.update(100.0)
 
     #########################################################
     ## Disabled-Specific init and update

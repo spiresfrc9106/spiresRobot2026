@@ -8,7 +8,7 @@ from westwood.robotstate import RobotState
 from westwood.subsystems.drive.drivesubsystem import DriveSubsystem
 from westwood.util.angleoptimize import optimizeAngle
 
-from westwood.constants.trajectory import kRotationPGain, kRotationIGain, kRotationDGain
+from constants import kRotationPGain, kRotationIGain, kRotationDGain
 
 
 class AbsoluteRelativeDrive(Command):

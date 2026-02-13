@@ -21,8 +21,8 @@ class MotorDependentConstants:
                 "TEST_MOTOR_CANID": None,
             },
             RobotTypes.Spires2025Sim: {
-                "HAS_MOTOR_TEST": False,
-                "TEST_MOTOR_CANID": None,
+                "HAS_MOTOR_TEST": True,
+                "TEST_MOTOR_CANID": 23,
             },
             RobotTypes.SpiresTestBoard: {
                 "HAS_MOTOR_TEST": False,

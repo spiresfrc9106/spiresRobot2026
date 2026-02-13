@@ -8,7 +8,7 @@ from wpimath.geometry import Pose2d, Transform2d
 from westwood.robotstate import RobotState
 from westwood.subsystems.drive.drivesubsystem import DriveSubsystem
 
-from westwood.constants.auto import kAutoDistanceThreshold
+from constants import kAutoDistanceThreshold
 
 
 class DriveDistance(Command):

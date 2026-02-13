@@ -54,7 +54,7 @@ from westwood.constants.trajectory import (
     kPathFollowingTranslationConstantsAuto,
     kPathFollowingRotationConstants,
 )
-from westwood.constants import kRobotUpdatePeriod
+from constants import kRobotUpdatePeriodS
 from westwood.util.logtracer import LogTracer
 from westwood.util import convenientmath
 
@@ -313,7 +313,7 @@ class DriveSubsystem(Subsystem):
         self, chassisSpeeds: ChassisSpeeds, coordinateMode: CoordinateMode
     ) -> None:
         Logger.recordOutput("drive/swerve/commandedSpeeds", chassisSpeeds)
-        discritizedSpeeds = ChassisSpeeds.discretize(chassisSpeeds, kRobotUpdatePeriod)
+        discritizedSpeeds = ChassisSpeeds.discretize(chassisSpeeds, kRobotUpdatePeriodS)
 
         robotChassisSpeeds = None
         if coordinateMode is DriveSubsystem.CoordinateMode.RobotRelative:

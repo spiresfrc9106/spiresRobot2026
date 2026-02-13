@@ -20,7 +20,7 @@ from wpimath.geometry import Rotation2d
 from westwood.subsystems.drive.swervemoduleio import SwerveModuleIO, SwerveModuleConfigParams
 from westwood.util.phoenixutil import PhoenixUtil, tryUntilOk
 
-from westwood.constants import kRobotUpdateFrequency, kRobotUpdatePeriod
+from constants import kRobotUpdateFrequency, kRobotUpdatePeriodS
 from westwood.constants.drive import (
     kDrivePGain,
     kDriveIGain,
@@ -107,7 +107,7 @@ class SwerveModuleIOCTRE(SwerveModuleIO):
         self.steerConfig.motion_magic.motion_magic_expo_k_v = 0.12 * config.steerGearing
         self.steerConfig.motion_magic.motion_magic_expo_k_a = 0.1
         self.steerConfig.closed_loop_ramps.torque_closed_loop_ramp_period = (
-            kRobotUpdatePeriod
+            kRobotUpdatePeriodS
         )
         # optionally fuse the cancoder to the steer motor
         self.steerConfig.feedback.sensor_to_mechanism_ratio = config.steerGearing

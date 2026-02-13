@@ -6,7 +6,7 @@ from wpimath.kinematics import DifferentialDriveKinematics, DifferentialDriveWhe
 
 from westwood.subsystems import DriveSubsystem
 
-from westwood.constants.drive import (
+from constants import (
     kDrivePGain,
     kDriveIGain,
     kDriveDGain,

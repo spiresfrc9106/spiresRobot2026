@@ -9,9 +9,11 @@ from wpimath import applyDeadband
 from wpimath.filter import SlewRateLimiter
 from wpilib import DriverStation, XboxController
 from utils.calibration import Calibration
+from utils.singleton import Singleton
+
 
 @autologgable_output
-class DriverInterface:
+class DriverInterface(metaclass=Singleton):
     """Class to gather input from the driver of the robot"""
 
     def __init__(self):

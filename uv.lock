@@ -950,23 +950,6 @@ wheels = [
 ]
 
 [[package]]
-name = "robotpy-pykit"
-version = "1.0.3"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pyfrc" },
-    { name = "pyntcore" },
-    { name = "robotpy-hal" },
-    { name = "robotpy-wpimath" },
-    { name = "robotpy-wpiutil" },
-    { name = "wpilib" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/81/69/f01b747ecca2d9f7455a738c050e4fa007eed038bcd40efce2f8923a6b67/robotpy_pykit-1.0.3.tar.gz", hash = "sha256:57bfcea73fbd0e3e779286782389be2fccd3dd0034313ae599dd4bd3ea3fe8cf", size = 23210, upload-time = "2026-01-29T15:16:36.12Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/95/5e/3017be019ee0152c9d462d03f4705babb82e4883b663cdac5f86e608ab3c/robotpy_pykit-1.0.3-py3-none-any.whl", hash = "sha256:2041cb2b9327912f9bd57454efd7e7d170e02e06d22fc8bf0baeedefee650b18", size = 32697, upload-time = "2026-01-29T15:16:35.347Z" },
-]
-
-[[package]]
 name = "robotpy-pykit-watch"
 version = "1.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1110,7 +1093,6 @@ dependencies = [
     { name = "robotpy-opencv" },
     { name = "robotpy-pathplannerlib" },
     { name = "robotpy-playingwithfusion" },
-    { name = "robotpy-pykit" },
     { name = "robotpy-pykit-watch" },
     { name = "robotpy-rev" },
     { name = "robotpy-romi" },
@@ -1142,7 +1124,6 @@ requires-dist = [
     { name = "robotpy-opencv" },
     { name = "robotpy-pathplannerlib", specifier = ">=2026.1.1" },
     { name = "robotpy-playingwithfusion" },
-    { name = "robotpy-pykit", specifier = ">=1.0.3" },
     { name = "robotpy-pykit-watch", specifier = ">=1.0.0" },
     { name = "robotpy-rev", specifier = ">=2026.0.1" },
     { name = "robotpy-romi", specifier = ">=2026.2.1" },

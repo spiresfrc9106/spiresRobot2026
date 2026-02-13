@@ -2,15 +2,13 @@ from typing import Callable
 from commands2.button import Trigger
 from pykit.logger import Logger
 from wpilib import RobotBase, DriverStation
-from wpimath.geometry import Pose2d, Pose3d, Rotation2d, Rotation3d, Transform3d
+from wpimath.geometry import Pose2d, Rotation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveDrive4Odometry, SwerveModulePosition
 
-from westwood.util.convenientmath  import pose3dFrom2d
 from westwood.util.robotposeestimator import (
     OdometryObservation,
     TurretObservation,
     TurretedRobotPoseEstimator,
-    TurretedVisionObservation,
     VisionObservation,
 )
 from westwood.util.logtracer import LogTracer

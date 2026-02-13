@@ -1,0 +1,27 @@
+from subsystems.intakeOuttake.motormoduleio import MotorModuleIO
+from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
+
+class MotorModuleIOWrappered(MotorModuleIO):
+    def __init__(self, name: str, motor: WrapperedMotorSuper) -> None:
+        super().__init__(name)
+        self.motor = motor
+
+    def setPID(self, kP: float, kI: float, kD: float) -> None:
+        self.motor.setPID(kP, kI, kD)
+
+    def setPosCmd(self, posCmdRad:float, arbFF:float=0.0)->None:
+        self.motor.setPosCmd(posCmdRad, arbFF)
+
+    def setVelCmd(self, velCmdRadps:float, arbFF:float=0.0)->None:
+        self.motor.setVelCmd(velCmdRadps, arbFF)
+
+    def setVoltage(self, outputVoltageVolts:float)->None:
+        self.motor.setVoltage(outputVoltageVolts)
+
+    def updateInputs(self, inputs: MotorModuleIO.MotorModuleIOInputs) -> None:
+        inputs.positionRad = self.motor.getMotorPositionRad()
+        inputs.velocityRadps = self.motor.getMotorVelocityRadPerSec()
+        inputs.appliedV = self.motor.getAppliedOutput()
+        inputs.drive_supply_current = 0.0
+        inputs.torqueCurrentA = self.motor.getOutputTorqueCurrentA()
+

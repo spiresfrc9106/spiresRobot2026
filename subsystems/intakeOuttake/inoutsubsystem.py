@@ -1,0 +1,408 @@
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Optional, Callable
+from unittest import case
+
+import numpy as np
+from commands2 import Command, Subsystem, cmd
+from commands2.sysid import SysIdRoutine
+from pykit.autolog import autolog_output, autologgable_output
+from pykit.logger import Logger
+from rev import SparkBase, SparkMaxSim, SparkSim
+from wpilib.simulation import LinearSystemSim_1_1_1, FlywheelSim, RoboRioSim, BatterySim
+from wpilib.sysid import State
+from wpimath.system.plant import DCMotor, LinearSystemId
+
+
+from wpimath.geometry import Rotation2d
+
+from constants import kRobotMode, RobotModes, kRobotUpdatePeriodS
+from humanInterface.operatorInterface import OperatorInterface
+from subsystems.intakeOuttake.inoutgainset import InOutGainSet
+from subsystems.intakeOuttake.inoutsubsystemio import InOutSubsystemIO
+from subsystems.intakeOuttake.inout import kTurretMinAngle, kTurretMaxAngle, kTurretTolerance
+from subsystems.intakeOuttake.inoutsubsystemioreal import InOutSubsystemIOReal
+from subsystems.intakeOuttake.inoutsubsystemiosim import InOutSubsystemIORealSim
+from subsystems.intakeOuttake.motormodule import MotorModule
+from subsystems.intakeOuttake.motormoduleio import MotorModuleIO
+from subsystems.intakeOuttake.motormoduleiowrappered import MotorModuleIOWrappered
+from subsystems.intakeOuttake.motormoduleiowrapperedsim import MotorModuleIOWrapperedSim
+from subsystems.state.configsubsystem import ConfigSubsystem
+from utils.singleton import Singleton
+from westwood.util.convenientmath import clampRotation
+from westwood.util.logtracer import LogTracer
+from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
+from wrappers.wrapperedSparkFlex import WrapperedSparkFlex
+from wrappers.wrapperedSparkMax import WrapperedSparkMax
+
+
+class InOutState(Enum):
+    kOff = 0
+    kIntaking = 1
+    kOutaking = 2
+    kShooting = 3
+
+class FlywheelState(Enum):
+    kOff = 0
+    kSpinningUp = 1
+    kSpunUp = 2
+
+
+@autologgable_output
+class InOutSubsystem(Subsystem):
+    GROUND_GEAR_REDUCTION = 16.0 / 32.0
+    GROUND_WHEEL_RADIUS_INCHES = 2.0
+    HOPPER_GEAR_REDUCTION = 10.0 / 84.0
+    HOPPER_WHEEL_RADIUS_INCHES = 2.0
+    FLYWHEEL_GEAR_REDUCTION = 1.0
+    FLYWHEEL_WHEEL_RADIUS_INCHES = 4.0
+
+
+    def __init__(
+        self,
+        io: InOutSubsystemIO,
+        groundModule_io: MotorModuleIO,
+        hopperModule_io: MotorModuleIO,
+        flywheelModule_io: MotorModuleIO,
+        simulation: "InOutSubsystemSimulation|None" = None
+    ) -> None:
+        Subsystem.__init__(self)
+        self.name = type(self).__name__
+        self.setName(self.name)
+        self.io = io
+        self.inputs = InOutSubsystemIO.InOutSubsystemIOInputs()
+        self.groundModule = MotorModule(name="groundModule", io=groundModule_io)
+        self.hopperModule = MotorModule(name="hopperModule", io=hopperModule_io)
+        self.flywheelModule = MotorModule(name="flywheelModule", io=flywheelModule_io)
+        self.modules = (self.groundModule, self.hopperModule, self.flywheelModule)
+        self.simulation = simulation
+
+        self.state: InOutState = InOutState.kOff
+        self.flywheelState: FlywheelState = FlywheelState.kOff
+
+        self.gains = InOutGainSet()
+
+        self.calGroundIntakeTargetSpeedIPS = self.gains.groundIntakeSpeedIPS.get()
+        self.calGroundOuttakeTargetSpeedIPS = self.gains.groundOuttakeSpeedIPS.get()
+        self.calGroundShootTargetSpeedIPS = self.gains.groundShootSpeedIPS.get()
+
+        self.calHopperIntakeTargetSpeedIPS = self.gains.hopperIntakeSpeedIPS.get()
+        self.calHopperOuttakeTargetSpeedIPS = self.gains.hopperOuttakeSpeedIPS.get()
+        self.calHopperShootTargetSpeedIPS = self.gains.hopperShootSpeedIPS.get()
+        self.calFlywheelTargetSpeedIPS = self.gains.flywheelSpeedIPS.get()
+
+        self.oInt = OperatorInterface()
+
+        self.isClosedLoop = True
+
+    def periodic(self) -> None:
+        """Run ongoing subsystem periodic process."""
+        LogTracer.resetOuter("TurretSubsystem periodic")
+        self.io.updateInputs(self.inputs)  # update state of the ionout subsystem
+        Logger.processInputs("Turret", self.inputs)
+        LogTracer.record("UpdateInputs")
+        if self.simulation:
+            self.simulation.periodic()
+            LogTracer.record("SimulationPeriodic")
+
+        if self.gains.hasChanged():
+            self._updateAllCals()
+
+        for module in self.modules:
+            module.periodic()
+
+        LogTracer.record("ModulesPeriodic")
+
+        #print(f"self.oInt.intake={self.oInt.intake}")
+        if self.oInt.intake:
+            print("self.setState(InOutState.kIntaking)")
+            self.setState(InOutState.kIntaking)
+        elif self.oInt.outtake:
+            self.setState(InOutState.kOutaking)
+        elif self.oInt.shoot:
+            self.setState(InOutState.kShooting)
+        else:
+            self.setState(InOutState.kOff)
+
+        if self.oInt.spinUpFlywheel:
+            self.setFlywheelState(FlywheelState.kSpinningUp)
+        elif self.oInt.spinDownFlywheel:
+            self.setFlywheelState(FlywheelState.kOff)
+
+        if self.isClosedLoop:
+            self.periodicUpdateClosedLoop()
+        LogTracer.record("Closed Loop Control")
+        Logger.recordOutput(f"{self.name}/ClosedLoop", self.isClosedLoop)
+        LogTracer.recordTotal()
+
+    def _updateAllCals(self):
+        self.groundModule.io.setPID(
+            self.gains.groundP.get(), 0.0, self.gains.groundD.get()
+        )
+        self.hopperModule.io.setPID(
+            self.gains.hopperP.get(), 0.0, self.gains.hopperD.get()
+        )
+        self.flywheelModule.io.setPID(
+            self.gains.flywheelP.get(), 0.0, self.gains.flywheelD.get()
+        )
+
+    def periodicUpdateClosedLoop(self) -> None:
+        match self.state:
+
+            case InOutState.kIntaking:
+                self.inputs.groundTargetIPS = self.calGroundIntakeTargetSpeedIPS
+                self.inputs.hopperTargetIPS = self.calFlywheelTargetSpeedIPS
+                print(f"self.inputs.groundTargetIPS={self.inputs.groundTargetIPS}")
+
+            case InOutState.kOutaking:
+                self.inputs.groundTargetIPS = -self.calGroundOuttakeTargetSpeedIPS
+                self.inputs.hopperTargetIPS = -self.calHopperOuttakeTargetSpeedIPS
+
+            case InOutState.kShooting:
+                self.inputs.groundTargetIPS = self.calGroundShootTargetSpeedIPS
+                self.inputs.hopperTargetIPS = -self.calHopperShootTargetSpeedIPS
+
+            case InOutState.kOff|_:
+                self.inputs.groundTargetIPS = 0.0
+                self.inputs.hopperTargetIPS = 0.0
+
+        match self.flywheelState:
+            case FlywheelState.kSpinningUp:
+                self.inputs.flywheelTargetIPS = self.calFlywheelTargetSpeedIPS
+            case FlywheelState.kOff|_:
+                self.inputs.flywheelTargetIPS = 0.0
+
+        #print(f"state={self.state} {self.inputs.groundTargetIPS} {self.groundIntakeInPerSToRadPerS(self.inputs.groundTargetIPS)}")
+        self.groundModule.setVelCmd(self.groundIntakeInPerSToRadPerS(self.inputs.groundTargetIPS))
+        self.hopperModule.setVelCmd(self.hopperInPerSToRadPerS(self.inputs.hopperTargetIPS))
+        self.flywheelModule.setVelCmd(self.flywheelInPerSToRadPerS(self.inputs.flywheelTargetIPS))
+
+    def setClosedLoop(self, closedLoop: bool) -> None:
+        self.isClosedLoop = closedLoop
+
+    def setState(self, state: InOutState):
+        self.state = state
+
+    def setFlywheelState(self, flywheelState: FlywheelState):
+        self.flywheelState = flywheelState
+
+    @classmethod
+    def groundIntakeRadPerSToInPerS(cls, radiansPerS: float) -> float:
+        return radiansPerS * cls.GROUND_GEAR_REDUCTION * cls.GROUND_WHEEL_RADIUS_INCHES / 2.0
+
+    @classmethod
+    def groundIntakeInPerSToRadPerS(cls, inPerS: float) -> float:
+        return inPerS / (cls.GROUND_GEAR_REDUCTION * cls.GROUND_WHEEL_RADIUS_INCHES / 2.0)
+
+    @classmethod
+    def hopperRadPerSToInPerS(cls, radiansPerS: float) -> float:
+        return radiansPerS * cls.HOPPER_GEAR_REDUCTION * cls.HOPPER_WHEEL_RADIUS_INCHES / 2.0
+
+    @classmethod
+    def hopperInPerSToRadPerS(cls, inPerS: float) -> float:
+        return inPerS / (cls.HOPPER_GEAR_REDUCTION * cls.HOPPER_WHEEL_RADIUS_INCHES / 2.0)
+
+    @classmethod
+    def flywheelRadPerSToInPerS(cls, radiansPerS: float) -> float:
+        return radiansPerS * cls.FLYWHEEL_GEAR_REDUCTION * cls.FLYWHEEL_WHEEL_RADIUS_INCHES / 2.0
+
+    @classmethod
+    def flywheelInPerSToRadPerS(cls, inPerS: float) -> float:
+        return inPerS / (cls.FLYWHEEL_GEAR_REDUCTION * cls.FLYWHEEL_WHEEL_RADIUS_INCHES / 2.0)
+
+    def sysIdRoutine(self, subsystem: Subsystem) -> Command:
+        """Model the behavior of the system (for better control) by sweeping through the max and min angles."""
+
+        def logState(state: State) -> None:
+            loggedStateStr = ""
+            match state:
+                case State.kQuasistaticForward:
+                    loggedStateStr = "quasistatic-forward"
+                case State.kQuasistaticReverse:
+                    loggedStateStr = "quasistatic-reverse"
+                case State.kDynamicForward:
+                    loggedStateStr = "dynamic-forward"
+                case State.kDynamicReverse:
+                    loggedStateStr = "dynamic-reverse"
+                case State.kNone:
+                    loggedStateStr = "none"
+            Logger.recordOutput("Turret/SysID State", loggedStateStr)
+
+        charactarizationRoutine = SysIdRoutine(
+            SysIdRoutine.Config(0.5, 6, 10, logState),
+            SysIdRoutine.Mechanism(
+                self.io.set_turret_volts,
+                (lambda _: None),
+                subsystem,
+            ),
+        )
+
+        return cmd.sequence(
+            cmd.runOnce(lambda: self.setClosedLoop(False), self),
+            charactarizationRoutine.quasistatic(SysIdRoutine.Direction.kForward).until(
+                self.isAtMax
+            ),
+            charactarizationRoutine.quasistatic(SysIdRoutine.Direction.kReverse).until(
+                self.isAtMin
+            ),
+            charactarizationRoutine.dynamic(SysIdRoutine.Direction.kForward).until(
+                self.isAtMax
+            ),
+            charactarizationRoutine.dynamic(SysIdRoutine.Direction.kReverse).until(
+                self.isAtMin
+            ),
+            cmd.runOnce(lambda: self.setClosedLoop(True), self),
+        )
+
+    def dummy(self):
+        pass
+
+    def getDefaultCommand(self) -> Optional[Command]:
+        return cmd.run(lambda: self.dummy(), self)
+
+# See https://github.com/FRCTeam360/RainMaker26/blob/ac5238c1ef05ec7bd4adafc81331d94dc29ffe08/src/main/java/frc/robot/subsystems/Indexer/IndexerIOSim.java#L3
+# for reference.
+@dataclass
+class FlywheelSimulation():
+    wrapperedMotor: WrapperedMotorSuper
+    gearRatio: float        # Gear Reduction is > 1.0
+    moi: float              # Moment of inertia in kg·m² = = 0.0513951385
+    gearbox: DCMotor = field(init=False)        # e.g: DCMotor.getNEO(1);
+    motorCtrl: SparkBase = field(init=False)   # was motorControllerSim
+    sparkSim: SparkSim = field(init=False)  #
+    plant: LinearSystemSim_1_1_1 = field(init=False)
+    flywheelSim: FlywheelSim = field(init=False)
+
+    def __post_init__(self) -> None:
+        self.gearbox = self.wrapperedMotor.gearbox
+        self.motorCtrl = self.wrapperedMotor.ctrl # TODO Clean this up
+        self.sparkSim = self.wrapperedMotor.sparkSim
+        self.plant = LinearSystemId.flywheelSystem(self.gearbox, self.moi, self.gearRatio)
+        self.flywheelSim = FlywheelSim(self.plant, self.gearbox, self.gearRatio)
+        # TODO Mike Stitt doesn't think we need this step
+        # self.motorCtrl.set(0.0)
+
+    def periodic(self):
+        # Step 1: Get commanded duty cycle directly (not from getAppliedOutput which includes noise)
+        commandedDutyCycle = self.motorCtrl.get()
+        busVoltage = RoboRioSim.getVInVoltage()
+        appliedVoltage = commandedDutyCycle * busVoltage
+        # Step 2: Set the input voltage to the physics simulation
+        self.flywheelSim.setInputVoltage(appliedVoltage)
+        # Step 3: Update the physics simulation
+        self.flywheelSim.update(kRobotUpdatePeriodS)
+        # Step 4: Use SparkMaxSim.iterate() to update the Spark MAX/Flex with simulated values
+        self.sparkSim.iterate(
+            self.flywheelSim.getAngularVelocity(), # Motor velocity in RPM
+            RoboRioSim.getVInVoltage(),            # Simulated battery voltage
+            kRobotUpdatePeriodS);                  # Time interval
+        # Step 5: Update battery voltage based on current draw
+        # TODO Mike Stitt - I think we need this across all currend draws
+        RoboRioSim.setVInVoltage(
+            BatterySim.calculateDefaultBatteryLoadedVoltage(self.flywheelSim.getCurrentDrawAmps())
+        )
+
+        """"
+        // Step 6: Set inputs from simulated values (source of truth)
+        inputs.position = 0.0; // Position not tracked for this flywheel
+        inputs.velocity = indexerSim.getAngularVelocityRPM(); // in RPM
+        inputs.voltage = appliedVoltage;
+        inputs.statorCurrent = indexerSim.getCurrentDrawAmps();
+        inputs.supplyCurrent = indexerSim.getCurrentDrawAmps();
+        inputs.sensor = false; // Sensor not actively used, ignore for now (defaults to false in Sim)
+
+        """
+
+class InOutSubsystemSimulation():
+    def __init__(self,
+            groundMotor:WrapperedMotorSuper,
+            hopperMotor: WrapperedMotorSuper,
+            flywheelMotor: WrapperedMotorSuper) -> None:
+        self.groundWheelSim = FlywheelSimulation(
+            wrapperedMotor=groundMotor,
+            gearRatio=1/InOutSubsystem.GROUND_GEAR_REDUCTION,
+            moi=0.05,
+        )
+        self.hopperWheelSim = FlywheelSimulation(
+            wrapperedMotor=hopperMotor,
+            gearRatio=1/InOutSubsystem.HOPPER_GEAR_REDUCTION,
+            moi=0.05,
+        )
+        self.flywheelWheelSim = FlywheelSimulation(
+            wrapperedMotor=flywheelMotor,
+            gearRatio=1/InOutSubsystem.FLYWHEEL_GEAR_REDUCTION,
+            moi=0.05,
+        )
+        self.simulations = (self.groundWheelSim, self.hopperWheelSim, self.flywheelWheelSim)
+
+    def periodic(self):
+        for simulation in self.simulations:
+            simulation.periodic()
+
+
+def inoutSubsystemFactory() -> InOutSubsystem|None:
+    config = ConfigSubsystem()
+    inout: Optional[InOutSubsystem] = None
+    if config.inoutDepConstants["HAS_INOUT"]:
+        match kRobotMode:
+            case RobotModes.REAL | RobotModes.SIMULATION:
+
+                groundMotorGearBox: Optional[DCMotor] = None
+                hopperMotorGearBox: Optional[DCMotor] = None
+                flywheelMotorGearBox: Optional[DCMotor] = None
+                """
+                if kRobotMode == RobotModes.SIMULATION:
+                    groundMotorGearBox = DCMotor.NEO(1)
+                    hopperMotorGearBox = DCMotor.NEO(1)
+                    flywheelMotorGearBox = DCMotor.neoVortex(1)
+                """
+                inoutGains = InOutGainSet()
+                groundMotor = WrapperedSparkMax(name="groundMotor",
+                                                canID=config.inoutDepConstants["GROUND_MOTOR_CANID"],
+                                                gearBox=groundMotorGearBox)
+                groundMotor.setInverted(config.inoutDepConstants["GROUND_MOTOR_INVERTED"])
+                groundMotor.setPID(inoutGains.groundP.get(), 0.0, inoutGains.groundD.get())
+                hopperMotor = WrapperedSparkMax(name="hopperMotor",
+                                                canID=config.inoutDepConstants["HOPPER_MOTOR_CANID"],
+                                                gearBox=hopperMotorGearBox)
+                hopperMotor.setInverted(config.inoutDepConstants["HOPPER_MOTOR_INVERTED"])
+                hopperMotor.setPID(inoutGains.hopperP.get(), 0.0, inoutGains.hopperD.get())
+                flywheelMotor = WrapperedSparkFlex(name="flywheelMotor",
+                                                   canID=config.inoutDepConstants["FLYWHEEL_MOTOR_CANID"],
+                                                   gearBox=flywheelMotorGearBox)
+                flywheelMotor.setInverted(config.inoutDepConstants["FLYWHEEL_MOTOR_INVERTED"])
+                flywheelMotor.setPID(inoutGains.flywheelP.get(), 0.0, inoutGains.flywheelD.get())
+                inoutSim = None
+                #if kRobotMode == RobotModes.SIMULATION:
+                #    inoutSim = InOutSubsystemSimulation(groundMotor, hopperMotor, flywheelMotor)
+            case _:
+                pass
+
+        match kRobotMode:
+            case RobotModes.REAL:
+                inout = InOutSubsystem(
+                    io=InOutSubsystemIOReal(name="inoutIO"),
+                    groundModule_io=MotorModuleIOWrappered(name="inoutGroundModuleIO", motor=groundMotor),
+                    hopperModule_io=MotorModuleIOWrappered(name="inoutHopperModuleIO", motor=hopperMotor),
+                    flywheelModule_io=MotorModuleIOWrappered(name="inoutFlywheelModuleIO", motor=flywheelMotor),
+                )
+            case RobotModes.SIMULATION:
+                inout = InOutSubsystem(
+                    io=InOutSubsystemIORealSim(name="inoutIO"),
+                    groundModule_io=MotorModuleIOWrapperedSim(name="inoutGroundModuleIO", motor=groundMotor),
+                    hopperModule_io=MotorModuleIOWrapperedSim(name="inoutHopperModuleIO", motor=hopperMotor),
+                    flywheelModule_io=MotorModuleIOWrapperedSim(name="inoutFlywheelModuleIO", motor=flywheelMotor),
+                    simulation=inoutSim
+                )
+            case RobotModes.REPLAY | _:
+                inout = InOutSubsystem(
+                    io=InOutSubsystemIO(),
+                    groundModule_io=MotorModuleIO(name="inoutGroundModuleIO"),
+                    hopperModule_io=MotorModuleIO(name="inoutHopperModuleIO"),
+                    flywheelModule_io=MotorModuleIO(name="inoutFlywheelModuleIO"),
+                )
+
+        inout.setDefaultCommand(inout.getDefaultCommand())
+
+    return inout
+

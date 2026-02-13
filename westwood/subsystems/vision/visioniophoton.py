@@ -8,7 +8,7 @@ from westwood.subsystems.vision.visionio import (
     VisionSubsystemTurretedPoseObservation,
 )
 
-from westwood.constants.vision import kApriltagFieldLayout
+from constants import kApriltagFieldLayout
 
 
 class VisionSubsystemIOPhotonVision(VisionSubsystemIO):

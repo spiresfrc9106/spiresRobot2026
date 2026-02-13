@@ -6,7 +6,7 @@ from photonlibpy.simulation import SimCameraProperties, PhotonCameraSim, VisionS
 from westwood.subsystems.vision.visionio import VisionSubsystemIO
 from westwood.subsystems.vision.visioniophoton import VisionSubsystemIOPhotonVision
 
-from westwood.constants.vision import kApriltagFieldLayout
+from constants import kApriltagFieldLayout
 
 
 class VisionSubsystemIOPhotonSim(VisionSubsystemIOPhotonVision):

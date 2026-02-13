@@ -1,11 +1,12 @@
 from typing_extensions import Self
 from commands2 import Subsystem
 from pykit.logger import Logger
-from pykit.autolog import autolog_output, autologgable_output
+from pykit.autolog import autologgable_output
 
 from subsystems.state.configio import ConfigIO, RobotTypes
+from subsystems.intakeOuttake.inout import InOutDependentConstants
 from utils.singleton import _instances
-from westwood.constants import kRobotMode
+from constants import kRobotMode
 from westwood.util.logtracer import LogTracer
 
 
@@ -54,6 +55,7 @@ class ConfigSubsystem(Subsystem):
         self.cameraDepConstants = CameraDependentConstants().get(self._robotType)
 
         self.cameraDepConstants = CameraDependentConstants().get(self._robotType)
+        self.inoutDepConstants = InOutDependentConstants().get(self._robotType)
         print(f":::::::::::")
         print(f"::::::::::: ConfigSubsystem: {kRobotMode} {self._robotType}")
         print(f":::::::::::")

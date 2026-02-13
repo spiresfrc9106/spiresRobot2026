@@ -242,10 +242,8 @@ class DrivetrainDependentConstants(metaclass=Singleton):
         return drivetrainConstants
 
     def get(self, robotType: RobotTypes):
-        x = self.getDivetrainConstants(robotType)
-        z = robotType
-        y = x[z]
-        return y
+        return self.getDivetrainConstants(robotType)[robotType]
+
 
 
 
