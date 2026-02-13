@@ -3,8 +3,8 @@ from wpimath.geometry import Rotation2d
 
 from westwood.robotstate import RobotState
 from westwood.subsystems.turret.turretsubsystem import TurretSubsystem
-from westwood.constants.field import kBlueTargetLocation
-from westwood.constants.turret import kTurretLocation
+from constants import kBlueTargetLocation
+from constants import kTurretLocation
 from westwood.util.angleoptimize import optimizeAngle
 from westwood.util.fliputil import FlipUtil
 

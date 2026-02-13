@@ -7,7 +7,7 @@ from wpilib import Timer
 
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
 from wrappers.wrapperedSparkFlex import WrapperedSparkFlex
-from wrappers.wrapperedSparkCommon import MotorControlStates
+from wrappers.wrapperedMotorCommon import MotorControlStates
 
 
 class MotorPosStallDetector:
@@ -72,7 +72,7 @@ class MotorPosStallDetector:
             and self.currentMotorDirectionSign == self.lastDirectionSign:
                 if self._hasMotorMovedTowardsDesPos():
                     self.lastMoveTimeS = self.currentUpdateTimeS
-                elif self.motor.getOutputCurrentA() > self.stallCurrentLimitA \
+                elif self.motor.getOutputTorqueCurrentA() > self.stallCurrentLimitA \
                         and self.currentUpdateTimeS - self.lastMoveTimeS > self.stallTimeLimitS:
                     result = True
         else:

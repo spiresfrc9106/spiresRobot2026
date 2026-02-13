@@ -5,7 +5,7 @@ from westwood.subsystems.drive.driveio import DriveIO
 
 from westwood.constants.drive import kPigeonCANId, kCANivoreName
 from westwood.constants.math import kRadiansPerDegree
-from westwood.constants import kRobotUpdateFrequency
+from constants import kRobotUpdateFrequency
 from westwood.util.phoenixutil import PhoenixUtil, tryUntilOk
 
 

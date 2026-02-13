@@ -1,6 +1,6 @@
 from math import hypot, sin
 from typing import Callable
-from wpilib import RobotController, Timer
+from wpilib import Timer
 from wpimath.geometry import (
     Pose2d,
     Pose3d,
@@ -17,7 +17,7 @@ from westwood.subsystems.vision.visionio import (
     VisionSubsystemPoseObservation,
 )
 from westwood.util.convenientmath import pose3dFrom2d
-from westwood.constants.vision import (
+from constants import (
     kCameraFOVVertical,
     kCameraFOVHorizontal,
     kSimulationVariation,

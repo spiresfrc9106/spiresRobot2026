@@ -15,7 +15,7 @@ from westwood.subsystems.drive.drivesubsystem import DriveSubsystem
 from westwood.util.controltype import AnalogInput
 
 
-from westwood.constants.trajectory import (
+from constants import (
     kWaypointJoystickVariation,
     kTrajectoryAnglePGain,
     kTrajectoryAngleIGain,
@@ -25,13 +25,13 @@ from westwood.constants.trajectory import (
     kTrajectoryPositionDGain,
 )
 
-from westwood.constants.drive import (
+from constants import (
     kMaxForwardLinearVelocity,
     kMaxForwardLinearAccelerationWaypoint,
     kMaxRotationAngularVelocity,
     kMaxRotationAngularAcceleration,
 )
-from westwood.constants.math import kMetersPerInch
+from constants import kMetersPerInch
 
 
 class DriveWaypoint(Command):

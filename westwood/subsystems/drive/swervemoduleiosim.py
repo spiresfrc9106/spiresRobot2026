@@ -6,7 +6,7 @@ from westwood.subsystems.drive.swervemoduleio import SwerveModuleConfigParams, S
 
 from westwood.constants.math import kRadiansPerRevolution
 from westwood.constants.sim import kSimMotorResistance
-from westwood.constants import kRobotUpdatePeriod
+from constants import kRobotUpdatePeriodS
 from westwood.util.convenientmath import clamp
 
 
@@ -43,8 +43,8 @@ class SwerveModuleIOSim(SwerveModuleIOCTRE):
 
         self.driveSim.setInputVoltage(clamp(wheelSim.motor_voltage, -12, 12))
         self.steerSim.setInputVoltage(clamp(steerSim.motor_voltage, -12, 12))
-        self.driveSim.update(kRobotUpdatePeriod)
-        self.steerSim.update(kRobotUpdatePeriod)
+        self.driveSim.update(kRobotUpdatePeriodS)
+        self.steerSim.update(kRobotUpdatePeriodS)
 
         wheelSim.set_raw_rotor_position(
             self.driveSim.getAngularPositionRotations() * self.config.driveGearing

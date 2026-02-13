@@ -78,7 +78,7 @@ from westwood.constants.drive import (
     kSteerGearingRatioMk5i,
     kSteerGearingRatioMk5n,
 )
-from westwood.constants import RobotModes, kRobotMode
+from constants import RobotModes, kRobotMode
 from westwood.util.fliputil import FlipUtil
 
 

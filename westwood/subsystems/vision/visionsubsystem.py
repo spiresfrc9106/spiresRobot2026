@@ -4,7 +4,7 @@ from pykit.logger import Logger
 
 from westwood.subsystems.vision.visionio import VisionSubsystemIO
 
-from westwood.constants.vision import (
+from constants import (
     kApriltagFieldLayout,
     kMaxVisionZError,
     kMaxVisionAmbiguity,
@@ -12,7 +12,6 @@ from westwood.constants.vision import (
     kThetaStdDevCoeff,
 )
 #from westwood.constants.turret import kTurretLocation
-from westwood.util.convenientmath import pose3dFromTransform3d
 from westwood.util.logtracer import LogTracer
 from westwood.util.robotposeestimator import TurretedVisionObservation, VisionObservation
 

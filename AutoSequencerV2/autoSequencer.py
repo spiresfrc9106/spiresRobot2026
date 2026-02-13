@@ -4,8 +4,8 @@ from AutoSequencerV2.modeList import ModeList
 from AutoSequencerV2.builtInModes.doNothingMode import DoNothingMode
 from AutoSequencerV2.builtInModes.waitMode import WaitMode
 from AutoSequencerV2.sequentialCommandGroup import SequentialCommandGroup
-from Autonomous.modes.driveForwardSlowly import DriveForwardSlowly
 from Autonomous.modes.driveOut import DriveOut
+from subsystems.state.configsubsystem import ConfigSubsystem
 from utils.singleton import Singleton
 from utils.allianceTransformUtils import onRed
 from utils.autonomousTransformUtils import setFlip
@@ -41,7 +41,8 @@ class AutoSequencer(metaclass=Singleton):
             LoggedDashboardChooser("Main Drive")
         )
         self.mainModeChooser.setDefaultOption("Do Nothing", DoNothingMode())
-        self.mainModeChooser.addOption("Drive Out", DriveOut())
+        if ConfigSubsystem().useCasseroleSwerve() or ConfigSubsystem().useWestwoodSwerve():
+            self.mainModeChooser.addOption("Drive Out", DriveOut())
         self._oldMainMode = self.mainModeChooser.getSelected()
 
         self.topLevelCmdGroup = SequentialCommandGroup()

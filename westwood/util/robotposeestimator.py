@@ -6,7 +6,6 @@ from wpimath.interpolation import (
 )
 from wpimath.kinematics import SwerveDrive4Kinematics, SwerveModulePosition
 
-from westwood.constants.turret import kTurretLocation
 
 
 # shamelessly reimplemented from 6328
@@ -233,67 +232,6 @@ class TurretedRobotPoseEstimator(RobotPoseEstimator):
         """
         self.turretBuffer.addSample(measurement.timestamp, measurement.turretAngle)
 
-    def addTurretedVisionMeasurement(self, measurement: TurretedVisionObservation):
-        """
-        Adds a turreted vision measurement to the pose estimator.
-        Args:
-            measurement: The turreted vision measurement to add. As given from a vision subsystem
-        Returns:
-            None
-        """
-        if self.poseBuffer.getInternalBuffer()[-1][0] - 2.0 > measurement.timestamp:
-            return
-        if self.turretBuffer.getInternalBuffer()[-1][0] - 2.0 > measurement.timestamp:
-            return
-
-        poseSample = self.poseBuffer.sample(measurement.timestamp)
-        if poseSample is None:
-            return
-
-        turretSample = self.turretBuffer.sample(measurement.timestamp)
-        if turretSample is None:
-            return
-
-        sampledRotationTrasnfrom = Transform3d(
-            0, 0, 0, Rotation3d(0, 0, turretSample.radians())
-        )
-        measuredFieldToRobot = (
-            measurement.fieldToTurretTransform
-            + sampledRotationTrasnfrom.inverse()
-            + kTurretLocation.inverse()
-        )
-        measuredFieldToRobot2d = Pose2d(
-            measuredFieldToRobot.translation().toTranslation2d(),
-            measuredFieldToRobot.rotation().toRotation2d(),
-        )
-
-        sampleToOdometryTransform = Transform2d(poseSample, self.odometryPose)
-        odometryToSampleTransform = Transform2d(self.odometryPose, poseSample)
-
-        estimateAtTime = self.estimatedPose + odometryToSampleTransform
-
-        r = [i * i for i in measurement.std]
-
-        visionK = [0.0, 0.0, 0.0]
-        for i in range(3):
-            stdDev = self.odoStdDevs[i]
-            if stdDev == 0.0:
-                visionK[i] = 0.0
-            else:
-                visionK[i] = stdDev / (stdDev + sqrt(stdDev * r[i]))
-        transform = Transform2d(estimateAtTime, measuredFieldToRobot2d)
-        kTimesTransform = [
-            visionK[i] * k
-            for i, k in enumerate(
-                [transform.X(), transform.Y(), transform.rotation().radians()]
-            )
-        ]
-        scaledTransform = Transform2d(
-            kTimesTransform[0], kTimesTransform[1], kTimesTransform[2]
-        )
-        self.estimatedPose = (
-            estimateAtTime + scaledTransform + sampleToOdometryTransform
-        )
 
     def resetPosition(
         self,

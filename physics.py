@@ -59,10 +59,37 @@ class PhysicsEngine:
     Simulates a drivetrain
     """
 
+    """
+    The call order:
+    0 robotInit has run
+    ... we initialize all of the subsystems and their hardware...
+    0 PhysicsEngine.__init__
+    [Physics] WARNING: Westwood Swerve is Not simulating
+    Robot startup complete!
+    [WPILogWriter] Creating WPILOG file at
+    [Auto] New Modes Selected: None Wait 0.0s Left Do Nothing None
+    0 robotPeriodic
+    1 robotPeriodic
+    2 PhysicsEngine.update_sim
+    [WPILogWriter] Renaming log to pykit_20260211_165729.wpilog
+    2 robotPeriodic
+    
+    ... then when entering teleop mode:
+    50 PhysicsEngine.update_sim
+    50 teleopInit
+    50 teleopPeriodic
+    50 robotPeriodic
+    51 PhysicsEngine.update_sim
+    51 teleopPeriodic
+    51 robotPeriodic
+    """
+
     # pylint: disable-next=unused-argument
     def __init__(self, physics_controller: PhysicsInterface, robot: MyRobot):
         self.physics_controller = physics_controller
         self.bot = robot
+
+        print(f"{self.bot.count} PhysicsEngine.__init__")
 
         driveSubsystem: DriveSubsystem|None = None
         if robot.westwoodContainer is not None:
@@ -86,6 +113,7 @@ class PhysicsEngine:
 
     # pylint: disable-next=unused-argument
     def update_sim(self, now: float, tm_diff: float) -> None:
+        #print(f"{self.bot.count} PhysicsEngine.update_sim")
         """
         Called when the simulation parameters for the program need to be
         updated.

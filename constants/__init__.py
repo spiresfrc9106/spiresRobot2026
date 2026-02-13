@@ -29,8 +29,9 @@ import os
 
 from wpilib import RobotBase
 
-kRobotUpdatePeriod = 1 / 50
-kRobotUpdateFrequency = 1 / kRobotUpdatePeriod
+kRobotUpdatePeriodMs: int = 40
+kRobotUpdatePeriodS: float = kRobotUpdatePeriodMs / 1000
+kRobotUpdateFrequency: float = 1 / kRobotUpdatePeriodS
 
 
 class RobotModes(Enum):
