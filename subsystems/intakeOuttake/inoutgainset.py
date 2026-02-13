@@ -29,15 +29,15 @@ class InOutGainSet(metaclass=Singleton):
         self.flywheelV = Calibration("InOut Flywheel kV", 0.0 , "volts/radPerSec")
         self.flywheelA = Calibration("InOut Flywheel kA", 0.000, "volts/radPerSecPerSec")
 
-        self.groundIntakeSpeedIPS = Calibration("Ground Intake Speed IPS", 10.0, "in/sec")
-        self.groundOuttakeSpeedIPS = Calibration("Ground Outtake Speed IPS", 10.0, "in/sec")
-        self.groundShootSpeedIPS = Calibration("Ground Shoot Speed IPS", 10.0, "in/sec")
+        self.groundIntakeSpeedIPS = Calibration("Ground Intake Speed IPS", 40.0, "in/sec")
+        self.groundOuttakeSpeedIPS = Calibration("Ground Outtake Speed IPS", 40.0, "in/sec")
+        self.groundShootSpeedIPS = Calibration("Ground Shoot Speed IPS", 40.0, "in/sec")
 
-        self.hopperIntakeSpeedIPS = Calibration("Hopper Intake Speed IPS", 10.0, "in/sec")
-        self.hopperOuttakeSpeedIPS = Calibration("Hopper Outtake Speed IPS", 10.0, "in/sec")
-        self.hopperShootSpeedIPS = Calibration("Hopper Shoot Speed IPS", 10.0, "in/sec")
+        self.hopperIntakeSpeedIPS = Calibration("Hopper Intake Speed IPS", 20.0, "in/sec")
+        self.hopperOuttakeSpeedIPS = Calibration("Hopper Outtake Speed IPS", 20.0, "in/sec")
+        self.hopperShootSpeedIPS = Calibration("Hopper Shoot Speed IPS", 20.0, "in/sec")
 
-        self.flywheelSpeedIPS = Calibration("Flywheel Speed IPS", 10.0, "rpm")
+        self.flywheelSpeedIPS = Calibration("Flywheel Speed IPS", 1000.0, "in/sec")
 
     def hasChanged(self)->bool:
         """
