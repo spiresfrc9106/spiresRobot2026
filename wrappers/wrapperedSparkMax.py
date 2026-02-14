@@ -181,7 +181,7 @@ class WrapperedSparkMax(WrapperedMotorSuper):
             self.controlState = MotorControlStates.VOLTAGE
 
     def getMotorPositionRad(self)->float:
-        if(TimedRobot.isSimulation()):
+        if(TimedRobot.isSimulation() and self.gearbox is None):
             pos = self.simActPos
         else:
             if self.configSuccess:

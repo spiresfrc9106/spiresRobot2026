@@ -2,7 +2,7 @@ import time
 from typing import Optional
 
 from rev import SparkFlex, SparkFlexConfig, REVLibError, ClosedLoopSlot, SparkBaseConfig, ResetMode, PersistMode, \
-    SparkMaxSim
+    SparkFlexSim
 from rev import SparkClosedLoopController
 from wpilib import TimedRobot
 from wpimath.system.plant import DCMotor
@@ -23,10 +23,10 @@ from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
 class WrapperedSparkFlex(WrapperedMotorSuper):
     def __init__(self, canID:int, name:str, brakeMode:bool=False, currentLimitA:int=40, gearBox:Optional[DCMotor]=None):
         self.ctrl = SparkFlex(canID, SparkFlex.MotorType.kBrushless)
-        self.sparkSim: Optional[SparkMaxSim] = None
+        self.sparkSim: Optional[SparkFlexSim] = None
         self.gearbox: Optional[DCMotor] = gearBox
         if self.gearbox is not None:
-            self.sparkSim = SparkMaxSim(self.ctrl, self.gearbox)
+            self.sparkSim = SparkFlexSim(self.ctrl, self.gearbox)
         self.closedLoopCtrl = self.ctrl.getClosedLoopController()
         self.encoder = self.ctrl.getEncoder()
         self.name = name
@@ -165,7 +165,7 @@ class WrapperedSparkFlex(WrapperedMotorSuper):
             self.controlState = MotorControlStates.VOLTAGE
 
     def getMotorPositionRad(self)->float:
-        if(TimedRobot.isSimulation()):
+        if(TimedRobot.isSimulation() and self.gearbox is None):
             pos = self.simActPos
         else:
             if self.configSuccess:

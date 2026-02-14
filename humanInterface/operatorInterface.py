@@ -58,8 +58,6 @@ class OperatorInterface(metaclass=Singleton):
                 self.spinUpFlywheel = False
                 self.spinDownFlywheel = False
 
-            print(f"self.intake: {self.intake}")
-
         else:
             # If the joystick is unplugged, pick safe-state xyzzy and raise a fault
             if(DriverStation.isFMSAttached()):
