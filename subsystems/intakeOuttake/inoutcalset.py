@@ -1,43 +1,41 @@
-from drivetrain.drivetrainPhysical import DrivetrainPhysical
+from subsystems.state.configsubsystem import ConfigSubsystem
 from utils.calibration import Calibration
 from utils.singleton import Singleton
-from utils.units import RPM2RadPerSec
 
-
-class InOutGainSet(metaclass=Singleton):
+class InOutCalSet(metaclass=Singleton):
     """Helper class to house all calibrated gains for inOut subsystem.
     """
 
     def __init__(self):
-
-        #TODO pull these calibration values out of the constants
-        self.groundP = Calibration("InOut Ground kP", 0.000_4)
-        self.groundD = Calibration("InOut Ground kD", 0.0)
-        self.groundS = Calibration("InOut Ground kS", 0.5, "volts")
-        self.groundV = Calibration("InOut Ground kV", 0.014 , "volts/radPerSec")
-        self.groundA = Calibration("InOut Ground kA", 0.000, "volts/radPerSecPerSec")
-
-        self.hopperP = Calibration("InOut Hopper kP", 0.000_1)
-        self.hopperD = Calibration("InOut Hopper kD", 0.0)
-        self.hopperS = Calibration("InOut Hopper kS", 0.5, "volts")
-        self.hopperV = Calibration("InOut Hopper kV", 0.01 , "volts/radPerSec")
-        self.hopperA = Calibration("InOut Hopper kA", 0.000, "volts/radPerSecPerSec")
-
-        self.flywheelP = Calibration("InOut Flywheel kP", 0.000_1)
-        self.flywheelD = Calibration("InOut Flywheel kD", 0.0)
-        self.flywheelS = Calibration("InOut Flywheel kS", 0.5, "volts")
-        self.flywheelV = Calibration("InOut Flywheel kV", 0.03 , "volts/radPerSec")
-        self.flywheelA = Calibration("InOut Flywheel kA", 0.000, "volts/radPerSecPerSec")
-
-        self.groundIntakeSpeedIPS = Calibration("Ground Intake Speed IPS", 40.0, "in/sec")
-        self.groundOuttakeSpeedIPS = Calibration("Ground Outtake Speed IPS", 40.0, "in/sec")
-        self.groundShootSpeedIPS = Calibration("Ground Shoot Speed IPS", 40.0, "in/sec")
-
-        self.hopperIntakeSpeedIPS = Calibration("Hopper Intake Speed IPS", 20.0, "in/sec")
-        self.hopperOuttakeSpeedIPS = Calibration("Hopper Outtake Speed IPS", 20.0, "in/sec")
-        self.hopperShootSpeedIPS = Calibration("Hopper Shoot Speed IPS", 20.0, "in/sec")
-
-        self.flywheelSpeedIPS = Calibration("Flywheel Speed IPS", 100.0, "in/sec")
+        depConsts = ConfigSubsystem().inoutDepConstants
+        if depConsts["HAS_INOUT"]:
+            self.groundP = Calibration("InOut Ground kP", depConsts["GROUND_KP"])
+            self.groundD = Calibration("InOut Ground kD", depConsts["GROUND_KD"])
+            self.groundS = Calibration("InOut Ground kS", depConsts["GROUND_KS"], "volts")
+            self.groundV = Calibration("InOut Ground kV", depConsts["GROUND_KV"], "volts/radPerSec")
+            self.groundA = Calibration("InOut Ground kA", depConsts["GROUND_KA"], "volts/radPerSecPerSec")
+    
+            self.hopperP = Calibration("InOut Hopper kP", depConsts["HOPPER_KP"])
+            self.hopperD = Calibration("InOut Hopper kD", depConsts["HOPPER_KD"])
+            self.hopperS = Calibration("InOut Hopper kS", depConsts["HOPPER_KS"], "volts")
+            self.hopperV = Calibration("InOut Hopper kV", depConsts["HOPPER_KV"], "volts/radPerSec")
+            self.hopperA = Calibration("InOut Hopper kA", depConsts["HOPPER_KA"], "volts/radPerSecPerSec")
+    
+            self.flywheelP = Calibration("InOut Flywheel kP", depConsts["FLYWHEEL_KP"])
+            self.flywheelD = Calibration("InOut Flywheel kD", depConsts["FLYWHEEL_KD"])
+            self.flywheelS = Calibration("InOut Flywheel kS", depConsts["FLYWHEEL_KS"], "volts")
+            self.flywheelV = Calibration("InOut Flywheel kV", depConsts["FLYWHEEL_KV"], "volts/radPerSec")
+            self.flywheelA = Calibration("InOut Flywheel kA", depConsts["FLYWHEEL_KA"], "volts/radPerSecPerSec")
+    
+            self.groundIntakeSpeedIPS = Calibration("Ground Intake Speed IPS", depConsts["GROUND_INTAKE_SPEED_IPS"], "in/sec")
+            self.groundOuttakeSpeedIPS = Calibration("Ground Outtake Speed IPS", depConsts["GROUND_OUTTAKE_SPEED_IPS"], "in/sec")
+            self.groundShootSpeedIPS = Calibration("Ground Shoot Speed IPS", depConsts["GROUND_SHOOT_SPEED_IPS"], "in/sec")
+    
+            self.hopperIntakeSpeedIPS = Calibration("Hopper Intake Speed IPS", depConsts["HOPPER_INTAKE_SPEED_IPS"], "in/sec")
+            self.hopperOuttakeSpeedIPS = Calibration("Hopper Outtake Speed IPS", depConsts["HOPPER_OUTTAKE_SPEED_IPS"], "in/sec")
+            self.hopperShootSpeedIPS = Calibration("Hopper Shoot Speed IPS", depConsts["HOPPER_SHOOT_SPEED_IPS"], "in/sec")
+    
+            self.flywheelSpeedIPS = Calibration("Flywheel Speed IPS", depConsts["FLYWHEEL_SPEED_IPS"], "in/sec")
 
     def hasChanged(self)->bool:
         """

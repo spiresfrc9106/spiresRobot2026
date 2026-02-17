@@ -21,7 +21,7 @@ from wpimath.geometry import Rotation2d
 
 from constants import kRobotMode, RobotModes, kRobotUpdatePeriodS
 from humanInterface.operatorInterface import OperatorInterface
-from subsystems.intakeOuttake.inoutgainset import InOutGainSet
+from subsystems.intakeOuttake.inoutcalset import InOutCalSet
 from subsystems.intakeOuttake.inoutsubsystemio import InOutSubsystemIO
 from subsystems.intakeOuttake.inout import kTurretMinAngle, kTurretMaxAngle, kTurretTolerance
 from subsystems.intakeOuttake.inoutsubsystemioreal import InOutSubsystemIOReal
@@ -49,21 +49,18 @@ class InOutState(Enum):
 class FlywheelState(Enum):
     kOff = 0
     kSpinningUp = 1
-    kSpunUp = 2
-
 
 @autologgable_output
 class InOutSubsystem(Subsystem):
-    GROUND_GEAR_REDUCTION = 16.0 / 32.0
-    GROUND_WHEEL_DIAMETER_INCHES = 2.0
+    GROUND_GEAR_REDUCTION = ConfigSubsystem().inoutDepConstants["GROUND_GEAR_REDUCTION"]
+    GROUND_WHEEL_DIAMETER_INCHES = ConfigSubsystem().inoutDepConstants["GROUND_WHEEL_DIAMETER_INCHES"]
     GROUND_WHEEL_RADIUS_INCHES = GROUND_WHEEL_DIAMETER_INCHES / 2.0
-    HOPPER_GEAR_REDUCTION = 10.0 / 84.0
-    HOPPER_WHEEL_DIAMETER_INCHES = 2.0
+    HOPPER_GEAR_REDUCTION = ConfigSubsystem().inoutDepConstants["HOPPER_GEAR_REDUCTION"]
+    HOPPER_WHEEL_DIAMETER_INCHES = ConfigSubsystem().inoutDepConstants["HOPPER_WHEEL_DIAMETER_INCHES"]
     HOPPER_WHEEL_RADIUS_INCHES = HOPPER_WHEEL_DIAMETER_INCHES / 2.0
-    FLYWHEEL_GEAR_REDUCTION = 1.0
-    FLYWHEEL_WHEEL_DIAMETER_INCHES = 4.0
+    FLYWHEEL_GEAR_REDUCTION = ConfigSubsystem().inoutDepConstants["FLYWHEEL_GEAR_REDUCTION"]
+    FLYWHEEL_WHEEL_DIAMETER_INCHES = ConfigSubsystem().inoutDepConstants["FLYWHEEL_WHEEL_DIAMETER_INCHES"]
     FLYWHEEL_WHEEL_RADIUS_INCHES = FLYWHEEL_WHEEL_DIAMETER_INCHES / 2.0
-
 
     def __init__(
         self,
@@ -87,7 +84,7 @@ class InOutSubsystem(Subsystem):
         self.state: InOutState = InOutState.kOff
         self.flywheelState: FlywheelState = FlywheelState.kOff
 
-        self.gains = InOutGainSet()
+        self.cals = InOutCalSet()
 
         self._updateAllCals()
 
@@ -108,7 +105,7 @@ class InOutSubsystem(Subsystem):
         Logger.processInputs("Turret", self.inputs)
         LogTracer.record("UpdateInputs")
 
-        if self.gains.hasChanged():
+        if self.cals.hasChanged():
             self._updateAllCals()
 
         #print(f"self.oInt.intake={self.oInt.intake}")
@@ -138,33 +135,33 @@ class InOutSubsystem(Subsystem):
 
     def _updateAllCals(self):
         self.groundModule.io.setPID(
-            self.gains.groundP.get(), 0.0, self.gains.groundD.get()
+            self.cals.groundP.get(), 0.0, self.cals.groundD.get()
         )
         self.hopperModule.io.setPID(
-            self.gains.hopperP.get(), 0.0, self.gains.hopperD.get()
+            self.cals.hopperP.get(), 0.0, self.cals.hopperD.get()
         )
         self.flywheelModule.io.setPID(
-            self.gains.flywheelP.get(), 0.0, self.gains.flywheelD.get()
+            self.cals.flywheelP.get(), 0.0, self.cals.flywheelD.get()
         )
-        self.calGroundKs = self.gains.groundS.get()
-        self.calGroundKv = self.gains.groundV.get()
-        self.calHopperKs = self.gains.hopperS.get()
-        self.calHopperKv = self.gains.hopperV.get()
-        self.calFlywheelKs = self.gains.flywheelS.get()
-        self.calFlywheelKv = self.gains.flywheelV.get()
+        self.calGroundKs = self.cals.groundS.get()
+        self.calGroundKv = self.cals.groundV.get()
+        self.calHopperKs = self.cals.hopperS.get()
+        self.calHopperKv = self.cals.hopperV.get()
+        self.calFlywheelKs = self.cals.flywheelS.get()
+        self.calFlywheelKv = self.cals.flywheelV.get()
 
         self.groundFF = SimpleMotorFeedforwardRadians(self.calGroundKs, self.calGroundKv, 0.0, kRobotUpdatePeriodS)
         self.hopperFF = SimpleMotorFeedforwardRadians(self.calHopperKs, self.calHopperKv, 0.0, kRobotUpdatePeriodS)
         self.flywheelFF = SimpleMotorFeedforwardRadians(self.calFlywheelKs, self.calFlywheelKv, 0.0, kRobotUpdatePeriodS)
 
-        self.calGroundIntakeTargetSpeedIPS = self.gains.groundIntakeSpeedIPS.get()
-        self.calGroundOuttakeTargetSpeedIPS = self.gains.groundOuttakeSpeedIPS.get()
-        self.calGroundShootTargetSpeedIPS = self.gains.groundShootSpeedIPS.get()
+        self.calGroundIntakeTargetSpeedIPS = self.cals.groundIntakeSpeedIPS.get()
+        self.calGroundOuttakeTargetSpeedIPS = self.cals.groundOuttakeSpeedIPS.get()
+        self.calGroundShootTargetSpeedIPS = self.cals.groundShootSpeedIPS.get()
 
-        self.calHopperIntakeTargetSpeedIPS = self.gains.hopperIntakeSpeedIPS.get()
-        self.calHopperOuttakeTargetSpeedIPS = self.gains.hopperOuttakeSpeedIPS.get()
-        self.calHopperShootTargetSpeedIPS = self.gains.hopperShootSpeedIPS.get()
-        self.calFlywheelTargetSpeedIPS = self.gains.flywheelSpeedIPS.get()
+        self.calHopperIntakeTargetSpeedIPS = self.cals.hopperIntakeSpeedIPS.get()
+        self.calHopperOuttakeTargetSpeedIPS = self.cals.hopperOuttakeSpeedIPS.get()
+        self.calHopperShootTargetSpeedIPS = self.cals.hopperShootSpeedIPS.get()
+        self.calFlywheelTargetSpeedIPS = self.cals.flywheelSpeedIPS.get()
 
 
     def periodicUpdateClosedLoop(self) -> None:
@@ -375,22 +372,22 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
                     hopperMotorGearBox = DCMotor.NEO(1)
                     flywheelMotorGearBox = DCMotor.neoVortex(1)
 
-                inoutGains = InOutGainSet()
+                inoutCals = InOutCalSet()
                 groundMotor = WrapperedSparkMax(name="groundMotor",
                                                 canID=config.inoutDepConstants["GROUND_MOTOR_CANID"],
                                                 gearBox=groundMotorGearBox)
                 groundMotor.setInverted(config.inoutDepConstants["GROUND_MOTOR_INVERTED"])
-                groundMotor.setPID(inoutGains.groundP.get(), 0.0, inoutGains.groundD.get())
+                groundMotor.setPID(inoutCals.groundP.get(), 0.0, inoutCals.groundD.get())
                 hopperMotor = WrapperedSparkMax(name="hopperMotor",
                                                 canID=config.inoutDepConstants["HOPPER_MOTOR_CANID"],
                                                 gearBox=hopperMotorGearBox)
                 hopperMotor.setInverted(config.inoutDepConstants["HOPPER_MOTOR_INVERTED"])
-                hopperMotor.setPID(inoutGains.hopperP.get(), 0.0, inoutGains.hopperD.get())
+                hopperMotor.setPID(inoutCals.hopperP.get(), 0.0, inoutCals.hopperD.get())
                 flywheelMotor = WrapperedSparkFlex(name="flywheelMotor",
                                                    canID=config.inoutDepConstants["FLYWHEEL_MOTOR_CANID"],
                                                    gearBox=flywheelMotorGearBox)
                 flywheelMotor.setInverted(config.inoutDepConstants["FLYWHEEL_MOTOR_INVERTED"])
-                flywheelMotor.setPID(inoutGains.flywheelP.get(), 0.0, inoutGains.flywheelD.get())
+                flywheelMotor.setPID(inoutCals.flywheelP.get(), 0.0, inoutCals.flywheelD.get())
                 inoutSim = None
                 if kRobotMode == RobotModes.SIMULATION:
                     inoutSim = InOutSubsystemSimulation(groundMotor, hopperMotor, flywheelMotor)
