@@ -11,22 +11,22 @@ class InOutGainSet(metaclass=Singleton):
     def __init__(self):
 
         #TODO pull these calibration values out of the constants
-        self.groundP = Calibration("InOut Ground kP", 0.000_1)
+        self.groundP = Calibration("InOut Ground kP", 0.000_4)
         self.groundD = Calibration("InOut Ground kD", 0.0)
         self.groundS = Calibration("InOut Ground kS", 0.5, "volts")
-        self.groundV = Calibration("InOut Ground kV", 0.0 , "volts/radPerSec")
+        self.groundV = Calibration("InOut Ground kV", 0.014 , "volts/radPerSec")
         self.groundA = Calibration("InOut Ground kA", 0.000, "volts/radPerSecPerSec")
 
         self.hopperP = Calibration("InOut Hopper kP", 0.000_1)
         self.hopperD = Calibration("InOut Hopper kD", 0.0)
         self.hopperS = Calibration("InOut Hopper kS", 0.5, "volts")
-        self.hopperV = Calibration("InOut Hopper kV", 0.0 , "volts/radPerSec")
+        self.hopperV = Calibration("InOut Hopper kV", 0.01 , "volts/radPerSec")
         self.hopperA = Calibration("InOut Hopper kA", 0.000, "volts/radPerSecPerSec")
 
         self.flywheelP = Calibration("InOut Flywheel kP", 0.000_1)
         self.flywheelD = Calibration("InOut Flywheel kD", 0.0)
         self.flywheelS = Calibration("InOut Flywheel kS", 0.5, "volts")
-        self.flywheelV = Calibration("InOut Flywheel kV", 0.0 , "volts/radPerSec")
+        self.flywheelV = Calibration("InOut Flywheel kV", 0.03 , "volts/radPerSec")
         self.flywheelA = Calibration("InOut Flywheel kA", 0.000, "volts/radPerSecPerSec")
 
         self.groundIntakeSpeedIPS = Calibration("Ground Intake Speed IPS", 40.0, "in/sec")
@@ -37,7 +37,7 @@ class InOutGainSet(metaclass=Singleton):
         self.hopperOuttakeSpeedIPS = Calibration("Hopper Outtake Speed IPS", 20.0, "in/sec")
         self.hopperShootSpeedIPS = Calibration("Hopper Shoot Speed IPS", 20.0, "in/sec")
 
-        self.flywheelSpeedIPS = Calibration("Flywheel Speed IPS", 1000.0, "in/sec")
+        self.flywheelSpeedIPS = Calibration("Flywheel Speed IPS", 100.0, "in/sec")
 
     def hasChanged(self)->bool:
         """

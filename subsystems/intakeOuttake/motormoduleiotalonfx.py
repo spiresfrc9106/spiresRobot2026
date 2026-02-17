@@ -149,8 +149,8 @@ class MotorModuleIOCTRE(MotorModuleIO):
             self.driveTorqueCurrent,
         )
 
-        inputs.positionRad = self.drivePosition.value * kRadiansPerRevolution
-        inputs.velocityRadps = self.driveVelocity.value * kRadiansPerRevolution
+        inputs.posRad = self.drivePosition.value * kRadiansPerRevolution
+        inputs.velRadps = self.driveVelocity.value * kRadiansPerRevolution
         inputs.appliedV = self.driveApplied.value
         inputs.drive_supply_current = self.driveSupplyCurrent.value
         inputs.torqueCurrentA = self.driveTorqueCurrent.value

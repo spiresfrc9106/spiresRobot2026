@@ -29,10 +29,10 @@ class MotorModule:
         self.io.setVelCmd(velCmdRadps, arbFF)
 
     def getMotorPositionRad(self)->float:
-        return self.inputs.positionRad
+        return self.inputs.posRad
 
     def getMotorVelocityRadPerSec(self)->float:
-        return self.inputs.velocityRadps
+        return self.inputs.velRadps
 
     def getAppliedOutput(self)->float:
         return self.inputs.appliedV
