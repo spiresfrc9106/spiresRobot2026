@@ -137,6 +137,270 @@
       "grid_layout": {
         "layouts": [
           {
+            "title": "Intake Speed IPS",
+            "x": 0.0,
+            "y": 256.0,
+            "width": 192.0,
+            "height": 192.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "ground",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Calibrations/Ground Intake Speed IPS/curValue",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": true
+                }
+              },
+              {
+                "title": "hopper",
+                "x": 320.0,
+                "y": 576.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Calibrations/Hopper Intake Speed IPS/curValue",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": true
+                }
+              }
+            ]
+          },
+          {
+            "title": "Outtake Speed IPS",
+            "x": 192.0,
+            "y": 256.0,
+            "width": 192.0,
+            "height": 192.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "ground",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Calibrations/Ground Outtake Speed IPS/curValue",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": true
+                }
+              },
+              {
+                "title": "hopper",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Calibrations/Hopper Outtake Speed IPS/curValue",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": true
+                }
+              }
+            ]
+          },
+          {
+            "title": "Shoot Speed IPS",
+            "x": 384.0,
+            "y": 256.0,
+            "width": 192.0,
+            "height": 256.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "ground",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Calibrations/Ground Shoot Speed IPS/curValue",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": true
+                }
+              },
+              {
+                "title": "hopper",
+                "x": 768.0,
+                "y": 128.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Calibrations/Hopper Shoot Speed IPS/curValue",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": true
+                }
+              },
+              {
+                "title": "flywheel",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Calibrations/Flywheel Speed IPS/curValue",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": true
+                }
+              }
+            ]
+          },
+          {
+            "title": "Target IPS",
+            "x": 768.0,
+            "y": 0.0,
+            "width": 192.0,
+            "height": 256.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "ground",
+                "x": 576.0,
+                "y": 256.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/AdvantageKit/inout/groundTargetIPS",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "flywheel",
+                "x": 512.0,
+                "y": 384.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/AdvantageKit/inout/flywheelTargetIPS",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "hopper",
+                "x": 512.0,
+                "y": 384.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/AdvantageKit/inout/hopperTargetIPS",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              }
+            ]
+          }
+        ],
+        "containers": [
+          {
+            "title": "flywheelIPS",
+            "x": 512.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "Radial Gauge",
+            "properties": {
+              "topic": "/AdvantageKit/inout/flywheelIPS",
+              "period": 0.06,
+              "data_type": "double",
+              "start_angle": -140.0,
+              "end_angle": 140.0,
+              "min_value": 0.0,
+              "max_value": 1400.0,
+              "number_of_labels": 7,
+              "wrap_value": false,
+              "show_pointer": true,
+              "show_ticks": true
+            }
+          },
+          {
+            "title": "hopperIPS",
+            "x": 256.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "Radial Gauge",
+            "properties": {
+              "topic": "/AdvantageKit/inout/hopperIPS",
+              "period": 0.06,
+              "data_type": "double",
+              "start_angle": -140.0,
+              "end_angle": 140.0,
+              "min_value": -100.0,
+              "max_value": 100.0,
+              "number_of_labels": 8,
+              "wrap_value": false,
+              "show_pointer": true,
+              "show_ticks": true
+            }
+          },
+          {
+            "title": "groundIPS",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "Radial Gauge",
+            "properties": {
+              "topic": "/AdvantageKit/inout/groundIPS",
+              "period": 0.06,
+              "data_type": "double",
+              "start_angle": -140.0,
+              "end_angle": 140.0,
+              "min_value": -100.0,
+              "max_value": 100.0,
+              "number_of_labels": 8,
+              "wrap_value": false,
+              "show_pointer": true,
+              "show_ticks": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "in-out-shoot-gains",
+      "grid_layout": {
+        "layouts": [
+          {
             "title": "InOut Ground kV",
             "x": 1344.0,
             "y": 0.0,
@@ -578,7 +842,7 @@
             "height": 128.0,
             "type": "Text Display",
             "properties": {
-              "topic": "/AdvantageKit/Turret/groundTargetIPS",
+              "topic": "/AdvantageKit/Inout/groundTargetIPS",
               "period": 0.06,
               "data_type": "double",
               "show_submit_button": false
@@ -592,7 +856,7 @@
             "height": 128.0,
             "type": "Text Display",
             "properties": {
-              "topic": "/AdvantageKit/Turret/hopperTargetIPS",
+              "topic": "/AdvantageKit/inout/hopperTargetIPS",
               "period": 0.06,
               "data_type": "double",
               "show_submit_button": false
@@ -606,7 +870,7 @@
             "height": 128.0,
             "type": "Text Display",
             "properties": {
-              "topic": "/AdvantageKit/Turret/flywheelTargetIPS",
+              "topic": "/AdvantageKit/inout/flywheelTargetIPS",
               "period": 0.06,
               "data_type": "double",
               "show_submit_button": false
@@ -620,14 +884,14 @@
             "height": 256.0,
             "type": "Radial Gauge",
             "properties": {
-              "topic": "/AdvantageKit/Turret/flywheelIPS",
+              "topic": "/AdvantageKit/inout/flywheelIPS",
               "period": 0.06,
               "data_type": "double",
               "start_angle": -140.0,
               "end_angle": 140.0,
               "min_value": 0.0,
-              "max_value": 1500.0,
-              "number_of_labels": 8,
+              "max_value": 1400.0,
+              "number_of_labels": 7,
               "wrap_value": false,
               "show_pointer": true,
               "show_ticks": true
@@ -641,7 +905,7 @@
             "height": 256.0,
             "type": "Radial Gauge",
             "properties": {
-              "topic": "/AdvantageKit/Turret/hopperIPS",
+              "topic": "/AdvantageKit/inout/hopperIPS",
               "period": 0.06,
               "data_type": "double",
               "start_angle": -140.0,
@@ -718,7 +982,7 @@
             "height": 256.0,
             "type": "Radial Gauge",
             "properties": {
-              "topic": "/AdvantageKit/Turret/groundIPS",
+              "topic": "/AdvantageKit/inout/groundIPS",
               "period": 0.06,
               "data_type": "double",
               "start_angle": -140.0,

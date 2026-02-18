@@ -3,12 +3,7 @@ from wpilib.simulation import DCMotorSim
 from wpimath.system.plant import LinearSystemId
 from subsystems.intakeOuttake.inoutsubsystemio import InOutSubsystemIO
 from subsystems.intakeOuttake.inoutsubsystemioreal import InOutSubsystemIOReal
-from subsystems.intakeOuttake.motormoduleio import MotorModuleIO
-from westwood.util.convenientmath import clamp
 
-from subsystems.intakeOuttake.inout import kTurretSimMotor, kTurretGearRatio, kTurretSimInertia
-from westwood.constants.math import kRadiansPerRevolution
-from constants import kRobotUpdatePeriodS
 
 
 class InOutSubsystemIORealSim(InOutSubsystemIOReal):
@@ -18,12 +13,14 @@ class InOutSubsystemIORealSim(InOutSubsystemIOReal):
         name: str,
     ) -> None:
         super().__init__(name)  # Initialize the Sim motor the same way as the actual Talon motor
+        """
         self.turretSimModel = DCMotorSim(
             LinearSystemId.DCMotorSystem(
                 kTurretSimMotor, kTurretSimInertia, kTurretGearRatio
             ),
             kTurretSimMotor,
         )  # Create a DC motor simulation model with specified parameters
+        """
 
     def updateInputs(self, inputs: InOutSubsystemIO.InOutSubsystemIOInputs) -> None:
         """Simulate the motor behavior, then update TalonIO inputs."""

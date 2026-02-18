@@ -11,19 +11,16 @@ from wpimath._controls._controls.controller import SimpleMotorFeedforwardRadians
 
 from pykit.autolog import autolog_output, autologgable_output
 from pykit.logger import Logger
-from rev import SparkBase, SparkMaxSim, SparkSim
+from rev import SparkBase, SparkSim
 from wpilib.simulation import LinearSystemSim_1_1_1, FlywheelSim, RoboRioSim, BatterySim
 from wpilib.sysid import State
 from wpimath.system.plant import DCMotor, LinearSystemId
-
-
-from wpimath.geometry import Rotation2d
 
 from constants import kRobotMode, RobotModes, kRobotUpdatePeriodS
 from humanInterface.operatorInterface import OperatorInterface
 from subsystems.intakeOuttake.inoutcalset import InOutCalSet
 from subsystems.intakeOuttake.inoutsubsystemio import InOutSubsystemIO
-from subsystems.intakeOuttake.inout import kTurretMinAngle, kTurretMaxAngle, kTurretTolerance
+
 from subsystems.intakeOuttake.inoutsubsystemioreal import InOutSubsystemIOReal
 from subsystems.intakeOuttake.inoutsubsystemiosim import InOutSubsystemIORealSim
 from subsystems.intakeOuttake.motormodule import MotorModule
@@ -31,9 +28,8 @@ from subsystems.intakeOuttake.motormoduleio import MotorModuleIO
 from subsystems.intakeOuttake.motormoduleiowrappered import MotorModuleIOWrappered
 from subsystems.intakeOuttake.motormoduleiowrapperedsim import MotorModuleIOWrapperedSim
 from subsystems.state.configsubsystem import ConfigSubsystem
-from utils.singleton import Singleton
+
 from utils.units import radPerSec2RPM
-from westwood.util.convenientmath import clampRotation
 from westwood.util.logtracer import LogTracer
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
 from wrappers.wrapperedSparkFlex import WrapperedSparkFlex
@@ -102,7 +98,7 @@ class InOutSubsystem(Subsystem):
         self.inputs.hopperIPS = self.hopperRadPerSToInPerS(self.hopperModule.inputs.velRadps)
         self.inputs.flywheelIPS = self.flywheelRadPerSToInPerS(self.flywheelModule.inputs.velRadps)
         self.io.updateInputs(self.inputs)  # update state of the ionout subsystem
-        Logger.processInputs("Turret", self.inputs)
+        Logger.processInputs("inout", self.inputs)
         LogTracer.record("UpdateInputs")
 
         if self.cals.hasChanged():
@@ -253,7 +249,7 @@ class InOutSubsystem(Subsystem):
                     loggedStateStr = "dynamic-reverse"
                 case State.kNone:
                     loggedStateStr = "none"
-            Logger.recordOutput("Turret/SysID State", loggedStateStr)
+            Logger.recordOutput("inout/SysID State", loggedStateStr)
 
         charactarizationRoutine = SysIdRoutine(
             SysIdRoutine.Config(0.5, 6, 10, logState),
@@ -421,7 +417,7 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
         inout.setDefaultCommand(inout.getDefaultCommand())
 
         match kRobotMode:
-            case RobotModes.REAL|RobotModes.SIMULATION:
+            case RobotModes.SIMULATION:
                 groundMaxFreeSpeedRadps = groundMotorGearBox.freeSpeed
                 groundMaxFreeSpeedRPM = radPerSec2RPM(groundMaxFreeSpeedRadps)
                 groundMaxFreeSpeedIPS =  inout.groundRadPerSToInPerS(groundMaxFreeSpeedRadps)
@@ -440,7 +436,7 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
                 print(f"flywheelMaxFreeSpeedRPM={flywheelMaxFreeSpeedRPM:.0f} flywheelMaxFreeSpeedIPS={flywheelMaxFreeSpeedIPS:.0f}"
                       f" calFlywheelIntakeTargetSpeedIPS={inout.calFlywheelTargetSpeedIPS:.0f}"
                       f" ratioOfMaxSpeed={inout.calFlywheelTargetSpeedIPS/flywheelMaxFreeSpeedIPS:.2f}")
-            case RobotModes.REPLAY | _:
+            case RobotModes.REAL|RobotModes.REPLAY | _:
                 pass
 
 
