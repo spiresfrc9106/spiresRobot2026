@@ -134,6 +134,8 @@ class WrapperedSparkMax(WrapperedMotorSuper):
             posCmdRad (float): motor desired shaft rotations in radians
             arbFF (float, optional): _description_. Defaults to 0.
         """
+        posCmdRad = float(posCmdRad)
+        arbFF = float(arbFF)
         self.simActPos = posCmdRad
         posCmdRev = rad2Rev(posCmdRad)
 
@@ -158,7 +160,8 @@ class WrapperedSparkMax(WrapperedMotorSuper):
             velCmd (float): motor desired shaft velocity in radians per second
             arbFF (int, optional): _description_. Defaults to 0.
         """
-
+        velCmdRadps = float(velCmdRadps)
+        arbFF = float(arbFF)
         self.desVelRadps = velCmdRadps
         desVelRPM = radPerSec2RPM(velCmdRadps)
         self.desVolt = arbFF
@@ -175,6 +178,7 @@ class WrapperedSparkMax(WrapperedMotorSuper):
             self.disconFault.set(err != REVLibError.kOk)
 
     def setVoltage(self, outputVoltageVolts:float)->None:
+        outputVoltageVolts = float(outputVoltageVolts)
         self.desVolt = outputVoltageVolts
         if self.configSuccess:
             self.ctrl.setVoltage(outputVoltageVolts)

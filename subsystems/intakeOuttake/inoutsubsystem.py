@@ -4,7 +4,8 @@ from typing import Optional
 
 from commands2 import Command, Subsystem, cmd
 from commands2.sysid import SysIdRoutine
-from wpimath._controls._controls.controller import SimpleMotorFeedforwardRadians
+from wpilib import XboxController, Timer
+from wpimath.controller import SimpleMotorFeedforwardRadians
 
 from pykit.autolog import autologgable_output
 from pykit.logger import Logger
@@ -90,7 +91,11 @@ class InOutSubsystem(Subsystem):
     def initialize(self):
         self.setState(InOutState.kOff)
         self.setFlywheelState(FlywheelState.kOff)
-        self.setDefaultCommand(self.getDefaultCommand())
+        self.groundModule.setVelCmd(0.0)
+        self.hopperModule.setVelCmd(0.0)
+        self.flywheelModule.setVelCmd(0.0)
+        self.setDefaultCommand(self.aDoNothingCommand())
+
 
     def periodic(self) -> None:
         """Run ongoing subsystem periodic process."""
@@ -108,24 +113,6 @@ class InOutSubsystem(Subsystem):
 
         if self.cals.hasChanged():
             self._updateAllCals()
-
-        match self.oInt.inOutCommand:
-            case InOutCommand.kIntaking:
-                self.setState(InOutState.kIntaking)
-            case InOutCommand.kOutaking:
-                self.setState(InOutState.kOutaking)
-            case InOutCommand.kShooting:
-                self.setState(InOutState.kShooting)
-            case InOutCommand.kOff|_:
-                self.setState(InOutState.kOff)
-
-        match self.oInt.flywheelCommand:
-            case FlywheelCommand.kNoCommand:
-                pass
-            case FlywheelCommand.kSpinningUp:
-                self.setFlywheelState(FlywheelState.kSpinningUp)
-            case FlywheelCommand.kSpinningDown|_:
-                self.setFlywheelState(FlywheelState.kOff)
 
         if self.isClosedLoop:
             self.periodicUpdateClosedLoop()
@@ -240,7 +227,53 @@ class InOutSubsystem(Subsystem):
     def flywheelInPerSToRadPerS(cls, inPerS: float) -> float:
         return inPerS / (cls.FLYWHEEL_WHEEL_RADIUS_INCHES * cls.FLYWHEEL_GEAR_REDUCTION)
 
-    def sysIdRoutine(self, subsystem: Subsystem) -> Command:
+    def feedForwardCharacterization(self, motorModule: MotorModule) -> Command:
+        velocitySamples: list[float] = []
+        voltageSamples: list[float] = []
+        timer = Timer()
+
+        def setup():
+            self.initialize()
+            self.setClosedLoop(False)
+            velocitySamples.clear()
+            voltageSamples.clear()
+            timer.restart()
+
+        def run():
+            voltage = timer.get() * motorModule.ffCharacterizationRampVPerS
+            motorModule.setVoltage(voltage)
+            velocitySamples.append(motorModule.getMotorVelocityRadPerSec())
+            voltageSamples.append(voltage)
+
+        def end(_interrupted: bool):
+            n = len(velocitySamples)
+            sumX = sum(velocitySamples)
+            sumY = sum(voltageSamples)
+            sumXY = sum(velocitySamples[i] * voltageSamples[i] for i in range(n))
+            sumX2 = sum(v**2 for v in velocitySamples)
+            kS = 0.0
+            kV = 0.0
+            divisor = (n * sumX2 - sumX * sumX)
+            if divisor != 0.0:
+                kS = (sumY * sumX2 - sumX * sumXY) / divisor
+                kV = (n * sumXY - sumX * sumY) / divisor
+
+            print("************************************************************")
+            print(f"{motorModule.name} Feed Forward Characterization Results: \nkS = {kS}\nkV = {kV}")
+            self.setClosedLoop(True)
+
+        controller = XboxController(1)
+        ffWaitCmd = cmd.waitUntil(
+            lambda: controller.getRightBumper()  and abs(motorModule.getMotorVelocityRadPerSec())<0.1)
+        ffCmd = (cmd.runOnce(setup, self)
+                 .andThen(cmd.run(run, self).withName(f"{motorModule.name} FeedForwardCharacterization"))
+                 .finallyDo(end))
+        ffWithWaits = ffWaitCmd.andThen(ffCmd.onlyWhile(lambda: controller.getRightBumper()))
+
+        return ffWithWaits
+
+
+    def sysIdRoutine(self, name:str, motorModule: MotorModule) -> Command:
         """Model the behavior of the system (for better control) by sweeping through the max and min angles."""
 
         def logState(state: State) -> None:
@@ -256,48 +289,105 @@ class InOutSubsystem(Subsystem):
                     loggedStateStr = "dynamic-reverse"
                 case State.kNone:
                     loggedStateStr = "none"
-            Logger.recordOutput("inout/SysID State", loggedStateStr)
+            Logger.recordOutput(f"inout/SysID State {name}", loggedStateStr)
 
         charactarizationRoutine = SysIdRoutine(
             SysIdRoutine.Config(0.5, 6, 10, logState),
             SysIdRoutine.Mechanism(
-                self.io.set_turret_volts,
+                motorModule.setVoltage,
                 (lambda _: None),
-                subsystem,
+                self,
             ),
         )
+
+        controller = XboxController(1)
+
+        sysIdQFWaitCmd = cmd.waitUntil(
+            lambda: controller.getRightBumper() and abs(motorModule.getMotorVelocityRadPerSec())<0.1)
+        sysIdQFCmd = charactarizationRoutine.quasistatic(SysIdRoutine.Direction.kForward)
+        sysIdQFWithWaits = sysIdQFWaitCmd.andThen(sysIdQFCmd.onlyWhile(lambda: controller.getRightBumper()))
+
+        sysIdQRWaitCmd = cmd.waitUntil(
+            lambda: controller.getRightBumper() and abs(motorModule.getMotorVelocityRadPerSec())<0.1)
+        sysIdQRCmd = charactarizationRoutine.quasistatic(SysIdRoutine.Direction.kReverse)
+        sysIdQRWithWaits = sysIdQRWaitCmd.andThen(sysIdQRCmd.onlyWhile(lambda: controller.getRightBumper()))
+
+        sysIdDFWaitCmd = cmd.waitUntil(
+            lambda: controller.getRightBumper()  and abs(motorModule.getMotorVelocityRadPerSec())<0.1)
+        sysIdDFCmd = charactarizationRoutine.dynamic(SysIdRoutine.Direction.kForward)
+        sysIdDFWithWaits = sysIdDFWaitCmd.andThen(sysIdDFCmd.onlyWhile(lambda: controller.getRightBumper()))
+
+        sysIdDRWaitCmd = cmd.waitUntil(
+            lambda: controller.getRightBumper()  and abs(motorModule.getMotorVelocityRadPerSec())<0.1)
+        sysIdDRCmd = charactarizationRoutine.dynamic(SysIdRoutine.Direction.kReverse)
+        sysIdDRWithWaits = sysIdDRWaitCmd.andThen(sysIdDRCmd.onlyWhile(lambda: controller.getRightBumper()))
 
         return cmd.sequence(
             cmd.runOnce(lambda: self.setClosedLoop(False), self),
-            charactarizationRoutine.quasistatic(SysIdRoutine.Direction.kForward).until(
-                self.isAtMax
-            ),
-            charactarizationRoutine.quasistatic(SysIdRoutine.Direction.kReverse).until(
-                self.isAtMin
-            ),
-            charactarizationRoutine.dynamic(SysIdRoutine.Direction.kForward).until(
-                self.isAtMax
-            ),
-            charactarizationRoutine.dynamic(SysIdRoutine.Direction.kReverse).until(
-                self.isAtMin
-            ),
+            sysIdQFWithWaits,
+            sysIdQRWithWaits,
+            sysIdDFWithWaits,
+            sysIdDRWithWaits,
             cmd.runOnce(lambda: self.setClosedLoop(True), self),
         )
 
-    def dummy(self):
+    def makeCommandFeedForwardCharacterizationGroundMotor(self) -> Command:
+        return self.feedForwardCharacterization(self.groundModule)
+
+    def makeCommandFeedForwardCharacterizationHopperMotor(self) -> Command:
+        return self.feedForwardCharacterization(self.hopperModule)
+
+    def makeCommandFeedForwardCharacterizationFlywheelMotor(self) -> Command:
+        return self.feedForwardCharacterization(self.flywheelModule)
+
+    def makeSysIdCommandGroundMotor(self) -> Command:
+        return self.sysIdRoutine("ground", self.groundModule)
+
+    def makeSysIdCommandHopperMotor(self) -> Command:
+        return self.sysIdRoutine("hopper", self.hopperModule)
+
+    def makeSysIdCommandFlywheelMotor(self) -> Command:
+        return self.sysIdRoutine("flywheel", self.flywheelModule)
+
+    def doNothing(self):
         pass
+
+    def useOperatorControls(self):
+        match self.oInt.inOutCommand:
+            case InOutCommand.kIntaking:
+                self.setState(InOutState.kIntaking)
+            case InOutCommand.kOutaking:
+                self.setState(InOutState.kOutaking)
+            case InOutCommand.kShooting:
+                self.setState(InOutState.kShooting)
+            case InOutCommand.kOff|_:
+                self.setState(InOutState.kOff)
+
+        match self.oInt.flywheelCommand:
+            case FlywheelCommand.kNoCommand:
+                pass
+            case FlywheelCommand.kSpinningUp:
+                self.setFlywheelState(FlywheelState.kSpinningUp)
+            case FlywheelCommand.kSpinningDown|_:
+                self.setFlywheelState(FlywheelState.kOff)
 
     """
     def getDefaultCommand(self) -> Optional[Command]:
         return cmd.run(lambda: self.dummy(), self)
     """
 
-    def getDefaultCommand(self) -> Optional[Command]:
+    def aDoNothingCommand(self) -> Optional[Command]:
         return cmd.sequence(
             cmd.runOnce(lambda: self.initialize(), self),
-            cmd.run(lambda: self.dummy(), self),
+            cmd.run(lambda: self.doNothing(), self),
         )
-        #cmd.run(lambda: self.dummy(), self)
+
+    def aOperatorRunsInoutCommand(self) -> Optional[Command]:
+        return cmd.sequence(
+            cmd.runOnce(lambda: self.initialize(), self),
+            cmd.run(lambda: self.useOperatorControls(), self),
+        )
+
 
 
 # See https://github.com/FRCTeam360/RainMaker26/blob/ac5238c1ef05ec7bd4adafc81331d94dc29ffe08/src/main/java/frc/robot/subsystems/Indexer/IndexerIOSim.java#L3

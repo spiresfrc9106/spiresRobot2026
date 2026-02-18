@@ -238,6 +238,8 @@ class MyRobot(LoggedRobot):
         # Start up the autonomous sequencer
         self.autoSequencer.initialize()
 
+        self.container.autonomousInit()
+
         # Use the autonomous rouines starting pose to init the pose estimator
         startPose = self.autoSequencer.getStartingPose()
         if startPose is not None:
@@ -266,6 +268,7 @@ class MyRobot(LoggedRobot):
     #########################################################
     ## Teleop-Specific init and update
     def teleopInit(self) -> None:
+        self.container.teleopInit()
         #print(f"{self.count} teleopInit")
         # This makes sure that the autonomous stops running when
         # teleop starts running. If you want the autonomous to
@@ -321,11 +324,7 @@ class MyRobot(LoggedRobot):
     #########################################################
     ## Test-Specific init and update
     def testInit(self) -> None:
-        # Cancels all running commands at the start of test mode
-        commands2.CommandScheduler.getInstance().cancelAll()
-
-        wpilib.LiveWindow.setEnabled(False)
-        #CTREMusicPlayback().play()
+        self.container.testInit()
 
     def testPeriodic(self):
         pass

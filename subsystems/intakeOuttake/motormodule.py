@@ -9,9 +9,10 @@ from westwood.util.logtracer import LogTracer
 
 
 class MotorModule:
-    def __init__(self, name: str, io: MotorModuleIO) -> None:
+    def __init__(self, name: str, io: MotorModuleIO, ffCharacterizationRampVPerS=0.1) -> None:
         self.name = name
         self.io = io
+        self.ffCharacterizationRampVPerS = ffCharacterizationRampVPerS
         self.inputs = MotorModuleIO.MotorModuleIOInputs()
 
     def periodic(self) -> None:
@@ -27,6 +28,9 @@ class MotorModule:
 
     def setVelCmd(self, velCmdRadps:float, arbFF:float=0.0)->None:
         self.io.setVelCmd(velCmdRadps, arbFF)
+
+    def setVoltage(self, outputVoltageVolts:float)->None:
+        self.io.setVoltage(outputVoltageVolts)
 
     def getMotorPositionRad(self)->float:
         return self.inputs.posRad

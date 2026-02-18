@@ -831,6 +831,115 @@
                 }
               }
             ]
+          },
+          {
+            "title": "List Layout",
+            "x": 512.0,
+            "y": 512.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "ground desVoltsOrFfVolts",
+                "x": 576.0,
+                "y": 576.0,
+                "width": 256.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/AdvantageKit/groundModule/desVoltsOrFfVolts",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "hopper desVoltsOrFfVolts",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/AdvantageKit/hopperModule/desVoltsOrFfVolts",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "flywheel desVoltsOrFfVolts",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/AdvantageKit/flywheelModule/desVoltsOrFfVolts",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              }
+            ]
+          },
+          {
+            "title": "SysID State",
+            "x": 768.0,
+            "y": 512.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "ground",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/AdvantageKit/RealOutputs/inout/SysID State ground",
+                  "period": 0.06,
+                  "data_type": "string",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "hopper",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/AdvantageKit/RealOutputs/inout/SysID State hopper",
+                  "period": 0.06,
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "flywheel",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/AdvantageKit/RealOutputs/inout/SysID State flywheel",
+                  "period": 0.06,
+                  "data_type": "string",
+                  "show_submit_button": false
+                }
+              }
+            ]
           }
         ],
         "containers": [
@@ -842,7 +951,7 @@
             "height": 128.0,
             "type": "Text Display",
             "properties": {
-              "topic": "/AdvantageKit/Inout/groundTargetIPS",
+              "topic": "/AdvantageKit/inout/groundTargetIPS",
               "period": 0.06,
               "data_type": "double",
               "show_submit_button": false
@@ -920,8 +1029,8 @@
           },
           {
             "title": "groundFFV",
-            "x": 384.0,
-            "y": 512.0,
+            "x": 576.0,
+            "y": 384.0,
             "width": 128.0,
             "height": 128.0,
             "type": "Text Display",
@@ -934,8 +1043,8 @@
           },
           {
             "title": "hopperFFV",
-            "x": 512.0,
-            "y": 512.0,
+            "x": 704.0,
+            "y": 384.0,
             "width": 128.0,
             "height": 128.0,
             "type": "Text Display",
@@ -948,27 +1057,13 @@
           },
           {
             "title": "flywheelFFV",
-            "x": 640.0,
-            "y": 512.0,
+            "x": 832.0,
+            "y": 384.0,
             "width": 128.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/InOutSubsystem/flywheelFFV",
-              "period": 0.06,
-              "data_type": "double",
-              "show_submit_button": false
-            }
-          },
-          {
-            "title": "ground desVoltsOrFfVolts",
-            "x": 832.0,
-            "y": 512.0,
-            "width": 256.0,
-            "height": 128.0,
-            "type": "Text Display",
-            "properties": {
-              "topic": "/AdvantageKit/groundModule/desVoltsOrFfVolts",
               "period": 0.06,
               "data_type": "double",
               "show_submit_button": false
@@ -990,6 +1085,40 @@
               "min_value": -100.0,
               "max_value": 100.0,
               "number_of_labels": 8,
+              "wrap_value": false,
+              "show_pointer": true,
+              "show_ticks": true
+            }
+          },
+          {
+            "title": "Test Choices",
+            "x": 256.0,
+            "y": 384.0,
+            "width": 320.0,
+            "height": 128.0,
+            "type": "ComboBox Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Test Choices",
+              "period": 0.06,
+              "sort_options": false
+            }
+          },
+          {
+            "title": "flywheelIPS",
+            "x": 256.0,
+            "y": 512.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "Radial Gauge",
+            "properties": {
+              "topic": "/AdvantageKit/inout/flywheelIPS",
+              "period": 0.06,
+              "data_type": "double",
+              "start_angle": -140.0,
+              "end_angle": 140.0,
+              "min_value": -1400.0,
+              "max_value": 1400.0,
+              "number_of_labels": 7,
               "wrap_value": false,
               "show_pointer": true,
               "show_ticks": true
