@@ -1,15 +1,12 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from math import pi
-from typing import Optional, Callable
-from unittest import case
+from typing import Optional
 
-import numpy as np
 from commands2 import Command, Subsystem, cmd
 from commands2.sysid import SysIdRoutine
 from wpimath._controls._controls.controller import SimpleMotorFeedforwardRadians
 
-from pykit.autolog import autolog_output, autologgable_output
+from pykit.autolog import autologgable_output
 from pykit.logger import Logger
 from rev import SparkBase, SparkSim
 from wpilib.simulation import LinearSystemSim_1_1_1, FlywheelSim, RoboRioSim, BatterySim
@@ -17,7 +14,7 @@ from wpilib.sysid import State
 from wpimath.system.plant import DCMotor, LinearSystemId
 
 from constants import kRobotMode, RobotModes, kRobotUpdatePeriodS
-from humanInterface.operatorInterface import OperatorInterface
+from humanInterface.operatorInterface import OperatorInterface, FlywheelCommand, InOutCommand
 from subsystems.intakeOuttake.inoutcalset import InOutCalSet
 from subsystems.intakeOuttake.inoutsubsystemio import InOutSubsystemIO
 
@@ -35,16 +32,16 @@ from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
 from wrappers.wrapperedSparkFlex import WrapperedSparkFlex
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
 
+class FlywheelState(Enum):
+    kOff = 0
+    kSpinningUp = 1
+
 
 class InOutState(Enum):
     kOff = 0
     kIntaking = 1
     kOutaking = 2
     kShooting = 3
-
-class FlywheelState(Enum):
-    kOff = 0
-    kSpinningUp = 1
 
 @autologgable_output
 class InOutSubsystem(Subsystem):
@@ -86,7 +83,14 @@ class InOutSubsystem(Subsystem):
 
         self.oInt = OperatorInterface()
 
+        self.initialize()
+
         self.isClosedLoop = True
+
+    def initialize(self):
+        self.setState(InOutState.kOff)
+        self.setFlywheelState(FlywheelState.kOff)
+        self.setDefaultCommand(self.getDefaultCommand())
 
     def periodic(self) -> None:
         """Run ongoing subsystem periodic process."""
@@ -105,21 +109,23 @@ class InOutSubsystem(Subsystem):
         if self.cals.hasChanged():
             self._updateAllCals()
 
-        #print(f"self.oInt.intake={self.oInt.intake}")
-        if self.oInt.intake:
-            #print("self.setState(InOutState.kIntaking)")
-            self.setState(InOutState.kIntaking)
-        elif self.oInt.outtake:
-            self.setState(InOutState.kOutaking)
-        elif self.oInt.shoot:
-            self.setState(InOutState.kShooting)
-        else:
-            self.setState(InOutState.kOff)
+        match self.oInt.inOutCommand:
+            case InOutCommand.kIntaking:
+                self.setState(InOutState.kIntaking)
+            case InOutCommand.kOutaking:
+                self.setState(InOutState.kOutaking)
+            case InOutCommand.kShooting:
+                self.setState(InOutState.kShooting)
+            case InOutCommand.kOff|_:
+                self.setState(InOutState.kOff)
 
-        if self.oInt.spinUpFlywheel:
-            self.setFlywheelState(FlywheelState.kSpinningUp)
-        elif self.oInt.spinDownFlywheel:
-            self.setFlywheelState(FlywheelState.kOff)
+        match self.oInt.flywheelCommand:
+            case FlywheelCommand.kNoCommand:
+                pass
+            case FlywheelCommand.kSpinningUp:
+                self.setFlywheelState(FlywheelState.kSpinningUp)
+            case FlywheelCommand.kSpinningDown|_:
+                self.setFlywheelState(FlywheelState.kOff)
 
         if self.isClosedLoop:
             self.periodicUpdateClosedLoop()
@@ -176,14 +182,14 @@ class InOutSubsystem(Subsystem):
                 self.inputs.groundTargetIPS = self.calGroundShootTargetSpeedIPS
                 self.inputs.hopperTargetIPS = -self.calHopperShootTargetSpeedIPS
 
-            case InOutState.kOff|_:
+            case InOutState.kOff | _:
                 self.inputs.groundTargetIPS = 0.0
                 self.inputs.hopperTargetIPS = 0.0
 
         match self.flywheelState:
             case FlywheelState.kSpinningUp:
                 self.inputs.flywheelTargetIPS = self.calFlywheelTargetSpeedIPS
-            case FlywheelState.kOff|_:
+            case FlywheelState.kOff | _:
                 self.inputs.flywheelTargetIPS = 0.0
 
         groundTargetRadPerS = self.groundInPerSToRadPerS(self.inputs.groundTargetIPS)
@@ -281,8 +287,18 @@ class InOutSubsystem(Subsystem):
     def dummy(self):
         pass
 
+    """
     def getDefaultCommand(self) -> Optional[Command]:
         return cmd.run(lambda: self.dummy(), self)
+    """
+
+    def getDefaultCommand(self) -> Optional[Command]:
+        return cmd.sequence(
+            cmd.runOnce(lambda: self.initialize(), self),
+            cmd.run(lambda: self.dummy(), self),
+        )
+        #cmd.run(lambda: self.dummy(), self)
+
 
 # See https://github.com/FRCTeam360/RainMaker26/blob/ac5238c1ef05ec7bd4adafc81331d94dc29ffe08/src/main/java/frc/robot/subsystems/Indexer/IndexerIOSim.java#L3
 # for reference.
@@ -414,8 +430,6 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
                     hopperModule_io=MotorModuleIO(name="inoutHopperModuleIO"),
                     flywheelModule_io=MotorModuleIO(name="inoutFlywheelModuleIO"),
                 )
-
-        inout.setDefaultCommand(inout.getDefaultCommand())
 
         match kRobotMode:
             case RobotModes.SIMULATION:

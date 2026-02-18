@@ -28,3 +28,7 @@ class RobotContainer:
     def robotPeriodic(self) -> None:
         pass
 
+    def quietRobotOnExitFromActiveMode(self) -> None:
+        if self.inout is not None:
+            self.inout.initialize()
+

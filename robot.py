@@ -261,6 +261,7 @@ class MyRobot(LoggedRobot):
 
     def autonomousExit(self):
         self.autoSequencer.end()
+        self.container.quietRobotOnExitFromActiveMode()
 
     #########################################################
     ## Teleop-Specific init and update
@@ -305,6 +306,9 @@ class MyRobot(LoggedRobot):
         if motorDepConstants['HAS_MOTOR_TEST']:
             self.motorCtrlFun.update(100.0)
 
+    def teleopExit(self):
+        self.container.quietRobotOnExitFromActiveMode()
+
     #########################################################
     ## Disabled-Specific init and update
     def disabledPeriodic(self):
@@ -328,7 +332,7 @@ class MyRobot(LoggedRobot):
 
     def testExit(self) -> None:
         #CTREMusicPlayback().stop()
-        pass
+        self.container.quietRobotOnExitFromActiveMode()
 
     #########################################################
     ## Cleanup

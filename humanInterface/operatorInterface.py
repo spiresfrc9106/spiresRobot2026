@@ -1,8 +1,23 @@
+from enum import Enum
+
 from utils.faults import Fault
 from wpilib import DriverStation, XboxController
 from utils.mapLookup2d import MapLookup2D
 from utils.singleton import Singleton
 
+
+
+class FlywheelCommand(Enum):
+    kNoCommand = 0
+    kSpinningUp = 1
+    kSpinningDown = 2
+
+
+class InOutCommand(Enum):
+    kOff = 0
+    kIntaking = 1
+    kOutaking = 2
+    kShooting = 3
 
 class OperatorInterface(metaclass=Singleton):
     """Class to gather input from the driver of the robot"""
@@ -13,11 +28,9 @@ class OperatorInterface(metaclass=Singleton):
         self.ctrl = XboxController(ctrlIdx)
         self.connectedFault = Fault(f"Operator XBox controller ({ctrlIdx}) unplugged")
         self.intake = False
-        self.outtake = False
-        self.shoot = False
-        self.spinUpFlywheel = False
-        self.spinDownFlywheel = False
-        
+        self.inOutCommand = InOutCommand.kOff
+        self.flywheelCommand = FlywheelCommand.kNoCommand
+
 
     def update(self) -> None:
         # value of controller buttons
@@ -32,38 +45,24 @@ class OperatorInterface(metaclass=Singleton):
             # Y = spindown
             # rightbumper = shoot
             if self.ctrl.getAButton():
-                self.intake = True
-                self.outtake = False
-                self.shoot = False
+                self.inOutCommand = InOutCommand.kIntaking
             elif self.ctrl.getBButton():
-                self.intake = False
-                self.outtake = True
-                self.shoot = False
+                self.inOutCommand = InOutCommand.kOutaking
             elif self.ctrl.getRightBumper():
-                self.intake = False
-                self.outtake = False
-                self.shoot = True
+                self.inOutCommand = InOutCommand.kShooting
             else:
-                self.intake = False
-                self.outtake = False
-                self.shoot = False
+                self.inOutCommand = InOutCommand.kOff
 
             if self.ctrl.getXButton():
-                self.spinUpFlywheel = True
-                self.spinDownFlywheel = False
+                self.flywheelCommand = FlywheelCommand.kSpinningUp
             elif self.ctrl.getYButton():
-                self.spinUpFlywheel = False
-                self.spinDownFlywheel = True
+                self.flywheelCommand = FlywheelCommand.kSpinningDown
             else:
-                self.spinUpFlywheel = False
-                self.spinDownFlywheel = False
+                self.flywheelCommand = FlywheelCommand.kNoCommand
 
         else:
             # If the joystick is unplugged, pick safe-state xyzzy and raise a fault
             if(DriverStation.isFMSAttached()):
                 self.connectedFault.setFaulted()
-                self.intake = False
-                self.outtake = False
-                self.shoot = False
-                self.spinUpFlywheel = False
-                self.spinDownFlywheel = False
+                self.inOutCommand = InOutCommand.kOff
+                self.flywheelCommand = FlywheelCommand.kNoCommand
