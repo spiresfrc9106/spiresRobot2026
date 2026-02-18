@@ -196,15 +196,11 @@ class MyRobot(LoggedRobot):
             LogTracer.record("WestwoodContainerPeriodic")
         self.container.robotPeriodic()
         LogTracer.record("ContainerPeriodic")
-        commands2.CommandScheduler.getInstance().run()
-        LogTracer.record("CommandsPeriodic")
-        LogTracer.recordTotal()
-        self.dInt.update()
 
+        self.dInt.update()
 
         if self.driveTrain is not None:
             self.driveTrain.update()
-
 
         self.oInt.update()
         self.cw.update()
@@ -212,6 +208,13 @@ class MyRobot(LoggedRobot):
         self.ledCtrl.update()
 
         self.count += 1
+        LogTracer.record("OtherUpdates")
+        LogTracer.recordTotal()
+
+        # We need to close log tracer with LogTracer.recordTotal(), above,
+        # because it is a singleton and
+        # the next line will open new top level tracers.
+        commands2.CommandScheduler.getInstance().run()
 
 
     def disabledInit(self) -> None:

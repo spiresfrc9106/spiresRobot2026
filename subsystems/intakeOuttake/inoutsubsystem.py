@@ -90,9 +90,10 @@ class InOutSubsystem(Subsystem):
 
     def periodic(self) -> None:
         """Run ongoing subsystem periodic process."""
-        LogTracer.resetOuter("inoutSubsystem periodic")
         for module in self.modules:
             module.periodic()
+        # We start LogTracing here because the above modules do their own periodic logging.
+        LogTracer.resetOuter("inoutSubsystem periodic")
         LogTracer.record("ModulesPeriodic")
         self.inputs.groundIPS = self.groundRadPerSToInPerS(self.groundModule.inputs.velRadps)
         self.inputs.hopperIPS = self.hopperRadPerSToInPerS(self.hopperModule.inputs.velRadps)
