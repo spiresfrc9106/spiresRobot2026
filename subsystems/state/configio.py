@@ -113,6 +113,7 @@ class ConfigIO:
         Args:
             inputs (ConfigIOInputs): The robot high-level state I/O inputs to update.
         """
+        pass
 
 
     @classmethod

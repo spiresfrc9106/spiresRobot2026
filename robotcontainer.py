@@ -26,6 +26,5 @@ class RobotContainer:
         self.inout: InOutSubsystem|None = inoutSubsystemFactory()
 
     def robotPeriodic(self) -> None:
-        if self.inout is not None:
-            self.inout.periodic()
+        pass
 

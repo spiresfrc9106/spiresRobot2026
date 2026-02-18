@@ -189,10 +189,12 @@ class MyRobot(LoggedRobot):
         #    gc.freeze()
 
         LogTracer.resetOuter("RobotPeriodic")
-        PhoenixUtil.updateSignals() #TODO rms - eventually remove this
-        LogTracer.record("PhoenixUpdate")
         if self.westwoodContainer is not None:
+            PhoenixUtil.updateSignals()
+            LogTracer.record("PhoenixUpdate")
             self.westwoodContainer.robotPeriodic()
+            LogTracer.record("WestwoodContainerPeriodic")
+        self.container.robotPeriodic()
         LogTracer.record("ContainerPeriodic")
         commands2.CommandScheduler.getInstance().run()
         LogTracer.record("CommandsPeriodic")
