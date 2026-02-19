@@ -28,7 +28,7 @@ class MotorModuleIO:
         connected: bool = False
         desVoltsOrFfVolts: float = 0.0
         posRad: float = 0.0  # rad
-        desVelRadps: float = 0.0
+        desVelRadps: float = 0.0 # rad / sec
         velRadps: float = 0.0  # rad / sec
         appliedV: float = 0.0  # volts
         torqueCurrentA: float = 0.0  # amps

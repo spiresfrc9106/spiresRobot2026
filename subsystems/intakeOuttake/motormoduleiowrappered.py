@@ -19,7 +19,7 @@ class MotorModuleIOWrappered(MotorModuleIO):
         self.motor.setVoltage(outputVoltageVolts)
 
     def updateInputs(self, inputs: MotorModuleIO.MotorModuleIOInputs) -> None:
-        inputs.desVoltsOrFfVolts = self.motor.desVolt
+        inputs.desVoltsOrFfVolts = self.motor.getDesiredVoltageOrFF()
         inputs.posRad = self.motor.getMotorPositionRad()
         inputs.desVelRadps = self.motor.desVelRadps
         inputs.velRadps = self.motor.getMotorVelocityRadPerSec()

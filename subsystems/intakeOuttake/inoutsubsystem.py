@@ -273,29 +273,56 @@ class InOutSubsystem(Subsystem):
         return ffWithWaits
 
 
-    def sysIdRoutine(self, name:str, motorModule: MotorModule) -> Command:
+    def sysIdRoutine(self,
+                     name:str,
+                     motorModule: MotorModule,
+                     voltsPerSec:float=0.5,
+                     stepVolts:float=6.0,
+                     timeoutS:float=10.0) -> Command:
         """Model the behavior of the system (for better control) by sweeping through the max and min angles."""
 
+        self.loggedStateStr = "none"
+
+        def logOutputs(_)->None:
+
+            volts = motorModule.io.motor.getDesiredVoltageOrFF()
+            Logger.recordOutput(f"inout {name} SysId/voltage", volts)
+            radsPerSec = motorModule.io.motor.getMotorVelocityRadPerSec()
+            Logger.recordOutput(f"inout {name} SysId/radsPerSec", radsPerSec)
+            rad = motorModule.io.motor.getMotorPositionRad()
+            Logger.recordOutput(f"inout {name} SysId/rad", rad)
+
+            #print(f"{Timer.getTimestamp():.6} {name} {self.loggedStateStr} SysID: volts={volts}, radsPerSec={radsPerSec}, rad={rad}")
+            assert type(volts) == float, f"volts is not a float: {volts}"
+            assert type(radsPerSec) == float, f"radsPerSec is not a float: {radsPerSec}"
+            assert type(rad) == float, f"rad is not a float: {rad}"
+            assert -1.0e10 <= volts <= 1.0e10, f"volts is out of bounds: {volts}"
+            assert -1.0e10 <= radsPerSec <= 1.0e10, f"radsPerSec is out of bounds: {radsPerSec}"
+            assert -1.0e10 <= rad <= 1.0e10, f"rad is out of bounds: {rad}"
+
         def logState(state: State) -> None:
-            loggedStateStr = ""
             match state:
                 case State.kQuasistaticForward:
-                    loggedStateStr = "quasistatic-forward"
+                    self.loggedStateStr = "quasistatic-forward"
                 case State.kQuasistaticReverse:
-                    loggedStateStr = "quasistatic-reverse"
+                    self.loggedStateStr = "quasistatic-reverse"
                 case State.kDynamicForward:
-                    loggedStateStr = "dynamic-forward"
+                    self.loggedStateStr = "dynamic-forward"
                 case State.kDynamicReverse:
-                    loggedStateStr = "dynamic-reverse"
-                case State.kNone:
-                    loggedStateStr = "none"
-            Logger.recordOutput(f"inout/SysID State {name}", loggedStateStr)
+                    self.loggedStateStr = "dynamic-reverse"
+                case State.kNone|_:
+                    self.loggedStateStr = "none"
+            Logger.recordOutput(f"inout {name} SysId/state", self.loggedStateStr)
 
         charactarizationRoutine = SysIdRoutine(
-            SysIdRoutine.Config(0.5, 6, 10, logState),
+            SysIdRoutine.Config(
+                voltsPerSec, # ramp voltage rate in V/sec
+                stepVolts, # step voltage in V
+                timeoutS, # timeout in seconds
+                logState),
             SysIdRoutine.Mechanism(
                 motorModule.setVoltage,
-                (lambda _: None),
+                logOutputs,
                 self,
             ),
         )
@@ -322,8 +349,11 @@ class InOutSubsystem(Subsystem):
         sysIdDRCmd = charactarizationRoutine.dynamic(SysIdRoutine.Direction.kReverse)
         sysIdDRWithWaits = sysIdDRWaitCmd.andThen(sysIdDRCmd.onlyWhile(lambda: controller.getRightBumper()))
 
+        def beforeTests()->None:
+            self.setClosedLoop(False)
+
         return cmd.sequence(
-            cmd.runOnce(lambda: self.setClosedLoop(False), self),
+            cmd.runOnce(beforeTests, self),
             sysIdQFWithWaits,
             sysIdQRWithWaits,
             sysIdDFWithWaits,
@@ -371,11 +401,6 @@ class InOutSubsystem(Subsystem):
             case FlywheelCommand.kSpinningDown|_:
                 self.setFlywheelState(FlywheelState.kOff)
 
-    """
-    def getDefaultCommand(self) -> Optional[Command]:
-        return cmd.run(lambda: self.dummy(), self)
-    """
-
     def aDoNothingCommand(self) -> Optional[Command]:
         return cmd.sequence(
             cmd.runOnce(lambda: self.initialize(), self),
@@ -407,7 +432,7 @@ class OperateFlywheelSimulation():
         self.gearbox = self.wrapperedMotor.gearbox
         self.motorCtrl = self.wrapperedMotor.ctrl # TODO Clean this up
         self.sparkSim = self.wrapperedMotor.sparkSim
-        self.plant = LinearSystemId.flywheelSystem(self.gearbox, self.moi, self.gearRatio)
+        self.plant = LinearSystemId.flywheelSystem(self.gearbox, self.moi, self.gearRatio) # TODO Investigate if gearRatio and moi and inertia make sense
         self.flywheelSim = FlywheelSim(self.plant, self.gearbox, measurementStdDevs=[0.01])
         # TODO Mike Stitt doesn't think we need this step
         # self.motorCtrl.set(0.0)

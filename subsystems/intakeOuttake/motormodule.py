@@ -17,7 +17,9 @@ class MotorModule:
 
     def periodic(self) -> None:
         LogTracer.resetOuter("MotorModule/" + self.name)
+        #print(f"{self.name} before: inputs: V={self.inputs.desVoltsOrFfVolts:.2f} Rad={self.inputs.posRad:.2f} Radps={self.inputs.velRadps:.2f}")
         self.io.updateInputs(self.inputs)
+        #print(f"{self.name} after: inputs: V={self.inputs.desVoltsOrFfVolts:.2f} Rad={self.inputs.posRad:.2f} Radps={self.inputs.velRadps:.2f}")
         LogTracer.record("UpdateInputs")
         Logger.processInputs(self.name, self.inputs)
         LogTracer.record("ProcessInputs")
@@ -40,6 +42,9 @@ class MotorModule:
 
     def getAppliedOutput(self)->float:
         return self.inputs.appliedV
+
+    def getdesVoltsOrFfVolts(self)->float:
+        return self.inputs.desVoltsOrFfVolts
 
     def getOutputTorqueCurrentA(self)->float:
         return self.inputs.torqueCurrentA

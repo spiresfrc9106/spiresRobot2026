@@ -175,7 +175,7 @@ class WrapperedSparkFlex(WrapperedMotorSuper):
             if self.configSuccess:
                 pos = rev2Rad(self.encoder.getPosition())
             else:
-                pos = 0
+                pos = 0.0
         self.actPosRad = pos
         return pos
 
@@ -183,13 +183,16 @@ class WrapperedSparkFlex(WrapperedMotorSuper):
         if self.configSuccess:
             vel = self.encoder.getVelocity()
         else:
-            vel = 0
+            vel = 0.0
         self.actVelRadps = RPM2RadPerSec(vel)
         return self.actVelRadps
 
     def getAppliedOutput(self)->float:
         self.actVolt = self.ctrl.getAppliedOutput() * 12
         return self.actVolt
+
+    def getDesiredVoltageOrFF(self)->float:
+        return self.desVolt
 
     def getCurrentLimitA(self)->int:
         return self.currentLimitA

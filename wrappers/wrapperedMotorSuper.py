@@ -34,6 +34,9 @@ class WrapperedMotorSuper:
     def getAppliedOutput(self)->float:
         assert False, "Not implemented"
 
+    def getDesiredVoltageOrFF(self) -> float:
+        assert False, "Not implemented"
+
     def getCurrentLimitA(self)->int:
         assert False, "Not implemented"
 
