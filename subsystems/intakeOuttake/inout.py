@@ -40,10 +40,10 @@ class InOutDependentConstants(metaclass=Singleton):
                 "FLYWHEEL_KV": 0.03, # volts/radPerSec
                 "FLYWHEEL_KA": 0.000, # volts/radPerSecPerSec
                 "GROUND_INTAKE_SPEED_IPS": 40.0, # in/sec
+                "HOPPER_INTAKE_SPEED_IPS": 20.0,  # in/sec
                 "GROUND_OUTTAKE_SPEED_IPS": 40.0, # in/sec
-                "GROUND_SHOOT_SPEED_IPS": 40.0, # in/sec
-                "HOPPER_INTAKE_SPEED_IPS": 20.0, # in/sec
                 "HOPPER_OUTTAKE_SPEED_IPS": 20.0, # in/sec
+                "GROUND_SHOOT_SPEED_IPS": 40.0,  # in/sec
                 "HOPPER_SHOOT_SPEED_IPS": 20.0, # in/sec
                 "FLYWHEEL_SPEED_IPS": 100.0, # in/sec
             },
@@ -76,13 +76,32 @@ class InOutDependentConstants(metaclass=Singleton):
                 "FLYWHEEL_KS": 0.5,  # volts
                 "FLYWHEEL_KV": 0.03,  # volts/radPerSec
                 "FLYWHEEL_KA": 0.000,  # volts/radPerSecPerSec
-                "GROUND_INTAKE_SPEED_IPS": 20.0,  # in/sec
+                """
+                TODO What didn't work it was too reactive to noise.
+                TODO I think I forgot to change the units from Radps to RPM for 
+                "GROUND_KP": 0.000_04,  # 0.000_291_42, # Max Velocity Error rad/s: 144.97, Max Control Effort: 7V
+                "GROUND_KD": 0.0,
+                "GROUND_KS": 0.281_67,  # volts
+                "GROUND_KV": 0.020_209,  # volts/radPerSec
+                "GROUND_KA": 0.000_5,  # volts/radPerSecPerSec
+                "HOPPER_KP": 0.000_78,
+                "HOPPER_KD": 0.0,
+                "HOPPER_KS": 0.128_9,  #
+                "HOPPER_KV": 0.019_315,  # volts/radPerSec
+                "HOPPER_KA": 0.002_025_1,  # volts/radPerSecPerSec
+                "FLYWHEEL_KP": 0.01,
+                "FLYWHEEL_KD": 0.0,
+                "FLYWHEEL_KS": 0.070_225,  # volts
+                "FLYWHEEL_KV": 0.016_29,  # volts/radPerSec
+                "FLYWHEEL_KA": 0.006_769_98,  # volts/radPerSecPerSec
+                """
+                "GROUND_INTAKE_SPEED_IPS": 40.0,  # in/sec
+                "HOPPER_INTAKE_SPEED_IPS": 40.0,  # in/sec
                 "GROUND_OUTTAKE_SPEED_IPS": 40.0,  # in/sec
-                "GROUND_SHOOT_SPEED_IPS": 80.0,  # in/sec
-                "HOPPER_INTAKE_SPEED_IPS": 20.0,  # in/sec
                 "HOPPER_OUTTAKE_SPEED_IPS": 40.0,  # in/sec
+                "GROUND_SHOOT_SPEED_IPS": 80.0,  # in/sec
                 "HOPPER_SHOOT_SPEED_IPS": 80.0,  # in/sec
-                "FLYWHEEL_SPEED_IPS": 300.0,  # in/sec
+                "FLYWHEEL_SPEED_IPS": 500.0,  # in/sec
         },
             RobotTypes.SpiresRoboRioV1: {
                 "HAS_INOUT": False,

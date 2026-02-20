@@ -27,7 +27,7 @@ from subsystems.intakeOuttake.motormoduleiowrappered import MotorModuleIOWrapper
 from subsystems.intakeOuttake.motormoduleiowrapperedsim import MotorModuleIOWrapperedSim
 from subsystems.state.configsubsystem import ConfigSubsystem
 
-from utils.units import radPerSec2RPM
+from utils.units import radPerSec2RPM, sign
 from westwood.util.logtracer import LogTracer
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
 from wrappers.wrapperedSparkFlex import WrapperedSparkFlex
@@ -135,14 +135,17 @@ class InOutSubsystem(Subsystem):
         )
         self.calGroundKs = self.cals.groundS.get()
         self.calGroundKv = self.cals.groundV.get()
+        self.calGroundKa = self.cals.groundA.get()
         self.calHopperKs = self.cals.hopperS.get()
         self.calHopperKv = self.cals.hopperV.get()
+        self.calHopperKa = self.cals.hopperA.get()
         self.calFlywheelKs = self.cals.flywheelS.get()
         self.calFlywheelKv = self.cals.flywheelV.get()
+        self.calFlywheelKa = self.cals.flywheelA.get()
 
-        self.groundFF = SimpleMotorFeedforwardRadians(self.calGroundKs, self.calGroundKv, 0.0, kRobotUpdatePeriodS)
-        self.hopperFF = SimpleMotorFeedforwardRadians(self.calHopperKs, self.calHopperKv, 0.0, kRobotUpdatePeriodS)
-        self.flywheelFF = SimpleMotorFeedforwardRadians(self.calFlywheelKs, self.calFlywheelKv, 0.0, kRobotUpdatePeriodS)
+        self.groundFF = SimpleMotorFeedforwardRadians(self.calGroundKs, self.calGroundKv, self.calGroundKa, kRobotUpdatePeriodS)
+        self.hopperFF = SimpleMotorFeedforwardRadians(self.calHopperKs, self.calHopperKv, self.calHopperKa, kRobotUpdatePeriodS)
+        self.flywheelFF = SimpleMotorFeedforwardRadians(self.calFlywheelKs, self.calFlywheelKv, self.calFlywheelKa, kRobotUpdatePeriodS)
 
         self.calGroundIntakeTargetSpeedIPS = self.cals.groundIntakeSpeedIPS.get()
         self.calGroundOuttakeTargetSpeedIPS = self.cals.groundOuttakeSpeedIPS.get()
@@ -181,16 +184,29 @@ class InOutSubsystem(Subsystem):
 
         groundTargetRadPerS = self.groundInPerSToRadPerS(self.inputs.groundTargetIPS)
         groundFFV = self.groundFF.calculate(groundTargetRadPerS)
+
+        velocityMeasurementDelayS = 0.180
+        curGroundActVelocityRadps = self.groundModule.inputs.velRadps
+        accellerationRadPerSPerS = (groundTargetRadPerS - curGroundActVelocityRadps) / velocityMeasurementDelayS
+        groundFFV = self.calGroundKs * sign(groundTargetRadPerS) + self.calGroundKv * groundTargetRadPerS + self.calGroundKa * accellerationRadPerSPerS
         Logger.recordOutput(f"{self.name}/groundFFV", groundFFV)
         self.groundModule.setVelCmd(groundTargetRadPerS, groundFFV)
 
+
         hopperTargetRadPerS = self.hopperInPerSToRadPerS(self.inputs.hopperTargetIPS)
         hopperFFV = self.hopperFF.calculate(hopperTargetRadPerS)
+        curHopperActVelocityRadps = self.hopperModule.inputs.velRadps
+        accellerationRadPerSPerS = (hopperTargetRadPerS - curHopperActVelocityRadps) / velocityMeasurementDelayS
+        #hopperFFV = self.calHopperKs * sign(hopperTargetRadPerS) + self.calHopperKv * hopperTargetRadPerS + self.calHopperKa * accellerationRadPerSPerS
+
         Logger.recordOutput(f"{self.name}/hopperFFV", hopperFFV)
         self.hopperModule.setVelCmd(hopperTargetRadPerS, hopperFFV)
 
         flywheelTargetRadPerS = self.flywheelInPerSToRadPerS(self.inputs.flywheelTargetIPS)
         flywheelFFV = self.flywheelFF.calculate(flywheelTargetRadPerS)
+        curFlywheelActVelocityRadps = self.flywheelModule.inputs.velRadps
+        accellerationRadPerSPerS = (flywheelTargetRadPerS - curFlywheelActVelocityRadps) / velocityMeasurementDelayS
+        #flywheelFFV = self.calFlywheelKs * sign(flywheelTargetRadPerS) + self.calFlywheelKv * flywheelTargetRadPerS + self.calFlywheelKa * accellerationRadPerSPerS
         Logger.recordOutput(f"{self.name}/flywheelFFV", flywheelFFV)
         self.flywheelModule.setVelCmd(flywheelTargetRadPerS, flywheelFFV)
 
