@@ -127,6 +127,31 @@ class WrapperedSparkMax(WrapperedMotorSuper):
                                 ResetMode.kNoResetSafeParameters,
                                 persist)
 
+    def setPIDFF(self, kP: float, kI: float, kD: float, kS: float, kV: float, kA: float) -> None:
+        if self.configSuccess:
+            (self.cfg
+                 .closedLoop
+                 .pid(
+                    kP, # DutyCycle/Rev
+                    kI, # DutyCycle/(rev*ms)
+                    kD, # (DutyCycle*ms)/rev
+                    ClosedLoopSlot.kSlot0)
+                 .feedForward
+                 .kS(kS,ClosedLoopSlot.kSlot0) # Volts
+                 .kV(kV,ClosedLoopSlot.kSlot0) # Volts/RPM
+                 .kA(kA,ClosedLoopSlot.kSlot0) # Volts/(RPM/s)
+            )
+            # Apply new configuration
+            # but don't reset other parameters
+            # Use the specified persist mode.
+            # By default we persist setings (usually we set PID once, then don't think about it again)
+            # However, if setPID is getting called in a periodic loop, don't bother persisting the parameters
+            # because the persist operation takes a long time on the spark max.
+            persist = PersistMode.kPersistParameters
+            self.ctrl.configure(self.cfg,
+                                ResetMode.kNoResetSafeParameters,
+                                persist)
+
     def setPosCmd(self, posCmdRad:float, arbFF:float=0.0)->None:
         """_summary_
 

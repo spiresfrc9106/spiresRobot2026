@@ -16,6 +16,9 @@ class WrapperedMotorSuper:
     def setPID(self, kP:float, kI:float, kD:float)->None:
         assert False, "Not implemented"
 
+    def setPIDFF(self, kP: float, kI: float, kD: float, kS: float, kV: float, kA: float) -> None:
+        assert False, "Not implemented"
+
     def setPosCmd(self, posCmdRad:float, arbFF:float=0.0)->None:
         assert False, "Not implemented"
 

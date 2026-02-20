@@ -9,6 +9,10 @@ class MotorModuleIOWrappered(MotorModuleIO):
     def setPID(self, kP: float, kI: float, kD: float) -> None:
         self.motor.setPID(kP, kI, kD)
 
+    def setPIDFF(self, kP: float, kI: float, kD: float, kS: float, kV: float, kA: float) -> None:
+        print(kP, kI, kD, kS, kV, kA)
+        self.motor.setPIDFF(kP, kI, kD, kS, kV, kA)
+
     def setPosCmd(self, posCmdRad:float, arbFF:float=0.0)->None:
         self.motor.setPosCmd(posCmdRad, arbFF)
 

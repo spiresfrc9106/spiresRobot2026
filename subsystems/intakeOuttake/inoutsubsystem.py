@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
+from math import isclose
 from typing import Optional
 
 from commands2 import Command, Subsystem, cmd
@@ -75,6 +76,7 @@ class InOutSubsystem(Subsystem):
         self.modules = (self.groundModule, self.hopperModule, self.flywheelModule)
         self.simulation = simulation
 
+        self.useSparkFeedForward = True
         self.state: InOutState = InOutState.kOff
         self.flywheelState: FlywheelState = FlywheelState.kOff
 
@@ -123,16 +125,27 @@ class InOutSubsystem(Subsystem):
             LogTracer.record("SimulationPeriodic")
         LogTracer.recordTotal()
 
+    def _updateMotorPIDandPerhapsFF(self,
+                                    mm:MotorModule,
+                                    kP_DcPerRev,
+                                    kD_DcMsPerRev,
+                                    kS_V,
+                                    kV_VSPerRad,
+                                    kA_VS2PerRad
+                                    ) -> None:
+        """
+            kP, # DutyCycle/Rev
+            kI, # DutyCycle/(rev*ms)
+            kD, # (DutyCycle*ms)/rev
+        """
+        if not self.useSparkFeedForward:
+            mm.io.setPID(kP_DcPerRev,0.0, kD_DcMsPerRev )
+        else:
+            kV_VMinutesPerRev = 0.0 if isclose(kA_VS2PerRad, 0.0) else 1.0 / radPerSec2RPM(1.0/kV_VSPerRad)
+            kA_VMinuteSecondsPerRev = 0.0 if isclose(kA_VS2PerRad, 0.0) else 1.0 / radPerSec2RPM(1.0/kA_VS2PerRad)
+            mm.io.setPIDFF(kP_DcPerRev,0.0, kD_DcMsPerRev, kS_V, kV_VMinutesPerRev, kA_VMinuteSecondsPerRev)
+
     def _updateAllCals(self):
-        self.groundModule.io.setPID(
-            self.cals.groundP.get(), 0.0, self.cals.groundD.get()
-        )
-        self.hopperModule.io.setPID(
-            self.cals.hopperP.get(), 0.0, self.cals.hopperD.get()
-        )
-        self.flywheelModule.io.setPID(
-            self.cals.flywheelP.get(), 0.0, self.cals.flywheelD.get()
-        )
         self.calGroundKs = self.cals.groundS.get()
         self.calGroundKv = self.cals.groundV.get()
         self.calGroundKa = self.cals.groundA.get()
@@ -142,10 +155,20 @@ class InOutSubsystem(Subsystem):
         self.calFlywheelKs = self.cals.flywheelS.get()
         self.calFlywheelKv = self.cals.flywheelV.get()
         self.calFlywheelKa = self.cals.flywheelA.get()
+        self._updateMotorPIDandPerhapsFF(
+            self.groundModule, self.cals.groundP.get(), self.cals.groundD.get(), self.calGroundKs, self.calGroundKv, self.calGroundKa
+        )
+        self._updateMotorPIDandPerhapsFF(
+            self.hopperModule, self.cals.hopperP.get(), self.cals.hopperD.get(), self.calHopperKs, self.calHopperKv, self.calHopperKa
+        )
+        self._updateMotorPIDandPerhapsFF(
+            self.flywheelModule, self.cals.flywheelP.get(), self.cals.flywheelD.get(), self.calFlywheelKs, self.calFlywheelKv, self.calFlywheelKa
+        )
 
-        self.groundFF = SimpleMotorFeedforwardRadians(self.calGroundKs, self.calGroundKv, self.calGroundKa, kRobotUpdatePeriodS)
-        self.hopperFF = SimpleMotorFeedforwardRadians(self.calHopperKs, self.calHopperKv, self.calHopperKa, kRobotUpdatePeriodS)
-        self.flywheelFF = SimpleMotorFeedforwardRadians(self.calFlywheelKs, self.calFlywheelKv, self.calFlywheelKa, kRobotUpdatePeriodS)
+        if not self.useSparkFeedForward:
+            self.groundFF = SimpleMotorFeedforwardRadians(self.calGroundKs, self.calGroundKv, self.calGroundKa, kRobotUpdatePeriodS)
+            self.hopperFF = SimpleMotorFeedforwardRadians(self.calHopperKs, self.calHopperKv, self.calHopperKa, kRobotUpdatePeriodS)
+            self.flywheelFF = SimpleMotorFeedforwardRadians(self.calFlywheelKs, self.calFlywheelKv, self.calFlywheelKa, kRobotUpdatePeriodS)
 
         self.calGroundIntakeTargetSpeedIPS = self.cals.groundIntakeSpeedIPS.get()
         self.calGroundOuttakeTargetSpeedIPS = self.cals.groundOuttakeSpeedIPS.get()
@@ -183,32 +206,36 @@ class InOutSubsystem(Subsystem):
                 self.inputs.flywheelTargetIPS = 0.0
 
         groundTargetRadPerS = self.groundInPerSToRadPerS(self.inputs.groundTargetIPS)
-        groundFFV = self.groundFF.calculate(groundTargetRadPerS)
-
-        velocityMeasurementDelayS = 0.180
-        curGroundActVelocityRadps = self.groundModule.inputs.velRadps
-        accellerationRadPerSPerS = (groundTargetRadPerS - curGroundActVelocityRadps) / velocityMeasurementDelayS
-        groundFFV = self.calGroundKs * sign(groundTargetRadPerS) + self.calGroundKv * groundTargetRadPerS + self.calGroundKa * accellerationRadPerSPerS
-        Logger.recordOutput(f"{self.name}/groundFFV", groundFFV)
-        self.groundModule.setVelCmd(groundTargetRadPerS, groundFFV)
-
-
         hopperTargetRadPerS = self.hopperInPerSToRadPerS(self.inputs.hopperTargetIPS)
-        hopperFFV = self.hopperFF.calculate(hopperTargetRadPerS)
-        curHopperActVelocityRadps = self.hopperModule.inputs.velRadps
-        accellerationRadPerSPerS = (hopperTargetRadPerS - curHopperActVelocityRadps) / velocityMeasurementDelayS
-        #hopperFFV = self.calHopperKs * sign(hopperTargetRadPerS) + self.calHopperKv * hopperTargetRadPerS + self.calHopperKa * accellerationRadPerSPerS
-
-        Logger.recordOutput(f"{self.name}/hopperFFV", hopperFFV)
-        self.hopperModule.setVelCmd(hopperTargetRadPerS, hopperFFV)
-
         flywheelTargetRadPerS = self.flywheelInPerSToRadPerS(self.inputs.flywheelTargetIPS)
-        flywheelFFV = self.flywheelFF.calculate(flywheelTargetRadPerS)
-        curFlywheelActVelocityRadps = self.flywheelModule.inputs.velRadps
-        accellerationRadPerSPerS = (flywheelTargetRadPerS - curFlywheelActVelocityRadps) / velocityMeasurementDelayS
-        #flywheelFFV = self.calFlywheelKs * sign(flywheelTargetRadPerS) + self.calFlywheelKv * flywheelTargetRadPerS + self.calFlywheelKa * accellerationRadPerSPerS
-        Logger.recordOutput(f"{self.name}/flywheelFFV", flywheelFFV)
-        self.flywheelModule.setVelCmd(flywheelTargetRadPerS, flywheelFFV)
+
+        if self.useSparkFeedForward:
+            self.groundModule.setVelCmd(groundTargetRadPerS)
+            self.hopperModule.setVelCmd(hopperTargetRadPerS)
+            self.flywheelModule.setVelCmd(flywheelTargetRadPerS)
+        else:
+            groundFFV = self.groundFF.calculate(groundTargetRadPerS)
+            velocityMeasurementDelayS = 0.180
+            curGroundActVelocityRadps = self.groundModule.inputs.velRadps
+            accellerationRadPerSPerS = (groundTargetRadPerS - curGroundActVelocityRadps) / velocityMeasurementDelayS
+            #groundFFV = self.calGroundKs * sign(groundTargetRadPerS) + self.calGroundKv * groundTargetRadPerS + self.calGroundKa * accellerationRadPerSPerS
+            Logger.recordOutput(f"{self.name}/groundFFV", groundFFV)
+            self.groundModule.setVelCmd(groundTargetRadPerS, groundFFV)
+
+            hopperFFV = self.hopperFF.calculate(hopperTargetRadPerS)
+            curHopperActVelocityRadps = self.hopperModule.inputs.velRadps
+            accellerationRadPerSPerS = (hopperTargetRadPerS - curHopperActVelocityRadps) / velocityMeasurementDelayS
+            #hopperFFV = self.calHopperKs * sign(hopperTargetRadPerS) + self.calHopperKv * hopperTargetRadPerS + self.calHopperKa * accellerationRadPerSPerS
+
+            Logger.recordOutput(f"{self.name}/hopperFFV", hopperFFV)
+            self.hopperModule.setVelCmd(hopperTargetRadPerS, hopperFFV)
+
+            flywheelFFV = self.flywheelFF.calculate(flywheelTargetRadPerS)
+            curFlywheelActVelocityRadps = self.flywheelModule.inputs.velRadps
+            accellerationRadPerSPerS = (flywheelTargetRadPerS - curFlywheelActVelocityRadps) / velocityMeasurementDelayS
+            #flywheelFFV = self.calFlywheelKs * sign(flywheelTargetRadPerS) + self.calFlywheelKv * flywheelTargetRadPerS + self.calFlywheelKa * accellerationRadPerSPerS
+            Logger.recordOutput(f"{self.name}/flywheelFFV", flywheelFFV)
+            self.flywheelModule.setVelCmd(flywheelTargetRadPerS, flywheelFFV)
 
     def setClosedLoop(self, closedLoop: bool) -> None:
         self.isClosedLoop = closedLoop
@@ -470,8 +497,6 @@ class OperateFlywheelSimulation():
         RoboRioSim.setVInVoltage(
             BatterySim.calculate(12.0, 0.020, [self.flywheelSim.getCurrentDraw()])
         )
-
-
 
 class InOutSubsystemSimulation():
     def __init__(self,

@@ -46,6 +46,9 @@ class MotorModuleIO:
     def setPID(self, kP: float, kI: float, kD: float) -> None:
         pass
 
+    def setPIDFF(self, kP: float, kI: float, kD: float, kS: float, kV: float, kA: float) -> None:
+        pass
+
     def setPosCmd(self, posCmdRad:float, arbFF:float=0.0)->None:
         """_summary_
 

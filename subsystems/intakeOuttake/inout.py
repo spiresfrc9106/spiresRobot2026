@@ -24,11 +24,11 @@ class InOutDependentConstants(metaclass=Singleton):
                 "GROUND_WHEEL_DIAMETER_INCHES": 2.0,
                 "HOPPER_WHEEL_DIAMETER_INCHES": 2.0,
                 "FLYWHEEL_WHEEL_DIAMETER_INCHES": 4.0,
-                "GROUND_KP": 0.000_4,
+                "GROUND_KP": 0.000_600, #2.4592E-05, # 0.000_4,
                 "GROUND_KD": 0.0,
-                "GROUND_KS": 0.5, # volts
-                "GROUND_KV": 0.014, # volts/radPerSec
-                "GROUND_KA": 0.000, # volts/radPerSecPerSec
+                "GROUND_KS": 0.024329, #0.024329, #0.024329, # 0.5, # volts
+                "GROUND_KV": 0.019456, #0.019456, # 0.014, # volts/radPerSec
+                "GROUND_KA": 0.077624, #0.077624, # 0.0077624, # 0.000, # volts/radPerSecPerSec
                 "HOPPER_KP": 0.000_1,
                 "HOPPER_KD": 0.0,
                 "HOPPER_KS": 0.5, #
