@@ -61,21 +61,21 @@ class InOutDependentConstants(metaclass=Singleton):
                 "GROUND_WHEEL_DIAMETER_INCHES": 2.0,
                 "HOPPER_WHEEL_DIAMETER_INCHES": 2.0,
                 "FLYWHEEL_WHEEL_DIAMETER_INCHES": 4.0,
-                "GROUND_KP": 0.000_4,
+                "GROUND_KP": 0.000_005_79, #at 144.97 Max Vel Error rad/s
                 "GROUND_KD": 0.0,
-                "GROUND_KS": 0.5,  # volts
-                "GROUND_KV": 0.014,  # volts/radPerSec
-                "GROUND_KA": 0.000,  # volts/radPerSecPerSec
-                "HOPPER_KP": 0.000_1,
+                "GROUND_KS": 0.281,  # volts
+                "GROUND_KV": 0.020_209,  # volts/radPerSec
+                "GROUND_KA": 0.002_101,  # volts/radPerSecPerSec
+                "HOPPER_KP": 0.000_1_352, # at 153.65 Max Vel Error rad/s
                 "HOPPER_KD": 0.0,
-                "HOPPER_KS": 0.5,  #
-                "HOPPER_KV": 0.01,  # volts/radPerSec
-                "HOPPER_KA": 0.000,  # volts/radPerSecPerSec
-                "FLYWHEEL_KP": 0.000_1,
+                "HOPPER_KS": 0.1289,  #
+                "HOPPER_KV": 0.019_315,  # volts/radPerSec
+                "HOPPER_KA": 0.002_025_1,  # volts/radPerSecPerSec
+                "FLYWHEEL_KP": 0.000_021_215, #at 183 Max Velocity Error
                 "FLYWHEEL_KD": 0.0,
-                "FLYWHEEL_KS": 0.5,  # volts
-                "FLYWHEEL_KV": 0.03,  # volts/radPerSec
-                "FLYWHEEL_KA": 0.000,  # volts/radPerSecPerSec
+                "FLYWHEEL_KS": 0.070_251,  # volts
+                "FLYWHEEL_KV": 0.016_290,  # volts/radPerSec
+                "FLYWHEEL_KA": 0.006_769_6,  # volts/radPerSecPerSec
                 """
                 TODO What didn't work it was too reactive to noise.
                 TODO I think I forgot to change the units from Radps to RPM for 
