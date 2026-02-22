@@ -96,7 +96,7 @@ class DrivetrainPhysical(metaclass=Singleton):
         # Drivetrain Performance Mechanical limits
         # Nominal calculations (ideal)
         if self.c.isSpiresRobot():
-            self.MAX_DT_MOTOR_SPEED_RPS = ConfigSubsystem().drivetrainDepConstants['SWERVE_WHEEL_MAX_SPEED_RPS']
+            self.MAX_DT_MOTOR_SPEED_RPS = ConfigSubsystem().drivetrainDepConstants['SWERVE_WHEEL_MAX_SPEED_RADPS']
         else:
             self.MAX_DT_MOTOR_SPEED_RPS = DCMotor.NEO(1).freeSpeed
             # self.MAX_DT_MOTOR_SPEED_RPS = DCMotor.neoVortex(1).freeSpeed
@@ -105,8 +105,8 @@ class DrivetrainPhysical(metaclass=Singleton):
 
         speed_multiple_at_comp = ConfigSubsystem().drivetrainDepConstants['SPEED_MULTIPLIER']
 
-        self.MAX_FWD_REV_SPEED_MPS = self.MAX_DT_LINEAR_SPEED_MPS * 0.98 * speed_multiple_at_comp  # fudge factor due to gearbox losses
-        self.MAX_STRAFE_SPEED_MPS = self.MAX_DT_LINEAR_SPEED_MPS * 0.98 * speed_multiple_at_comp  # fudge factor due to gearbox losses
+        self.MAX_FWD_REV_SPEED_MPS = self.MAX_DT_LINEAR_SPEED_MPS * 0.98 * speed_multiple_at_comp  # fudge factor due to gearBox losses
+        self.MAX_STRAFE_SPEED_MPS = self.MAX_DT_LINEAR_SPEED_MPS * 0.98 * speed_multiple_at_comp  # fudge factor due to gearBox losses
         self.MAX_ROTATE_SPEED_RAD_PER_SEC = deg2Rad(
             360.0
         ) * speed_multiple_at_comp  # Fixed at the maximum rotational speed we'd want.

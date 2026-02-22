@@ -31,8 +31,7 @@ from subsystems.state.configsubsystem import ConfigSubsystem
 from utils.units import radPerSec2RPM, sign
 from westwood.util.logtracer import LogTracer
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
-from wrappers.wrapperedSparkFlex import WrapperedSparkFlex
-from wrappers.wrapperedSparkMax import WrapperedSparkMax
+from wrappers.wrapperedSparkMotor import  WrapperedSparkMotor
 
 class FlywheelState(Enum):
     kOff = 0
@@ -465,18 +464,18 @@ class OperateFlywheelSimulation():
     wrapperedMotor: WrapperedMotorSuper
     gearRatio: float        # Gear Reduction is > 1.0
     moi: float              # Moment of inertia in kg·m² = = 0.0513951385
-    gearbox: DCMotor = field(init=False)        # e.g: DCMotor.getNEO(1);
+    gearBox: DCMotor = field(init=False)        # e.g: DCMotor.getNEO(1);
     motorCtrl: SparkBase = field(init=False)   # was motorControllerSim
     sparkSim: SparkSim = field(init=False)  #
     plant: LinearSystemSim_1_1_1 = field(init=False)
     flywheelSim: FlywheelSim = field(init=False)
 
     def __post_init__(self) -> None:
-        self.gearbox = self.wrapperedMotor.gearbox
-        self.motorCtrl = self.wrapperedMotor.ctrl # TODO Clean this up
-        self.sparkSim = self.wrapperedMotor.sparkSim
-        self.plant = LinearSystemId.flywheelSystem(self.gearbox, self.moi, self.gearRatio) # TODO Investigate if gearRatio and moi and inertia make sense
-        self.flywheelSim = FlywheelSim(self.plant, self.gearbox, measurementStdDevs=[0.01])
+        self.gearBox = self.wrapperedMotor.spark.gearBox
+        self.motorCtrl = self.wrapperedMotor.spark.ctrl # TODO Clean this up
+        self.sparkSim = self.wrapperedMotor.spark.sparkSim
+        self.plant = LinearSystemId.flywheelSystem(self.gearBox, self.moi, self.gearRatio) # TODO Investigate if gearRatio and moi and inertia make sense
+        self.flywheelSim = FlywheelSim(self.plant, self.gearBox, measurementStdDevs=[0.01])
         # TODO Mike Stitt doesn't think we need this step
         # self.motorCtrl.set(0.0)
 
@@ -542,17 +541,17 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
                     flywheelMotorGearBox = DCMotor.neoVortex(1)
 
                 inoutCals = InOutCalSet()
-                groundMotor = WrapperedSparkMax(name="groundMotor",
+                groundMotor = WrapperedSparkMotor.makeSparkMax(name="groundMotor",
                                                 canID=config.inoutDepConstants["GROUND_MOTOR_CANID"],
                                                 gearBox=groundMotorGearBox)
                 groundMotor.setInverted(config.inoutDepConstants["GROUND_MOTOR_INVERTED"])
                 groundMotor.setPID(inoutCals.groundP.get(), 0.0, inoutCals.groundD.get())
-                hopperMotor = WrapperedSparkMax(name="hopperMotor",
+                hopperMotor = WrapperedSparkMotor.makeSparkMax(name="hopperMotor",
                                                 canID=config.inoutDepConstants["HOPPER_MOTOR_CANID"],
                                                 gearBox=hopperMotorGearBox)
                 hopperMotor.setInverted(config.inoutDepConstants["HOPPER_MOTOR_INVERTED"])
                 hopperMotor.setPID(inoutCals.hopperP.get(), 0.0, inoutCals.hopperD.get())
-                flywheelMotor = WrapperedSparkFlex(name="flywheelMotor",
+                flywheelMotor = WrapperedSparkMotor.makeSparkFlex(name="flywheelMotor",
                                                    canID=config.inoutDepConstants["FLYWHEEL_MOTOR_CANID"],
                                                    gearBox=flywheelMotorGearBox)
                 flywheelMotor.setInverted(config.inoutDepConstants["FLYWHEEL_MOTOR_INVERTED"])

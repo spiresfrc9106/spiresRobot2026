@@ -1,11 +1,6 @@
-from typing import Optional
-from wpimath.system.plant import DCMotor
 from wrappers.wrapperedMotorCommon import MotorControlStates
 
 class WrapperedMotorSuper:
-
-    def __init__(self, canID:int, name:str, brakeMode:bool=False, currentLimitA:int=40, gearBox:Optional[DCMotor]=None):
-        pass
 
     def setFollow(self, leaderCanID:int, invert:bool=False)->None:
         assert False, "Not implemented"

@@ -8,8 +8,7 @@ from wpimath.geometry import Pose3d, Transform3d, Translation3d, Rotation3d
 from subsystems.state.configio import RobotTypes
 from utils.singleton import Singleton
 from wrappers.wrapperedLimelightCamera import wrapperedLimilightCameraFactory
-from wrappers.wrapperedSparkMax import WrapperedSparkMax
-from wrappers.wrapperedSparkFlex import WrapperedSparkFlex
+from wrappers.wrapperedSparkMotor import  WrapperedSparkMotor
 
 # Camera Mount Offsets
 # These are relative to the robot origin
@@ -119,12 +118,13 @@ class DrivetrainDependentConstants(metaclass=Singleton):
     def getDivetrainConstants(self, robotType: RobotTypes):
         drivetrainConstants = {
             RobotTypes.Spires2023: {
-                "WHEEL_MOTOR_WRAPPER": WrapperedSparkMax,
+                "HAS_DRIVETRAIN": True,
+                "WHEEL_MOTOR_WRAPPER": WrapperedSparkMotor.makeSparkMax,
                 "SWERVE_WHEEL_GEAR_RATIO": 5.50,   # Base Low
                 #"SWERVE_WHEEL_GEAR_RATIO": 5.08,  # Base Medium
                 #"SWERVE_WHEEL_GEAR_RATIO": 4.71,  # Base High
                 "SWERVE_WHEEL_DIAMETER_IN": 3.0,
-                "SWERVE_WHEEL_MAX_SPEED_RPS": DCMotor.NEO(1).freeSpeed,
+                "SWERVE_WHEEL_MAX_SPEED_RADPS": WrapperedSparkMotor.NEO_CONFIGURED_FREESPEED_RADPS,
                 "WIDTH": 16.5,
                 "LENGTH": 26.5,
                 "MASS_LBS": 32, #changed because coach jeremy lifted the robot and felt it was that
@@ -134,17 +134,17 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "BR_OFFSET_DEG": -11.2-90+180,
                 "GYRO": "NAVX", # "NAVX", # "ADIS16470_IMU",
                 "CAMS": self.getCommonCams(RobotTypes.Spires2023),
-                "HAS_DRIVETRAIN": True,
                 "USE_PHOTON_NAV": False,
                 "SPEED_MULTIPLIER": 3,
             },
             RobotTypes.Spires2025: {
-                "WHEEL_MOTOR_WRAPPER": WrapperedSparkFlex,
+                "HAS_DRIVETRAIN": True,
+                "WHEEL_MOTOR_WRAPPER": WrapperedSparkMotor.makeSparkFlex,
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.50, # Base Low
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.08, # Base Medium
                 "SWERVE_WHEEL_GEAR_RATIO": 4.71, # Base High
                 "SWERVE_WHEEL_DIAMETER_IN": 3.0,
-                "SWERVE_WHEEL_MAX_SPEED_RPS": DCMotor.neoVortex(1).freeSpeed,
+                "SWERVE_WHEEL_MAX_SPEED_RADPS": WrapperedSparkMotor.VORTEX_CONFIGURED_FREESPEED_RADPS,
                 "WIDTH": 26.0,
                 "LENGTH": 33.0,
                 "MASS_LBS": 104,
@@ -154,17 +154,17 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "BR_OFFSET_DEG": 117.5-90-180-155,
                 "GYRO": "ADIS16470_IMU",
                 "CAMS": self.getCommonCams(RobotTypes.Spires2025),
-                "HAS_DRIVETRAIN": True,
                 "USE_PHOTON_NAV": True,
                 "SPEED_MULTIPLIER": 2,
             },
             RobotTypes.Spires2025Sim: {
-                "WHEEL_MOTOR_WRAPPER": WrapperedSparkFlex,
+                "HAS_DRIVETRAIN": True,
+                "WHEEL_MOTOR_WRAPPER": WrapperedSparkMotor.makeSparkFlex,
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.50, # Base Low
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.08, # Base Medium
                 "SWERVE_WHEEL_GEAR_RATIO": 4.71, # Base High
                 "SWERVE_WHEEL_DIAMETER_IN": 3.0,
-                "SWERVE_WHEEL_MAX_SPEED_RPS": DCMotor.neoVortex(1).freeSpeed,
+                "SWERVE_WHEEL_MAX_SPEED_RADPS": WrapperedSparkMotor.VORTEX_CONFIGURED_FREESPEED_RADPS,
                 "WIDTH": 22.5,
                 "LENGTH": 26.5,
                 "MASS_LBS": 60,
@@ -174,17 +174,17 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "BR_OFFSET_DEG": 0,
                 "CAMS": self.getCommonCams(RobotTypes.Spires2025Sim),
                 "GYRO": "ADIS16470_IMU",
-                "HAS_DRIVETRAIN": True,
                 "USE_PHOTON_NAV": True,
                 "SPEED_MULTIPLIER": 2,
             },
             RobotTypes.SpiresTestBoard: {
-                "WHEEL_MOTOR_WRAPPER": WrapperedSparkMax,
+                "HAS_DRIVETRAIN": False,
+                "WHEEL_MOTOR_WRAPPER": WrapperedSparkMotor.makeSparkMax,
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.50, # Base Low
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.08, # Base Medium
                 "SWERVE_WHEEL_GEAR_RATIO": 4.71,  # Base High
                 "SWERVE_WHEEL_DIAMETER_IN": 3.0,
-                "SWERVE_WHEEL_MAX_SPEED_RPS": DCMotor.neoVortex(1).freeSpeed,
+                "SWERVE_WHEEL_MAX_SPEED_RADPS": WrapperedSparkMotor.NEO_CONFIGURED_FREESPEED_RADPS,
                 "WIDTH": 22.5,
                 "LENGTH": 26.5,
                 "MASS_LBS": 60,
@@ -194,17 +194,17 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "BR_OFFSET_DEG": 0,
                 "GYRO": "NoGyro",
                 "CAMS": [],
-                "HAS_DRIVETRAIN": False,
                 "USE_PHOTON_NAV": False,
                 "SPEED_MULTIPLIER": 2,
             },
             RobotTypes.SpiresRoboRioV1: {
-                "WHEEL_MOTOR_WRAPPER": WrapperedSparkMax,
+                "HAS_DRIVETRAIN": False,
+                "WHEEL_MOTOR_WRAPPER": WrapperedSparkMotor.makeSparkMax,
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.50, # Base Low
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.08, # Base Medium
                 "SWERVE_WHEEL_GEAR_RATIO": 4.71,  # Base High
                 "SWERVE_WHEEL_DIAMETER_IN": 3.0,
-                "SWERVE_WHEEL_MAX_SPEED_RPS": DCMotor.neoVortex(1).freeSpeed,
+                "SWERVE_WHEEL_MAX_SPEED_RADPS": WrapperedSparkMotor.NEO_CONFIGURED_FREESPEED_RADPS,
                 "WIDTH": 22.5,
                 "LENGTH": 26.5,
                 "MASS_LBS": 60,
@@ -214,17 +214,17 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "BR_OFFSET_DEG": 0,
                 "GYRO": "NoGyro",
                 "CAMS": [],
-                "HAS_DRIVETRAIN": False,
                 "USE_PHOTON_NAV": False,
                 "SPEED_MULTIPLIER": 2,
             },
             RobotTypes.Spires2026Sim: {
-                "WHEEL_MOTOR_WRAPPER": WrapperedSparkFlex,
+                "HAS_DRIVETRAIN": True,
+                "WHEEL_MOTOR_WRAPPER": WrapperedSparkMotor.makeSparkFlex,
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.50, # Base Low
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.08, # Base Medium
                 "SWERVE_WHEEL_GEAR_RATIO": 4.71,  # Base High
                 "SWERVE_WHEEL_DIAMETER_IN": 3.0,
-                "SWERVE_WHEEL_MAX_SPEED_RPS": DCMotor.neoVortex(1).freeSpeed,
+                "SWERVE_WHEEL_MAX_SPEED_RADPS": WrapperedSparkMotor.VORTEX_CONFIGURED_FREESPEED_RADPS,
                 "WIDTH": 22.5,
                 "LENGTH": 26.5,
                 "MASS_LBS": 60,
@@ -234,7 +234,6 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "BR_OFFSET_DEG": 0,
                 "CAMS": self.getCommonCams(RobotTypes.SpiresTestBoard),
                 "GYRO": "ADIS16470_IMU",
-                "HAS_DRIVETRAIN": True,
                 "USE_PHOTON_NAV": True,
                 "SPEED_MULTIPLIER": 2,
             },

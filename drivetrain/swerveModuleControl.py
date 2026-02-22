@@ -11,7 +11,8 @@ from wpilib import TimedRobot
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.drivetrainPhysical import wrapperedSwerveDriveAzmthEncoder
 from drivetrain.swerveModuleGainSet import SwerveModuleGainSet
-from wrappers.wrapperedSparkMax import WrapperedSparkMax
+from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
+from wrappers.wrapperedSparkMotor import  WrapperedSparkMotor
 from utils.units import rad2Deg
 from pykit.logger import Logger
 
@@ -59,7 +60,7 @@ class SwerveModuleControl:
         self,
         subsystemName:str,
         moduleName:str,
-        wheelMotorWrapper:...,
+        wheelMotorWrapper:WrapperedMotorSuper,
         wheelMotorCanID:int,
         azmthMotorCanID:int,
         azmthEncoderPortIdx:int,
@@ -89,7 +90,7 @@ class SwerveModuleControl:
         self.wheelMotor = wheelMotorWrapper(
             wheelMotorCanID, subsystemName + moduleName + "/wheelMotor", False
         )
-        self.azmthMotor = WrapperedSparkMax(
+        self.azmthMotor = WrapperedSparkMotor.makeSparkMax(
             azmthMotorCanID, subsystemName + moduleName + "/azmthMotor", True
         )
 

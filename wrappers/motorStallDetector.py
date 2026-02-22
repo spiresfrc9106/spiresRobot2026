@@ -1,18 +1,12 @@
-
-
-
-
-
 from wpilib import Timer
 
-from wrappers.wrapperedSparkMax import WrapperedSparkMax
-from wrappers.wrapperedSparkFlex import WrapperedSparkFlex
+from wrappers.wrapperedSparkMotor import WrapperedSparkMotor
 from wrappers.wrapperedMotorCommon import MotorControlStates
 
 
 class MotorPosStallDetector:
     def __init__(self, name:str,
-                 motor: WrapperedSparkMax|WrapperedSparkFlex,
+                 motor: WrapperedSparkMotor,
                  stallCurrentLimitA: int,
                  stallTimeLimitS: float):
         self.name = name
