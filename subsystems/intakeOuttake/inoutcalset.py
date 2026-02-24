@@ -26,6 +26,10 @@ class InOutCalSet(metaclass=Singleton):
             self.flywheelS = Calibration("InOut Flywheel kS", depConsts["FLYWHEEL_KS"], "volts")
             self.flywheelV = Calibration("InOut Flywheel kV", depConsts["FLYWHEEL_KV"], "volts/radPerSec")
             self.flywheelA = Calibration("InOut Flywheel kA", depConsts["FLYWHEEL_KA"], "volts/radPerSecPerSec")
+
+            self.groundMaxAccIPS2 = Calibration( "InOut Ground Max Acc IPS2", depConsts["GROUND_MAX_MOTION_MAX_ACC_IPS2"], "in/sec^2")
+            self.hopperMaxAccIPS2 = Calibration( "InOut Hopper Max Acc IPS2", depConsts["HOPPER_MAX_MOTION_MAX_ACC_IPS2"], "in/sec^2")
+            self.flywheelMaxAccIPS2 = Calibration( "InOut Hopper Max Acc IPS2", depConsts["FLYWHEEL_MAX_MOTION_MAX_ACC_IPS2"], "in/sec^2")
     
             self.groundIntakeSpeedIPS = Calibration("Ground Intake Speed IPS", depConsts["GROUND_INTAKE_SPEED_IPS"], "in/sec")
             self.groundOuttakeSpeedIPS = Calibration("Ground Outtake Speed IPS", depConsts["GROUND_OUTTAKE_SPEED_IPS"], "in/sec")
@@ -58,6 +62,9 @@ class InOutCalSet(metaclass=Singleton):
             or self.flywheelS.isChanged()
             or self.flywheelV.isChanged()
             or self.flywheelA.isChanged()
+            or self.groundMaxAccIPS2.isChanged()
+            or self.hopperMaxAccIPS2.isChanged()
+            or self.flywheelMaxAccIPS2.isChanged()
             or self.groundIntakeSpeedIPS.isChanged()
             or self.groundOuttakeSpeedIPS.isChanged()
             or self.groundShootSpeedIPS.isChanged()
@@ -111,6 +118,15 @@ class InOutCalSet(metaclass=Singleton):
 
     def setFlywheelA(self, flywheel_A):
         self.flywheelA = flywheel_A
+
+    def setGroundMaxAccIPS2(self, ground_maxAccIPS2):
+        self.groundMaxAccIPS2 = ground_maxAccIPS2
+
+    def setHopperMaxAccIPS2(self, hopper_maxAccIPS2):
+        self.hopperMaxAccIPS2 = hopper_maxAccIPS2
+
+    def setFlywheelMaxAccIPS2(self, flywheel_maxAccIPS2):
+        self.flywheelMaxAccIPS2 = flywheel_maxAccIPS2
 
     def setGroundIntakeSpeedIPS(self, groundIntake_IPS):
         self.groundIntakeSpeedIPS = groundIntake_IPS

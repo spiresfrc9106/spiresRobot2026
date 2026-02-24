@@ -49,6 +49,9 @@ class MotorModuleIO:
     def setPIDFF(self, kP: float, kI: float, kD: float, kS: float, kV: float, kA: float) -> None:
         pass
 
+    def setMaxMotionVelParams(self, maxAccRadps2: float) -> None:
+        pass
+
     def setPosCmd(self, posCmdRad:float, arbFF:float=0.0)->None:
         """_summary_
 
@@ -66,6 +69,8 @@ class MotorModuleIO:
             arbFF (int, optional): _description_. Defaults to 0.
         """
 
+    def setMaxMotionVelCmd(self, velCmdRadps: float):
+        pass
 
     def setVoltage(self, outputVoltageVolts:float)->None:
         pass

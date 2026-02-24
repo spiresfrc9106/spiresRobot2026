@@ -31,6 +31,9 @@ class MotorModule:
     def setVelCmd(self, velCmdRadps:float, arbFF:float=0.0)->None:
         self.io.setVelCmd(velCmdRadps, arbFF)
 
+    def setMaxMotionVelCmd(self, velCmdRadps: float):
+        self.io.setMaxMotionVelCmd(velCmdRadps)
+
     def setVoltage(self, outputVoltageVolts:float)->None:
         self.io.setVoltage(outputVoltageVolts)
 

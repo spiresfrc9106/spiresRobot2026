@@ -10,14 +10,19 @@ class MotorModuleIOWrappered(MotorModuleIO):
         self.motor.setPID(kP, kI, kD)
 
     def setPIDFF(self, kP: float, kI: float, kD: float, kS: float, kV: float, kA: float) -> None:
-        print(kP, kI, kD, kS, kV, kA)
         self.motor.setPIDFF(kP, kI, kD, kS, kV, kA)
+
+    def setMaxMotionVelParams(self, maxAccRadps2: float) -> None:
+        self.motor.setMaxMotionVelParams(maxAccRadps2)
 
     def setPosCmd(self, posCmdRad:float, arbFF:float=0.0)->None:
         self.motor.setPosCmd(posCmdRad, arbFF)
 
     def setVelCmd(self, velCmdRadps:float, arbFF:float=0.0)->None:
         self.motor.setVelCmd(velCmdRadps, arbFF)
+
+    def setMaxMotionVelCmd(self, velCmdRadps: float) -> None:
+        self.motor.setMaxMotionVelCmd(velCmdRadps)
 
     def setVoltage(self, outputVoltageVolts:float)->None:
         self.motor.setVoltage(outputVoltageVolts)

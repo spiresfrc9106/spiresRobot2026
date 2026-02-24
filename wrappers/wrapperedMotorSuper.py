@@ -14,10 +14,16 @@ class WrapperedMotorSuper:
     def setPIDFF(self, kP: float, kI: float, kD: float, kS: float, kV: float, kA: float) -> None:
         assert False, "Not implemented"
 
+    def setMaxMotionVelParams(self, maxAccRadps2:float) -> None:
+        assert False, "Not implemented"
+
     def setPosCmd(self, posCmdRad:float, arbFF:float=0.0)->None:
         assert False, "Not implemented"
 
     def setVelCmd(self, velCmdRadps:float, arbFF:float=0.0)->None:
+        assert False, "Not implemented"
+
+    def setMaxMotionVelCmd(self, velCmdRadps:float)->None:
         assert False, "Not implemented"
 
     def setVoltage(self, outputVoltageVolts:float)->None:

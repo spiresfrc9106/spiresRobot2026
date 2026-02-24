@@ -180,6 +180,27 @@ class WrapperedSparkMotor(WrapperedMotorSuper):
                                 ResetMode.kNoResetSafeParameters,
                                 persist)
 
+    def setMaxMotionVelParams(self, maxAccRadps2:float) -> None:
+        maxAccRadps2 = float(maxAccRadps2)
+        maxAccRPMps = radPerSec2RPM(maxAccRadps2)
+        if self.configSuccess:
+            (self.spark.cfg
+                 .closedLoop
+                 .maxMotion
+                 .maxAcceleration(maxAccRPMps, ClosedLoopSlot.kSlot0)
+            )
+            # Apply new configuration
+            # but don't reset other parameters
+            # Use the specified persist mode.
+            # By default we persist setings (usually we set PID once, then don't think about it again)
+            # However, if setPID is getting called in a periodic loop, don't bother persisting the parameters
+            # because the persist operation takes a long time on the spark max.
+            persist = PersistMode.kPersistParameters
+            self.spark.ctrl.configure(self.spark.cfg,
+                                ResetMode.kNoResetSafeParameters,
+                                persist)
+
+
     def setPosCmd(self, posCmdRad:float, arbFF:float=0.0)->None:
         """_summary_
 
@@ -230,11 +251,37 @@ class WrapperedSparkMotor(WrapperedMotorSuper):
             self.controlState = MotorControlStates.VELOCITY
             self.disconFault.set(err != REVLibError.kOk)
 
+
+    def setMaxMotionVelCmd(self, velCmdRadps:float)->None:
+        """_summary_
+
+        Args:
+            velCmd (float): motor desired shaft velocity in radians per second
+        """
+        velCmdRadps = float(velCmdRadps)
+        self.desVelRadps = velCmdRadps
+        desVelRPM = radPerSec2RPM(velCmdRadps)
+        self.desVolt = 0.0
+
+        if self.configSuccess:
+            err = self.closedLoopCtrl.setSetpoint(
+                desVelRPM,
+                SparkBase.ControlType.kMAXMotionVelocityControl,
+                ClosedLoopSlot.kSlot0,
+            )
+            self.controlState = MotorControlStates.MAXMOTIONVELOCITY
+            self.disconFault.set(err != REVLibError.kOk)
+
     def setVoltage(self, outputVoltageVolts:float)->None:
         outputVoltageVolts = float(outputVoltageVolts)
         self.desVolt = outputVoltageVolts
         if self.configSuccess:
-            self.spark.ctrl.setVoltage(outputVoltageVolts)
+            #self.spark.ctrl.setVoltage(outputVoltageVolts)
+            err = self.closedLoopCtrl.setReference(
+                outputVoltageVolts,
+                SparkBase.ControlType.kVoltage,
+                ClosedLoopSlot.kSlot0
+            )
             self.controlState = MotorControlStates.VOLTAGE
 
     def getMotorPositionRad(self)->float:

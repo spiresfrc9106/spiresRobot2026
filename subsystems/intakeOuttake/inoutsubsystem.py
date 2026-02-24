@@ -10,7 +10,7 @@ from wpimath.controller import SimpleMotorFeedforwardRadians
 
 from pykit.autolog import autologgable_output
 from pykit.logger import Logger
-from rev import SparkBase, SparkSim
+from rev import SparkBase, SparkSim, ClosedLoopSlot
 from wpilib.simulation import LinearSystemSim_1_1_1, FlywheelSim, RoboRioSim, BatterySim
 from wpilib.sysid import State
 from wpimath.system.plant import DCMotor, LinearSystemId
@@ -76,6 +76,7 @@ class InOutSubsystem(Subsystem):
         self.simulation = simulation
 
         self.useSparkFeedForward = True
+        self.useSparkMaxMotionVelocityControl = True
         self.state: InOutState = InOutState.kOff
         self.flywheelState: FlywheelState = FlywheelState.kOff
 
@@ -92,9 +93,15 @@ class InOutSubsystem(Subsystem):
     def initialize(self):
         self.setState(InOutState.kOff)
         self.setFlywheelState(FlywheelState.kOff)
-        self.groundModule.setVelCmd(0.0)
-        self.hopperModule.setVelCmd(0.0)
-        self.flywheelModule.setVelCmd(0.0)
+        self.oldGroundTargetRadPerS = 0.0
+        self.oldHopperTargetRadPerS = 0.0
+        self.oldFlywheelTargetRadPerS = 0.0
+        self.groundModule.setVoltage(0.0)
+        self.hopperModule.setVoltage(0.0)
+        self.flywheelModule.setVoltage(0.0)
+        self.groundModule.io.motor.spark.cfg.closedLoop.feedForward.kA(0.0,ClosedLoopSlot.kSlot0)
+        self.hopperModule.io.motor.spark.cfg.closedLoop.feedForward.kA(0.0,ClosedLoopSlot.kSlot0)
+        self.flywheelModule.io.motor.spark.cfg.closedLoop.feedForward.kA(0.0,ClosedLoopSlot.kSlot0)
         self.setDefaultCommand(self.aDoNothingCommand())
 
 
@@ -130,19 +137,22 @@ class InOutSubsystem(Subsystem):
                                     kD_DcMsPerRev,
                                     kS_V,
                                     kV_VSPerRad,
-                                    kA_VS2PerRad
+                                    kA_VS2PerRad,
+                                    maxAccRadps2
                                     ) -> None:
         """
             kP, # DutyCycle/Rev
             kI, # DutyCycle/(rev*ms)
             kD, # (DutyCycle*ms)/rev
         """
-        if not self.useSparkFeedForward:
+        if not (self.useSparkFeedForward or self.useSparkMaxMotionVelocityControl):
             mm.io.setPID(kP_DcPerRev,0.0, kD_DcMsPerRev )
         else:
             kV_VMinutesPerRev = 0.0 if isclose(kA_VS2PerRad, 0.0) else 1.0 / radPerSec2RPM(1.0/kV_VSPerRad)
             kA_VMinuteSecondsPerRev = 0.0 if isclose(kA_VS2PerRad, 0.0) else 1.0 / radPerSec2RPM(1.0/kA_VS2PerRad)
             mm.io.setPIDFF(kP_DcPerRev,0.0, kD_DcMsPerRev, kS_V, kV_VMinutesPerRev, kA_VMinuteSecondsPerRev)
+            if self.useSparkMaxMotionVelocityControl:
+                mm.io.setMaxMotionVelParams(maxAccRadps2)
 
     def _updateAllCals(self):
         self.calGroundKs = self.cals.groundS.get()
@@ -154,17 +164,21 @@ class InOutSubsystem(Subsystem):
         self.calFlywheelKs = self.cals.flywheelS.get()
         self.calFlywheelKv = self.cals.flywheelV.get()
         self.calFlywheelKa = self.cals.flywheelA.get()
+        self.calGroundMaxAccIps2 = self.cals.flywheelMaxAccIPS2.get()
+        self.calHopperMaxAccIps2 = self.cals.hopperMaxAccIPS2.get()
+        self.calFlywheelMaxAccIps2 = self.cals.flywheelMaxAccIPS2.get()
+
         self._updateMotorPIDandPerhapsFF(
-            self.groundModule, self.cals.groundP.get(), self.cals.groundD.get(), self.calGroundKs, self.calGroundKv, self.calGroundKa
+            self.groundModule, self.cals.groundP.get(), self.cals.groundD.get(), self.calGroundKs, self.calGroundKv, self.calGroundKa, self.calGroundMaxAccIps2
         )
         self._updateMotorPIDandPerhapsFF(
-            self.hopperModule, self.cals.hopperP.get(), self.cals.hopperD.get(), self.calHopperKs, self.calHopperKv, self.calHopperKa
+            self.hopperModule, self.cals.hopperP.get(), self.cals.hopperD.get(), self.calHopperKs, self.calHopperKv, self.calHopperKa, self.calHopperMaxAccIps2
         )
         self._updateMotorPIDandPerhapsFF(
-            self.flywheelModule, self.cals.flywheelP.get(), self.cals.flywheelD.get(), self.calFlywheelKs, self.calFlywheelKv, self.calFlywheelKa
+            self.flywheelModule, self.cals.flywheelP.get(), self.cals.flywheelD.get(), self.calFlywheelKs, self.calFlywheelKv, self.calFlywheelKa, self.calFlywheelMaxAccIps2
         )
 
-        if not self.useSparkFeedForward:
+        if not (self.useSparkFeedForward or self.useSparkMaxMotionVelocityControl):
             self.groundFF = SimpleMotorFeedforwardRadians(self.calGroundKs, self.calGroundKv, self.calGroundKa, kRobotUpdatePeriodS)
             self.hopperFF = SimpleMotorFeedforwardRadians(self.calHopperKs, self.calHopperKv, self.calHopperKa, kRobotUpdatePeriodS)
             self.flywheelFF = SimpleMotorFeedforwardRadians(self.calFlywheelKs, self.calFlywheelKv, self.calFlywheelKa, kRobotUpdatePeriodS)
@@ -208,10 +222,53 @@ class InOutSubsystem(Subsystem):
         hopperTargetRadPerS = self.hopperInPerSToRadPerS(self.inputs.hopperTargetIPS)
         flywheelTargetRadPerS = self.flywheelInPerSToRadPerS(self.inputs.flywheelTargetIPS)
 
-        if self.useSparkFeedForward:
-            self.groundModule.setVelCmd(groundTargetRadPerS)
-            self.hopperModule.setVelCmd(hopperTargetRadPerS)
-            self.flywheelModule.setVelCmd(flywheelTargetRadPerS)
+        if self.useSparkFeedForward or self.useSparkMaxMotionVelocityControl:
+            if self.useSparkMaxMotionVelocityControl:
+                if groundTargetRadPerS != self.oldGroundTargetRadPerS:
+                    if self.oldGroundTargetRadPerS == 0.0:
+                        self.groundModule.io.motor.spark.cfg.closedLoop.feedForward.kA(self.calGroundKa, ClosedLoopSlot.kSlot0)
+                    if isclose(groundTargetRadPerS,0.0):
+                        groundTargetRadPerS = 0.0
+                        self.groundModule.io.motor.spark.cfg.closedLoop.feedForward.kA(0.0, ClosedLoopSlot.kSlot0)
+                        self.groundModule.setMaxMotionVelCmd(0.0)
+                        #self.groundModule.setVoltage(0.0)
+                    else:
+                        self.groundModule.setMaxMotionVelCmd(groundTargetRadPerS)
+                    self.oldGroundTargetRadPerS = groundTargetRadPerS
+                if hopperTargetRadPerS != self.oldHopperTargetRadPerS:
+                    if self.oldHopperTargetRadPerS == 0.0:
+                        self.hopperModule.io.motor.spark.cfg.closedLoop.feedForward.kA(self.calHopperKa, ClosedLoopSlot.kSlot0)
+                    if isclose(hopperTargetRadPerS,0.0):
+                        hopperTargetRadPerS = 0.0
+                        self.hopperModule.io.motor.spark.cfg.closedLoop.feedForward.kA(0.0, ClosedLoopSlot.kSlot0)
+                        self.hopperModule.setMaxMotionVelCmd(0.0)
+                        #self.hopperModule.setVoltage(0.0)
+                    else:
+                        self.hopperModule.setMaxMotionVelCmd(hopperTargetRadPerS)
+                    self.oldHopperTargetRadPerS = hopperTargetRadPerS
+                if flywheelTargetRadPerS != self.oldFlywheelTargetRadPerS:
+                    if self.oldFlywheelTargetRadPerS == 0.0:
+                        self.flywheelModule.io.motor.spark.cfg.closedLoop.feedForward.kA(self.calFlywheelKa, ClosedLoopSlot.kSlot0)
+                    if isclose(flywheelTargetRadPerS,0.0):
+                        flywheelTargetRadPerS = 0.0
+                        self.flywheelModule.setMaxMotionVelCmd(0.0)
+                        #self.flywheelModule.setVoltage(0.0)
+                    else:
+                        self.flywheelModule.setMaxMotionVelCmd(flywheelTargetRadPerS)
+                    self.oldFlywheelTargetRadPerS = flywheelTargetRadPerS
+            else:
+                if isclose(groundTargetRadPerS,0.0):
+                    self.groundModule.setVoltage(0.0)
+                else:
+                    self.groundModule.setVelCmd(groundTargetRadPerS)
+                if isclose(hopperTargetRadPerS,0.0):
+                    self.hopperModule.setVoltage(0.0)
+                else:
+                    self.hopperModule.setVelCmd(hopperTargetRadPerS)
+                if isclose(flywheelTargetRadPerS,0.0):
+                    self.flywheelModule.setVoltage(0.0)
+                else:
+                    self.flywheelModule.setVelCmd(flywheelTargetRadPerS)
         else:
             groundFFV = self.groundFF.calculate(groundTargetRadPerS)
             velocityMeasurementDelayS = 0.180
@@ -455,7 +512,55 @@ class InOutSubsystem(Subsystem):
             cmd.run(lambda: self.useOperatorControls(), self),
         )
 
+class MaxMotionVelocityControl():
+    def __init__(self):
+        pass
 
+    """
+        groundTargetRadPerS = self.groundInPerSToRadPerS(self.inputs.groundTargetIPS)
+
+        if self.useSparkFeedForward or self.useSparkMaxMotionVelocityControl:
+            if self.useSparkMaxMotionVelocityControl:
+                if groundTargetRadPerS != self.oldGroundTargetRadPerS:
+                    if self.oldGroundTargetRadPerS == 0.0:
+                        self.groundModule.io.motor.spark.cfg.closedLoop.feedForward.kA(self.calGroundKa, ClosedLoopSlot.kSlot0)
+                    if isclose(groundTargetRadPerS,0.0):
+                        groundTargetRadPerS = 0.0
+                        self.groundModule.io.motor.spark.cfg.closedLoop.feedForward.kA(0.0, ClosedLoopSlot.kSlot0)
+                        self.groundModule.setMaxMotionVelCmd(0.0)
+                        #self.groundModule.setVoltage(0.0)
+                    else:
+                        self.groundModule.setMaxMotionVelCmd(groundTargetRadPerS)
+                    self.oldGroundTargetRadPerS = groundTargetRadPerS
+            else:
+                if isclose(groundTargetRadPerS,0.0):
+                    self.groundModule.setVoltage(0.0)
+                else:
+                    self.groundModule.setVelCmd(groundTargetRadPerS)
+        else:
+            groundFFV = self.groundFF.calculate(groundTargetRadPerS)
+            velocityMeasurementDelayS = 0.180
+            curGroundActVelocityRadps = self.groundModule.inputs.velRadps
+            accellerationRadPerSPerS = (groundTargetRadPerS - curGroundActVelocityRadps) / velocityMeasurementDelayS
+            #groundFFV = self.calGroundKs * sign(groundTargetRadPerS) + self.calGroundKv * groundTargetRadPerS + self.calGroundKa * accellerationRadPerSPerS
+            Logger.recordOutput(f"{self.name}/groundFFV", groundFFV)
+            self.groundModule.setVelCmd(groundTargetRadPerS, groundFFV)
+
+            hopperFFV = self.hopperFF.calculate(hopperTargetRadPerS)
+            curHopperActVelocityRadps = self.hopperModule.inputs.velRadps
+            accellerationRadPerSPerS = (hopperTargetRadPerS - curHopperActVelocityRadps) / velocityMeasurementDelayS
+            #hopperFFV = self.calHopperKs * sign(hopperTargetRadPerS) + self.calHopperKv * hopperTargetRadPerS + self.calHopperKa * accellerationRadPerSPerS
+
+            Logger.recordOutput(f"{self.name}/hopperFFV", hopperFFV)
+            self.hopperModule.setVelCmd(hopperTargetRadPerS, hopperFFV)
+
+            flywheelFFV = self.flywheelFF.calculate(flywheelTargetRadPerS)
+            curFlywheelActVelocityRadps = self.flywheelModule.inputs.velRadps
+            accellerationRadPerSPerS = (flywheelTargetRadPerS - curFlywheelActVelocityRadps) / velocityMeasurementDelayS
+            #flywheelFFV = self.calFlywheelKs * sign(flywheelTargetRadPerS) + self.calFlywheelKv * flywheelTargetRadPerS + self.calFlywheelKa * accellerationRadPerSPerS
+            Logger.recordOutput(f"{self.name}/flywheelFFV", flywheelFFV)
+            self.flywheelModule.setVelCmd(flywheelTargetRadPerS, flywheelFFV)
+    """
 
 # See https://github.com/FRCTeam360/RainMaker26/blob/ac5238c1ef05ec7bd4adafc81331d94dc29ffe08/src/main/java/frc/robot/subsystems/Indexer/IndexerIOSim.java#L3
 # for reference.
@@ -505,7 +610,7 @@ class InOutSubsystemSimulation():
         self.groundWheelSim = OperateFlywheelSimulation(
             wrapperedMotor=groundMotor,
             gearRatio=1/InOutSubsystem.GROUND_GEAR_REDUCTION,
-            moi=0.005,
+            moi=0.05,
         )
         self.hopperWheelSim = OperateFlywheelSimulation(
             wrapperedMotor=hopperMotor,
