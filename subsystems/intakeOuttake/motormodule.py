@@ -1,17 +1,37 @@
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
 from pykit.logger import Logger
 from wpimath.geometry import Rotation2d
 from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
 
 from subsystems.intakeOuttake.motormoduleio import MotorModuleIO
 
+from utils.calibration import Calibration
 from westwood.constants.drive import kMinWheelLinearVelocity, kWheelRadius
 from westwood.util.logtracer import LogTracer
 
+if TYPE_CHECKING:
+    from subsystems.intakeOuttake.motormodulecontroller import MotorModuleController
+
+
+@dataclass
+class MotorModuleCals:
+    kP: Calibration
+    kD: Calibration
+    kS: Calibration
+    kV: Calibration
+    kA: Calibration
+    maxAccIPS2: Calibration
+
 
 class MotorModule:
-    def __init__(self, name: str, io: MotorModuleIO, ffCharacterizationRampVPerS=0.1) -> None:
+    def __init__(self, name: str, io: MotorModuleIO,
+                 controller: 'MotorModuleController',
+                 ffCharacterizationRampVPerS=0.1) -> None:
         self.name = name
         self.io = io
+        self.controller = controller
         self.ffCharacterizationRampVPerS = ffCharacterizationRampVPerS
         self.inputs = MotorModuleIO.MotorModuleIOInputs()
 
@@ -24,6 +44,15 @@ class MotorModule:
         Logger.processInputs(self.name, self.inputs)
         LogTracer.record("ProcessInputs")
         LogTracer.recordTotal()
+
+    def updatePIDandFF(self) -> None:
+        self.controller.updatePIDandFF(self.io)
+
+    def updateClosedLoopOutput(self, targetRadPerS: float) -> None:
+        self.controller.updateClosedLoopOutput(self.io, targetRadPerS)
+
+    def reset(self) -> None:
+        self.controller.reset(self.io)
 
     def setPosCmd(self, posCmdRad:float, arbFF:float=0.0)->None:
         self.io.setPosCmd(posCmdRad, arbFF)
@@ -51,7 +80,3 @@ class MotorModule:
 
     def getOutputTorqueCurrentA(self)->float:
         return self.inputs.torqueCurrentA
-
-
-
-

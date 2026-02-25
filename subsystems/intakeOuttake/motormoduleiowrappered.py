@@ -27,6 +27,9 @@ class MotorModuleIOWrappered(MotorModuleIO):
     def setVoltage(self, outputVoltageVolts:float)->None:
         self.motor.setVoltage(outputVoltageVolts)
 
+    def setFeedForwardKA(self, kA: float) -> None:
+        self.motor.setFeedForwardKA(kA)
+
     def updateInputs(self, inputs: MotorModuleIO.MotorModuleIOInputs) -> None:
         inputs.desVoltsOrFfVolts = self.motor.getDesiredVoltageOrFF()
         inputs.posRad = self.motor.getMotorPositionRad()

@@ -75,5 +75,8 @@ class MotorModuleIO:
     def setVoltage(self, outputVoltageVolts:float)->None:
         pass
 
+    def setFeedForwardKA(self, kA: float) -> None:
+        pass
+
 
 

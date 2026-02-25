@@ -180,6 +180,10 @@ class WrapperedSparkMotor(WrapperedMotorSuper):
                                 ResetMode.kNoResetSafeParameters,
                                 persist)
 
+    def setFeedForwardKA(self, kA:float) -> None:
+        if self.configSuccess:
+            self.spark.cfg.closedLoop.feedForward.kA(kA,ClosedLoopSlot.kSlot0)
+
     def setMaxMotionVelParams(self, maxAccRadps2:float) -> None:
         maxAccRadps2 = float(maxAccRadps2)
         maxAccRPMps = radPerSec2RPM(maxAccRadps2)
