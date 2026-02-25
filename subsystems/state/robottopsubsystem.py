@@ -7,11 +7,6 @@ from subsystems.state.robottopio import RobotTopIO
 from utils.singleton import _instances
 from westwood.util.logtracer import LogTracer
 
-
-
-
-
-
 # pylint: disable-next=too-many-instance-attributes
 @autologgable_output
 class RobotTopSubsystem(Subsystem):

@@ -5,4 +5,5 @@ class MotorControlStates(IntEnum):
     VOLTAGE = 1
     POSITION = 2
     VELOCITY = 3
+    MAXMOTIONVELOCITY = 4
 

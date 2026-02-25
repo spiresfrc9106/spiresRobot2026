@@ -1,11 +1,6 @@
-from typing import Optional
-from wpimath.system.plant import DCMotor
 from wrappers.wrapperedMotorCommon import MotorControlStates
 
 class WrapperedMotorSuper:
-
-    def __init__(self, canID:int, name:str, brakeMode:bool=False, currentLimitA:int=40, gearBox:Optional[DCMotor]=None):
-        pass
 
     def setFollow(self, leaderCanID:int, invert:bool=False)->None:
         assert False, "Not implemented"
@@ -16,10 +11,22 @@ class WrapperedMotorSuper:
     def setPID(self, kP:float, kI:float, kD:float)->None:
         assert False, "Not implemented"
 
+    def setPIDFF(self, kP: float, kI: float, kD: float, kS: float, kV: float, kA: float) -> None:
+        assert False, "Not implemented"
+
+    def setFeedForwardKA(self, kA:float) -> None:
+        assert False, "Not implemented"
+
+    def setMaxMotionVelParams(self, maxAccRadps2:float) -> None:
+        assert False, "Not implemented"
+
     def setPosCmd(self, posCmdRad:float, arbFF:float=0.0)->None:
         assert False, "Not implemented"
 
     def setVelCmd(self, velCmdRadps:float, arbFF:float=0.0)->None:
+        assert False, "Not implemented"
+
+    def setMaxMotionVelCmd(self, velCmdRadps:float)->None:
         assert False, "Not implemented"
 
     def setVoltage(self, outputVoltageVolts:float)->None:
@@ -32,6 +39,9 @@ class WrapperedMotorSuper:
         assert False, "Not implemented"
 
     def getAppliedOutput(self)->float:
+        assert False, "Not implemented"
+
+    def getDesiredVoltageOrFF(self) -> float:
         assert False, "Not implemented"
 
     def getCurrentLimitA(self)->int:

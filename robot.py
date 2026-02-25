@@ -189,20 +189,18 @@ class MyRobot(LoggedRobot):
         #    gc.freeze()
 
         LogTracer.resetOuter("RobotPeriodic")
-        PhoenixUtil.updateSignals() #TODO rms - eventually remove this
-        LogTracer.record("PhoenixUpdate")
         if self.westwoodContainer is not None:
+            PhoenixUtil.updateSignals()
+            LogTracer.record("PhoenixUpdate")
             self.westwoodContainer.robotPeriodic()
+            LogTracer.record("WestwoodContainerPeriodic")
+        self.container.robotPeriodic()
         LogTracer.record("ContainerPeriodic")
-        commands2.CommandScheduler.getInstance().run()
-        LogTracer.record("CommandsPeriodic")
-        LogTracer.recordTotal()
-        self.dInt.update()
 
+        self.dInt.update()
 
         if self.driveTrain is not None:
             self.driveTrain.update()
-
 
         self.oInt.update()
         self.cw.update()
@@ -210,6 +208,13 @@ class MyRobot(LoggedRobot):
         self.ledCtrl.update()
 
         self.count += 1
+        LogTracer.record("OtherUpdates")
+        LogTracer.recordTotal()
+
+        # We need to close log tracer with LogTracer.recordTotal(), above,
+        # because it is a singleton and
+        # the next line will open new top level tracers.
+        commands2.CommandScheduler.getInstance().run()
 
 
     def disabledInit(self) -> None:
@@ -232,6 +237,8 @@ class MyRobot(LoggedRobot):
 
         # Start up the autonomous sequencer
         self.autoSequencer.initialize()
+
+        self.container.autonomousInit()
 
         # Use the autonomous rouines starting pose to init the pose estimator
         startPose = self.autoSequencer.getStartingPose()
@@ -256,10 +263,12 @@ class MyRobot(LoggedRobot):
 
     def autonomousExit(self):
         self.autoSequencer.end()
+        self.container.quietRobotOnExitFromActiveMode()
 
     #########################################################
     ## Teleop-Specific init and update
     def teleopInit(self) -> None:
+        self.container.teleopInit()
         #print(f"{self.count} teleopInit")
         # This makes sure that the autonomous stops running when
         # teleop starts running. If you want the autonomous to
@@ -300,6 +309,9 @@ class MyRobot(LoggedRobot):
         if motorDepConstants['HAS_MOTOR_TEST']:
             self.motorCtrlFun.update(100.0)
 
+    def teleopExit(self):
+        self.container.quietRobotOnExitFromActiveMode()
+
     #########################################################
     ## Disabled-Specific init and update
     def disabledPeriodic(self):
@@ -312,18 +324,14 @@ class MyRobot(LoggedRobot):
     #########################################################
     ## Test-Specific init and update
     def testInit(self) -> None:
-        # Cancels all running commands at the start of test mode
-        commands2.CommandScheduler.getInstance().cancelAll()
-
-        wpilib.LiveWindow.setEnabled(False)
-        #CTREMusicPlayback().play()
+        self.container.testInit()
 
     def testPeriodic(self):
         pass
 
     def testExit(self) -> None:
         #CTREMusicPlayback().stop()
-        pass
+        self.container.quietRobotOnExitFromActiveMode()
 
     #########################################################
     ## Cleanup
