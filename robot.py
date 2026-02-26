@@ -155,13 +155,14 @@ class MyRobot(LoggedRobot):
         if ConfigSubsystem().useCasseroleSwerve():
             self.driveTrain = DrivetrainControl()
 
-
         self.dInt = DriverInterface()
         self.oInt = OperatorInterface()
 
         self.ledCtrl = LEDControl()
 
-        self.autoSequencer = AutoSequencer()
+        self.autoSequencer = None
+        if self.driveTrain is not None:
+            self.autoSequencer = AutoSequencer()
 
         if motorDepConstants['HAS_MOTOR_TEST']:
             self.motorCtrlFun = MotorControl()
@@ -236,16 +237,18 @@ class MyRobot(LoggedRobot):
             self.autonomousCommand.schedule()
 
         # Start up the autonomous sequencer
-        self.autoSequencer.initialize()
+        if self.autoSequencer is not None:
+            self.autoSequencer.initialize()
 
         self.container.autonomousInit()
 
         # Use the autonomous rouines starting pose to init the pose estimator
-        startPose = self.autoSequencer.getStartingPose()
-        if startPose is not None:
-            if self.driveTrain is not None:
-                # Use the autonomous routines starting pose to init the pose estimator
-                self.driveTrain.poseEst.setKnownPose(self.autoSequencer.getStartingPose())  # position set.
+        if self.autoSequencer is not None:
+            startPose = self.autoSequencer.getStartingPose()
+            if startPose is not None:
+                if self.driveTrain is not None:
+                    # Use the autonomous routines starting pose to init the pose estimator
+                    self.driveTrain.poseEst.setKnownPose(self.autoSequencer.getStartingPose())  # position set.
 
         # Mark we at least started autonomous
         self.autoHasRun = True # pylint: disable=attribute-defined-outside-init
@@ -256,13 +259,15 @@ class MyRobot(LoggedRobot):
         # Do not run autosteer in autonomous
         #self.autosteer.setAutoSteerActiveCmd(False)
 
-        self.autoSequencer.update()
+        if self.autoSequencer is not None:
+            self.autoSequencer.update()
 
         # Operators cannot control in autonomous
         #self.driveTrain.setManualCmd(DrivetrainCommand())
 
     def autonomousExit(self):
-        self.autoSequencer.end()
+        if self.autoSequencer is not None:
+            self.autoSequencer.end()
         self.container.quietRobotOnExitFromActiveMode()
 
     #########################################################
@@ -315,11 +320,13 @@ class MyRobot(LoggedRobot):
     #########################################################
     ## Disabled-Specific init and update
     def disabledPeriodic(self):
-        self.autoSequencer.updateMode()
+        if self.autoSequencer is not None:
+            self.autoSequencer.updateMode()
         Trajectory().trajHDC.updateCals()
 
     def disabledInit(self):
-        self.autoSequencer.updateMode(True)
+        if self.autoSequencer is not None:
+            self.autoSequencer.updateMode(True)
 
     #########################################################
     ## Test-Specific init and update

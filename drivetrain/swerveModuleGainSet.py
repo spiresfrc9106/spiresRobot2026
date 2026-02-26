@@ -13,24 +13,23 @@ class SwerveModuleGainSet:
 
     def __init__(self):
 
-        #TODO pull these calibration values out of the drivetrainDependentConstants
-        #TODO rms Which value: self.wheelP = Calibration("Drivetrain Module Wheel kP", 0.03)
-        self.wheelP = Calibration("Drivetrain Module Wheel kP", 0.000_1)
-        self.wheelI = Calibration("Drivetrain Module Wheel kI", 0.0)
-        self.wheelD = Calibration("Drivetrain Module Wheel kD", 0.0)
-        self.wheelA = Calibration(
-            "Drivetrain Module Wheel kA", 0.000, "volts/radPerSecPerSec"
-        )
         p = DrivetrainPhysical()
-        self.wheelV = Calibration(
-            #was "Drivetrain Module Wheel kV", 12.0 / p.MAX_DT_MOTOR_SPEED_RPS, "volts/radPerSec"
-            "Drivetrain Module Wheel kV", 0.0 / p.MAX_DT_MOTOR_SPEED_RPS, "volts/radPerSec"
+        self.wheelP = Calibration("Drivetrain Module Wheel kP", p.WHEEL_P)
+        self.wheelI = Calibration("Drivetrain Module Wheel kI", p.WHEEL_I)
+        self.wheelD = Calibration("Drivetrain Module Wheel kD", p.WHEEL_D)
+        self.wheelA = Calibration(
+            "Drivetrain Module Wheel kA", p.WHEEL_A, "volts/radPerSecPerSec"
         )
-        # was:self.wheelS = Calibration("Drivetrain Module Wheel kS", 0.15, "volts")
-        self.wheelS = Calibration("Drivetrain Module Wheel kS", 0.5, "volts")
-        self.azmthP = Calibration("Drivetrain Module Azmth kP", 0.03)
-        self.azmthI = Calibration("Drivetrain Module Azmth kI", 0.0)
-        self.azmthD = Calibration("Drivetrain Module Azmth kD", 0.0000)
+        self.wheelV = Calibration(
+            "Drivetrain Module Wheel kV", p.WHEEL_V, "volts/radPerSec"
+        )
+        self.wheelS = Calibration("Drivetrain Module Wheel kS", p.WHEEL_S, "volts")
+        self.azmthP = Calibration("Drivetrain Module Azmth kP", p.AZMTH_P)
+        self.azmthI = Calibration("Drivetrain Module Azmth kI", p.AZMTH_I)
+        self.azmthD = Calibration("Drivetrain Module Azmth kD", p.AZMTH_D)
+        self.azmthA = Calibration("Drivetrain Module Azmth kA", p.AZMTH_A)
+        self.azmthV = Calibration("Drivetrain Module Azmth kV", p.AZMTH_V)
+        self.azmthS = Calibration("Drivetrain Module Azmth kS", p.AZMTH_S, "volts")
 
     def hasChanged(self)->bool:
         """
@@ -47,6 +46,9 @@ class SwerveModuleGainSet:
             or self.azmthP.isChanged()
             or self.azmthI.isChanged()
             or self.azmthD.isChanged()
+            or self.azmthA.isChanged()
+            or self.azmthV.isChanged()
+            or self.azmthS.isChanged()
         )
     def setWheelP(self, wheel_P):
         self.wheelP = wheel_P
@@ -66,3 +68,9 @@ class SwerveModuleGainSet:
         self.azmthI = azmth_I
     def setAzmthD(self,azmth_D):
         self.azmthD = azmth_D
+    def setAzmthA(self, azmth_A):
+        self.azmthA = azmth_A
+    def setAzmthV(self, azmth_V):
+        self.azmthV = azmth_V
+    def setAzmthS(self, azmth_S):
+        self.azmthS = azmth_S

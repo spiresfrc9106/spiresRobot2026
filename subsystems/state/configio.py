@@ -15,13 +15,12 @@ RobotTypes = Enum('RobotTypes', [
     'Practice',
     'TestBoard',
     'Spires2023',
-    'Spires2025',
-    'Spires2025Sim',
+    'Spires2026',
+    'Spires2026Sim',
     'SpiresMain',
     'SpiresPractice',
     'SpiresTestBoard',
     'SpiresRoboRioV1',
-    'Spires2026Sim',
 ])
 
 class _RobotIdentification(metaclass=Singleton):
@@ -55,7 +54,7 @@ class _RobotIdentification(metaclass=Singleton):
         self.serialNumber = RobotController.getSerialNumber()
 
         if FRC_TEAM_NUMBER == 9106 and RobotBase.isSimulation():
-            self.robotType = RobotTypes.Spires2025Sim
+            self.robotType = RobotTypes.Spires2026Sim
         elif self.serialNumber == "030e2cb0":
             #Test to see if the RoboRio serial number is the main/"Production" bot.
             self.robotType = RobotTypes.Main
@@ -69,7 +68,7 @@ class _RobotIdentification(metaclass=Singleton):
         elif self.serialNumber == "032430C5":
             self.robotType = RobotTypes.Spires2023
         elif self.serialNumber == "032B1F4B":
-            self.robotType = RobotTypes.Spires2025
+            self.robotType = RobotTypes.Spires2026
         elif self.serialNumber == "032B1FBB":
             self.robotType = RobotTypes.SpiresTestBoard
         elif self.serialNumber == "03057ab7":

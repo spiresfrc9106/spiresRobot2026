@@ -29,7 +29,7 @@ import os
 
 from wpilib import RobotBase
 
-kRobotUpdatePeriodMs: int = 40
+kRobotUpdatePeriodMs: int = 20
 kRobotUpdatePeriodS: float = kRobotUpdatePeriodMs / 1000
 kRobotUpdateFrequency: float = 1 / kRobotUpdatePeriodS
 

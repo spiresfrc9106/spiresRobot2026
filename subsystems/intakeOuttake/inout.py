@@ -7,10 +7,10 @@ class InOutDependentConstants(metaclass=Singleton):
             RobotTypes.Spires2023: {
                 "HAS_INOUT": False,
             },
-            RobotTypes.Spires2025: {
+            RobotTypes.Spires2026: {
                 "HAS_INOUT": False,
             },
-            RobotTypes.Spires2025Sim: {
+            RobotTypes.Spires2026Sim: {
                 "HAS_INOUT": True,
                 "GROUND_MOTOR_CANID": 17,
                 "HOPPER_MOTOR_CANID": 11,
@@ -95,31 +95,7 @@ class InOutDependentConstants(metaclass=Singleton):
             RobotTypes.SpiresRoboRioV1: {
                 "HAS_INOUT": False,
             },
-            RobotTypes.Spires2026Sim: {
-                "HAS_INOUT": False,
-            },
         }
     def get(self, robotType: RobotTypes):
         return self.inOutDepConstants[robotType]
 
-
-"""
-TODO What didn't work it was too reactive to noise.
-TODO I think I forgot to change the units from Radps to RPM for 
-"GROUND_KP": 0.000_04,  # 0.000_291_42, # Max Velocity Error rad/s: 144.97, Max Control Effort: 7V
-"GROUND_KD": 0.0,
-"GROUND_KS": 0.281_67,  # volts
-"GROUND_KV": 0.020_209,  # volts/radPerSec
-"GROUND_KA": 0.000_5,  # volts/radPerSecPerSec
-"HOPPER_KP": 0.000_78,
-"HOPPER_KD": 0.0,
-"HOPPER_KS": 0.128_9,  #
-"HOPPER_KV": 0.019_315,  # volts/radPerSec
-"HOPPER_KA": 0.002_025_1,  # volts/radPerSecPerSec
-"FLYWHEEL_KP": 0.01,
-"FLYWHEEL_KD": 0.0,
-"FLYWHEEL_KS": 0.070_225,  # volts
-"FLYWHEEL_KV": 0.016_29,  # volts/radPerSec
-"FLYWHEEL_KA": 0.006_769_98,  # volts/radPerSecPerSec
-GROUND_MAX_MOTION_MAX_ACC_IPS2
-"""

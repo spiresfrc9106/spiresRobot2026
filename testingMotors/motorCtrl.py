@@ -16,11 +16,11 @@ class MotorDependentConstants:
                 "HAS_MOTOR_TEST": False,
                 "TEST_MOTOR_CANID": None,
             },
-            RobotTypes.Spires2025: {
+            RobotTypes.Spires2026: {
                 "HAS_MOTOR_TEST": False,
                 "TEST_MOTOR_CANID": None,
             },
-            RobotTypes.Spires2025Sim: {
+            RobotTypes.Spires2026Sim: {
                 "HAS_MOTOR_TEST": True,
                 "TEST_MOTOR_CANID": 23,
             },
@@ -29,10 +29,6 @@ class MotorDependentConstants:
                 "TEST_MOTOR_CANID": None,
         },
             RobotTypes.SpiresRoboRioV1: {
-                "HAS_MOTOR_TEST": False,
-                "TEST_MOTOR_CANID": None,
-            },
-            RobotTypes.Spires2026Sim: {
                 "HAS_MOTOR_TEST": False,
                 "TEST_MOTOR_CANID": None,
             },
