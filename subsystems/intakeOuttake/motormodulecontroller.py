@@ -69,6 +69,7 @@ class MaxMotionController(MotorModuleController):
                 targetRadPerS = 0.0
                 io.setFeedForwardKA(0.0)
                 io.setMaxMotionVelCmd(0.0)
+                io.setVoltage(0.0)
             else:
                 io.setMaxMotionVelCmd(targetRadPerS)
             self.oldTargetRadPerS = targetRadPerS

@@ -307,7 +307,8 @@ class MyRobot(LoggedRobot):
             #self.autodrive.setRequest(self.dInt.getAutoDrive())
 
         if self.dInt.getGyroResetCmd():
-            self.driveTrain.resetGyro()
+            if self.driveTrain is not None:
+                self.driveTrain.resetGyro()
 
         # No trajectory in Teleop
         Trajectory().setCmd(None)

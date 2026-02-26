@@ -69,11 +69,11 @@ class InOutDependentConstants(metaclass=Singleton):
                 "GROUND_KS": 0.281,  # volts
                 "GROUND_KV": 0.020_209,  # volts/radPerSec
                 "GROUND_KA": 0.002_101,  # volts/radPerSecPerSec
-                "HOPPER_KP": 0.000_1_352, # at 153.65 Max Vel Error rad/s
+                "HOPPER_KP": 0.000_005_644_2, # at 153.65 Max Vel Error rad/s
                 "HOPPER_KD": 0.0,
                 "HOPPER_KS": 0.1289,  #
                 "HOPPER_KV": 0.019_315,  # volts/radPerSec
-                "HOPPER_KA": 0.002_025_1,  # volts/radPerSecPerSec
+                "HOPPER_KA": 0.002_024_1,  # volts/radPerSecPerSec
                 "FLYWHEEL_KP": 0.000_021_215, #at 183 Max Velocity Error
                 "FLYWHEEL_KD": 0.0,
                 "FLYWHEEL_KS": 0.070_251,  # volts
