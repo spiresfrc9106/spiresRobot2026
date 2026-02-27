@@ -1,4 +1,4 @@
-from subsystems.intakeOuttake.motormodule import MotorModuleCals
+from subsystems.common.motormodule import MotorModuleCals
 from subsystems.state.configsubsystem import ConfigSubsystem
 from utils.calibration import Calibration
 from utils.singleton import Singleton

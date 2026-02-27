@@ -7,8 +7,8 @@ from wpimath.controller import SimpleMotorFeedforwardRadians
 
 from constants import kRobotUpdatePeriodS
 from pykit.logger import Logger
-from subsystems.intakeOuttake.motormodule import MotorModuleCals
-from subsystems.intakeOuttake.motormoduleio import MotorModuleIO
+from subsystems.common.motormodule import MotorModuleCals
+from subsystems.common.motormoduleio import MotorModuleIO
 from utils.units import radPerSec2RPM
 
 

@@ -2,17 +2,14 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from pykit.logger import Logger
-from wpimath.geometry import Rotation2d
-from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
 
-from subsystems.intakeOuttake.motormoduleio import MotorModuleIO
+from subsystems.common.motormoduleio import MotorModuleIO
 
 from utils.calibration import Calibration
-from westwood.constants.drive import kMinWheelLinearVelocity, kWheelRadius
 from westwood.util.logtracer import LogTracer
 
 if TYPE_CHECKING:
-    from subsystems.intakeOuttake.motormodulecontroller import MotorModuleController
+    from subsystems.common.motormodulecontroller import MotorModuleController
 
 
 @dataclass

@@ -1,16 +1,14 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from math import isclose
 from typing import Optional
 
 from commands2 import Command, Subsystem, cmd
 from commands2.sysid import SysIdRoutine
 from wpilib import XboxController, Timer
-from wpimath.controller import SimpleMotorFeedforwardRadians
 
 from pykit.autolog import autologgable_output
 from pykit.logger import Logger
-from rev import SparkBase, SparkSim, ClosedLoopSlot
+from rev import SparkBase, SparkSim
 from wpilib.simulation import LinearSystemSim_1_1_1, FlywheelSim, RoboRioSim, BatterySim
 from wpilib.sysid import State
 from wpimath.system.plant import DCMotor, LinearSystemId
@@ -22,15 +20,14 @@ from subsystems.intakeOuttake.inoutsubsystemio import InOutSubsystemIO
 
 from subsystems.intakeOuttake.inoutsubsystemioreal import InOutSubsystemIOReal
 from subsystems.intakeOuttake.inoutsubsystemiosim import InOutSubsystemIORealSim
-from subsystems.intakeOuttake.motormodule import MotorModule
-from subsystems.intakeOuttake.motormodulecontroller import MaxMotionController, NullController, SparkVelocityController, \
-    SparkSlewRateLimitedVelocityController
-from subsystems.intakeOuttake.motormoduleio import MotorModuleIO
-from subsystems.intakeOuttake.motormoduleiowrappered import MotorModuleIOWrappered
-from subsystems.intakeOuttake.motormoduleiowrapperedsim import MotorModuleIOWrapperedSim
+from subsystems.common.motormodule import MotorModule
+from subsystems.common.motormodulecontroller import NullController, SparkSlewRateLimitedVelocityController
+from subsystems.common.motormoduleio import MotorModuleIO
+from subsystems.common.motormoduleiowrappered import MotorModuleIOWrappered
+from subsystems.common.motormoduleiowrapperedsim import MotorModuleIOWrapperedSim
 from subsystems.state.configsubsystem import ConfigSubsystem
 
-from utils.units import radPerSec2RPM, sign
+from utils.units import radPerSec2RPM
 from westwood.util.logtracer import LogTracer
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
 from wrappers.wrapperedSparkMotor import  WrapperedSparkMotor
