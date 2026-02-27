@@ -23,7 +23,8 @@ from subsystems.intakeOuttake.inoutsubsystemio import InOutSubsystemIO
 from subsystems.intakeOuttake.inoutsubsystemioreal import InOutSubsystemIOReal
 from subsystems.intakeOuttake.inoutsubsystemiosim import InOutSubsystemIORealSim
 from subsystems.intakeOuttake.motormodule import MotorModule
-from subsystems.intakeOuttake.motormodulecontroller import MaxMotionController, NullController
+from subsystems.intakeOuttake.motormodulecontroller import MaxMotionController, NullController, SparkVelocityController, \
+    SparkSlewRateLimitedVelocityController
 from subsystems.intakeOuttake.motormoduleio import MotorModuleIO
 from subsystems.intakeOuttake.motormoduleiowrappered import MotorModuleIOWrappered
 from subsystems.intakeOuttake.motormoduleiowrapperedsim import MotorModuleIOWrapperedSim
@@ -448,7 +449,7 @@ class InOutSubsystemSimulation():
         self.groundWheelSim = OperateFlywheelSimulation(
             wrapperedMotor=groundMotor,
             gearRatio=1/InOutSubsystem.GROUND_GEAR_REDUCTION,
-            moi=0.05,
+            moi=0.005,
         )
         self.hopperWheelSim = OperateFlywheelSimulation(
             wrapperedMotor=hopperMotor,
@@ -497,9 +498,44 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
                                                    gearBox=flywheelMotorGearBox)
                 flywheelMotor.setInverted(config.inoutDepConstants["FLYWHEEL_MOTOR_INVERTED"])
 
-                groundController = MaxMotionController(cals=inoutCals.groundCals)
-                hopperController = MaxMotionController(cals=inoutCals.hopperCals)
-                flywheelController = MaxMotionController(cals=inoutCals.flywheelCals)
+                """
+                groundController = SparkVelocityController(
+                    cals=inoutCals.groundCals
+                )
+                hopperController = SparkVelocityController(
+                    cals=inoutCals.hopperCals
+                )
+                flywheelController = SparkVelocityController(
+                    cals=inoutCals.flywheelCals
+                )
+
+
+                groundController = MaxMotionController(
+                    cals=inoutCals.groundCals,
+                    userUnitsToRadPerSec=InOutSubsystem.groundInPerSToRadPerS
+                )
+                hopperController = MaxMotionController(
+                    cals=inoutCals.hopperCals,
+                    userUnitsToRadPerSec=InOutSubsystem.hopperInPerSToRadPerS
+                )
+                flywheelController = MaxMotionController(
+                    cals=inoutCals.flywheelCals,
+                    userUnitsToRadPerSec=InOutSubsystem.flywheelInPerSToRadPerS
+                )
+                """
+
+                groundController = SparkSlewRateLimitedVelocityController(
+                    cals=inoutCals.groundCals,
+                    userUnitsToRadPerSec=InOutSubsystem.groundInPerSToRadPerS
+                )
+                hopperController = SparkSlewRateLimitedVelocityController(
+                    cals=inoutCals.hopperCals,
+                    userUnitsToRadPerSec=InOutSubsystem.hopperInPerSToRadPerS
+                )
+                flywheelController = SparkSlewRateLimitedVelocityController(
+                    cals=inoutCals.flywheelCals,
+                    userUnitsToRadPerSec=InOutSubsystem.flywheelInPerSToRadPerS
+                )
 
                 inoutSim = None
                 if kRobotMode == RobotModes.SIMULATION:

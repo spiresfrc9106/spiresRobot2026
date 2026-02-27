@@ -22,7 +22,7 @@ class MotorModuleCals:
     kS: Calibration
     kV: Calibration
     kA: Calibration
-    maxAccIPS2: Calibration
+    maxAccUserUnitsPerS2: Calibration
 
 
 class MotorModule:

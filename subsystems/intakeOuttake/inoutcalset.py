@@ -35,15 +35,15 @@ class InOutCalSet(metaclass=Singleton):
             self.groundCals = MotorModuleCals(
                 kP=self.groundP, kD=self.groundD,
                 kS=self.groundS, kV=self.groundV, kA=self.groundA,
-                maxAccIPS2=self.groundMaxAccIPS2)
+                maxAccUserUnitsPerS2=self.groundMaxAccIPS2)
             self.hopperCals = MotorModuleCals(
                 kP=self.hopperP, kD=self.hopperD,
                 kS=self.hopperS, kV=self.hopperV, kA=self.hopperA,
-                maxAccIPS2=self.hopperMaxAccIPS2)
+                maxAccUserUnitsPerS2=self.hopperMaxAccIPS2)
             self.flywheelCals = MotorModuleCals(
                 kP=self.flywheelP, kD=self.flywheelD,
                 kS=self.flywheelS, kV=self.flywheelV, kA=self.flywheelA,
-                maxAccIPS2=self.flywheelMaxAccIPS2)
+                maxAccUserUnitsPerS2=self.flywheelMaxAccIPS2)
     
             self.groundIntakeSpeedIPS = Calibration("Ground Intake Speed IPS", depConsts["GROUND_INTAKE_SPEED_IPS"], "in/sec")
             self.groundOuttakeSpeedIPS = Calibration("Ground Outtake Speed IPS", depConsts["GROUND_OUTTAKE_SPEED_IPS"], "in/sec")
