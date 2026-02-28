@@ -150,10 +150,7 @@ class MyRobot(LoggedRobot):
         # We do our own logging, we don't need additional logging in the background.
         # Both of these will increase CPU load by a lot, and we never use their output.
 
-        self.driveTrain = None
-        #print(f"useCasseroleSwerve()={ConfigSubsystem().useCasseroleSwerve()}")
-        if ConfigSubsystem().useCasseroleSwerve():
-            self.driveTrain = DrivetrainControl()
+
 
         self.dInt = DriverInterface()
         self.oInt = OperatorInterface()
@@ -161,7 +158,7 @@ class MyRobot(LoggedRobot):
         self.ledCtrl = LEDControl()
 
         self.autoSequencer = None
-        if self.driveTrain is not None:
+        if self.container.drivetrainSubsystem is not None:
             self.autoSequencer = AutoSequencer()
 
         if motorDepConstants['HAS_MOTOR_TEST']:
@@ -199,9 +196,6 @@ class MyRobot(LoggedRobot):
         LogTracer.record("ContainerPeriodic")
 
         self.dInt.update()
-
-        if self.driveTrain is not None:
-            self.driveTrain.update()
 
         self.oInt.update()
         self.cw.update()
@@ -246,9 +240,9 @@ class MyRobot(LoggedRobot):
         if self.autoSequencer is not None:
             startPose = self.autoSequencer.getStartingPose()
             if startPose is not None:
-                if self.driveTrain is not None:
+                if self.container.drivetrainSubsystem is not None:
                     # Use the autonomous routines starting pose to init the pose estimator
-                    self.driveTrain.poseEst.setKnownPose(self.autoSequencer.getStartingPose())  # position set.
+                    self.container.drivetrainSubsystem.casseroleDrivetrain.poseEst.setKnownPose(self.autoSequencer.getStartingPose())  # position set.
 
         # Mark we at least started autonomous
         self.autoHasRun = True # pylint: disable=attribute-defined-outside-init
@@ -261,9 +255,6 @@ class MyRobot(LoggedRobot):
 
         if self.autoSequencer is not None:
             self.autoSequencer.update()
-
-        # Operators cannot control in autonomous
-        #self.driveTrain.setManualCmd(DrivetrainCommand())
 
     def autonomousExit(self):
         if self.autoSequencer is not None:
@@ -282,9 +273,7 @@ class MyRobot(LoggedRobot):
         if self.autonomousCommand:
             self.autonomousCommand.cancel()
 
-        # clear existing telemetry trajectory
-        if self.driveTrain is not None:
-            self.driveTrain.poseEst._telemetry.setCurAutoTrajectory(None)
+
         # Ensure auto-steer starts disabled, no motion without driver command
         #self.autosteer.setInhibited()
 
@@ -294,8 +283,8 @@ class MyRobot(LoggedRobot):
         #print(f"{self.count} teleopPeriodic")
 
         # TODO - this is technically one loop delayed, which could induce lag
-        if self.driveTrain is not None:
-            self.driveTrain.setManualCmd(self.dInt.getCmd(), self.dInt.getRobotRelative())
+        if self.container.drivetrainSubsystem is not None:
+            self.container.drivetrainSubsystem.casseroleDrivetrain.setManualCmd(self.dInt.getCmd(), self.dInt.getRobotRelative())
 
 
             # We're enabled as long as the driver is commanding it, and we're _not_ trying to control robot relative.
@@ -307,8 +296,8 @@ class MyRobot(LoggedRobot):
             #self.autodrive.setRequest(self.dInt.getAutoDrive())
 
         if self.dInt.getGyroResetCmd():
-            if self.driveTrain is not None:
-                self.driveTrain.resetGyro()
+            if self.container.drivetrainSubsystem is not None:
+                self.container.drivetrainSubsystem.casseroleDrivetrain.resetGyro()
 
         # No trajectory in Teleop
         Trajectory().setCmd(None)

@@ -43,18 +43,19 @@ class InOutState(Enum):
     kOutaking = 2
     kShooting = 3
 
-IDP = ConfigSubsystem().inoutDepConstants
-HAS_INOUT = IDP["HAS_INOUT"]
+IODC = ConfigSubsystem().inoutDepConstants
+HAS_INOUT = IODC["HAS_INOUT"]
+
 @autologgable_output
 class InOutSubsystem(Subsystem):
-    GROUND_GEAR_REDUCTION = IDP["GROUND_GEAR_REDUCTION"] if HAS_INOUT else 1.0
-    GROUND_WHEEL_DIAMETER_INCHES = IDP["GROUND_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
+    GROUND_GEAR_REDUCTION = IODC["GROUND_GEAR_REDUCTION"] if HAS_INOUT else 1.0
+    GROUND_WHEEL_DIAMETER_INCHES = IODC["GROUND_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
     GROUND_WHEEL_RADIUS_INCHES = GROUND_WHEEL_DIAMETER_INCHES / 2.0 if HAS_INOUT else 1.0
-    HOPPER_GEAR_REDUCTION = IDP["HOPPER_GEAR_REDUCTION"] if HAS_INOUT else 1.0
-    HOPPER_WHEEL_DIAMETER_INCHES = IDP["HOPPER_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
+    HOPPER_GEAR_REDUCTION = IODC["HOPPER_GEAR_REDUCTION"] if HAS_INOUT else 1.0
+    HOPPER_WHEEL_DIAMETER_INCHES = IODC["HOPPER_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
     HOPPER_WHEEL_RADIUS_INCHES = HOPPER_WHEEL_DIAMETER_INCHES / 2.0 if HAS_INOUT else 1.0
-    FLYWHEEL_GEAR_REDUCTION = IDP["FLYWHEEL_GEAR_REDUCTION"] if HAS_INOUT else 1.0
-    FLYWHEEL_WHEEL_DIAMETER_INCHES = IDP["FLYWHEEL_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
+    FLYWHEEL_GEAR_REDUCTION = IODC["FLYWHEEL_GEAR_REDUCTION"] if HAS_INOUT else 1.0
+    FLYWHEEL_WHEEL_DIAMETER_INCHES = IODC["FLYWHEEL_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
     FLYWHEEL_WHEEL_RADIUS_INCHES = FLYWHEEL_WHEEL_DIAMETER_INCHES / 2.0 if HAS_INOUT else 1.0
 
     def __init__(
@@ -348,7 +349,7 @@ class InOutSubsystemSimulation():
 def inoutSubsystemFactory() -> InOutSubsystem|None:
     config = ConfigSubsystem()
     inout: Optional[InOutSubsystem] = None
-    if config.inoutDepConstants["HAS_INOUT"]:
+    if HAS_INOUT:
         match kRobotMode:
             case RobotModes.REAL | RobotModes.SIMULATION:
 
@@ -363,17 +364,17 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
 
                 inoutCals = InOutCalSet()
                 groundMotor = WrapperedSparkMotor.makeSparkMax(name="groundMotor",
-                                                canID=config.inoutDepConstants["GROUND_MOTOR_CANID"],
+                                                canID=IODC["GROUND_MOTOR_CANID"],
                                                 gearBox=groundMotorGearBox)
-                groundMotor.setInverted(config.inoutDepConstants["GROUND_MOTOR_INVERTED"])
+                groundMotor.setInverted(IODC["GROUND_MOTOR_INVERTED"])
                 hopperMotor = WrapperedSparkMotor.makeSparkMax(name="hopperMotor",
-                                                canID=config.inoutDepConstants["HOPPER_MOTOR_CANID"],
+                                                canID=IODC["HOPPER_MOTOR_CANID"],
                                                 gearBox=hopperMotorGearBox)
-                hopperMotor.setInverted(config.inoutDepConstants["HOPPER_MOTOR_INVERTED"])
+                hopperMotor.setInverted(IODC["HOPPER_MOTOR_INVERTED"])
                 flywheelMotor = WrapperedSparkMotor.makeSparkFlex(name="flywheelMotor",
-                                                   canID=config.inoutDepConstants["FLYWHEEL_MOTOR_CANID"],
+                                                   canID=IODC["FLYWHEEL_MOTOR_CANID"],
                                                    gearBox=flywheelMotorGearBox)
-                flywheelMotor.setInverted(config.inoutDepConstants["FLYWHEEL_MOTOR_INVERTED"])
+                flywheelMotor.setInverted(IODC["FLYWHEEL_MOTOR_INVERTED"])
 
                 """
                 groundController = SparkVelocityController(
@@ -475,8 +476,5 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
                       f" ratioOfMaxSpeed={inout.calFlywheelTargetSpeedIPS/flywheelMaxFreeSpeedIPS:.2f}")
             case RobotModes.REAL|RobotModes.REPLAY | _:
                 pass
-
-
-
 
     return inout
