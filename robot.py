@@ -26,7 +26,6 @@ if DrivetrainDependentConstants().useWestwoodSwerve:
 from westwood.util.logtracer import LogTracer
 from westwood.util.phoenixutil import PhoenixUtil
 
-from AutoSequencerV2.autoSequencer import AutoSequencer
 from testingMotors.motorCtrl import motorDepConstants, MotorControl
 
 from drivetrain.controlStrategies.trajectory import Trajectory
@@ -157,10 +156,6 @@ class MyRobot(LoggedRobot):
 
         self.ledCtrl = LEDControl()
 
-        self.autoSequencer = None
-        if self.container.drivetrainSubsystem is not None:
-            self.autoSequencer = AutoSequencer()
-
         if motorDepConstants['HAS_MOTOR_TEST']:
             self.motorCtrlFun = MotorControl()
 
@@ -230,19 +225,8 @@ class MyRobot(LoggedRobot):
         if self.autonomousCommand:
             self.autonomousCommand.schedule()
 
-        # Start up the autonomous sequencer
-        if self.autoSequencer is not None:
-            self.autoSequencer.initialize()
 
         self.container.autonomousInit()
-
-        # Use the autonomous rouines starting pose to init the pose estimator
-        if self.autoSequencer is not None:
-            startPose = self.autoSequencer.getStartingPose()
-            if startPose is not None:
-                if self.container.drivetrainSubsystem is not None:
-                    # Use the autonomous routines starting pose to init the pose estimator
-                    self.container.drivetrainSubsystem.casseroleDrivetrain.poseEst.setKnownPose(self.autoSequencer.getStartingPose())  # position set.
 
         # Mark we at least started autonomous
         self.autoHasRun = True # pylint: disable=attribute-defined-outside-init
@@ -250,15 +234,8 @@ class MyRobot(LoggedRobot):
     def autonomousPeriodic(self) -> None:
         """This function is called periodically during autonomous"""
 
-        # Do not run autosteer in autonomous
-        #self.autosteer.setAutoSteerActiveCmd(False)
-
-        if self.autoSequencer is not None:
-            self.autoSequencer.update()
 
     def autonomousExit(self):
-        if self.autoSequencer is not None:
-            self.autoSequencer.end()
         self.container.quietRobotOnExitFromActiveMode()
 
     #########################################################
@@ -310,13 +287,10 @@ class MyRobot(LoggedRobot):
     #########################################################
     ## Disabled-Specific init and update
     def disabledPeriodic(self):
-        if self.autoSequencer is not None:
-            self.autoSequencer.updateMode()
         Trajectory().trajHDC.updateCals()
 
     def disabledInit(self):
-        if self.autoSequencer is not None:
-            self.autoSequencer.updateMode(True)
+        pass
 
     #########################################################
     ## Test-Specific init and update
