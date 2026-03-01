@@ -80,7 +80,6 @@ class DrivetrainSubsystem(Subsystem):
 
     def periodic(self) -> None:
         """Run ongoing subsystem periodic process."""
-        """Run ongoing subsystem periodic process."""
         for module in self.wheelModules:
             module.periodic()
         for module in self.azmthModules:
