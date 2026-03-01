@@ -347,7 +347,6 @@ class InOutSubsystemSimulation():
 
 
 def inoutSubsystemFactory() -> InOutSubsystem|None:
-    config = ConfigSubsystem()
     inout: Optional[InOutSubsystem] = None
     if HAS_INOUT:
         match kRobotMode:

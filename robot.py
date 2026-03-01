@@ -30,7 +30,6 @@ from testingMotors.motorCtrl import motorDepConstants, MotorControl
 
 from drivetrain.controlStrategies.trajectory import Trajectory
 
-from drivetrain.drivetrainControl import DrivetrainControl
 from humanInterface.driverInterface import DriverInterface
 from humanInterface.ledControl import LEDControl
 from humanInterface.operatorInterface import OperatorInterface

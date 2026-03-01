@@ -1,5 +1,6 @@
 import random
 import math
+from typing import Tuple
 
 from wpimath.controller import SimpleMotorFeedforwardMeters
 from wpimath.controller import PIDController
@@ -11,7 +12,9 @@ from wpilib import TimedRobot
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.drivetrainPhysical import wrapperedSwerveDriveAzmthEncoder
 from drivetrain.swerveModuleGainSet import SwerveModuleGainSet
+from subsystems.common.motormoduleio import MotorModuleIO
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
+from wrappers.wrapperedRevThroughBoreEncoder import WrapperedRevThroughBoreEncoder
 from wrappers.wrapperedSparkMotor import  WrapperedSparkMotor
 from utils.units import rad2Deg
 from pykit.logger import Logger
@@ -58,51 +61,19 @@ class SwerveModuleControl:
 
     def __init__(
         self,
-        subsystemName:str,
-        moduleName:str,
-        wheelMotorWrapper:WrapperedMotorSuper,
-        wheelMotorCanID:int,
-        azmthMotorCanID:int,
-        azmthEncoderPortIdx:int,
-        azmthOffset:float,
-        invertWheelMotor:bool,
-        invertAzmthMotor:bool,
-        invertAzmthEncoder:bool
+        motorModulesAndEncoderSet: Tuple[str, MotorModuleIO, MotorModuleIO, WrapperedRevThroughBoreEncoder]
     ):
         """Instantiate one swerve drive module
 
         Args:
-            moduleName (str): Name Prefix for the module (IE, "FL", or "BR"). For logging purposes mostly
-            wheelMotorCanID (int): CAN Id for the wheel motor for this module
-            azmthMotorCanID (int): CAN Id for the azimuth motor for this module
-            azmthEncoderPortIdx (int): RIO Port for the azimuth absolute encoder for this module
-            azmthOffset (float): Mounting offset of the azimuth encoder in Radians.
-            invertWheelMotor (bool): Inverts the drive direction of the wheel motor
-            invertAzmthMotor (bool): Inverts the steering direction of the azimuth motor
-            invertAzmthEncoder (bool): Inverts the direction of the steering azimuth encoder
+            todo
         """
         p = DrivetrainPhysical()
         self.dtMotorRotToLinear = p.dtMotorRotToLinear
         self.dtLinearToMotorRot = p.dtLinearToMotorRot
         self.MAX_FWD_REV_SPEED_MPS = p.MAX_FWD_REV_SPEED_MPS
 
-        print(f"{moduleName} azmthOffset={rad2Deg(azmthOffset):7.1f} deg")
-        self.wheelMotor = wheelMotorWrapper(
-            wheelMotorCanID, subsystemName + moduleName + "/wheelMotor", False
-        )
-        self.azmthMotor = WrapperedSparkMotor.makeSparkMax(
-            azmthMotorCanID, subsystemName + moduleName + "/azmthMotor", True
-        )
-
-        # Note the azimuth encoder inversion should be fixed, based on the physical design of the encoder itself,
-        # plus the swerve module physical construction. It might need to be tweaked here though if we change 
-        # module brands or sensor brands.
-        self.azmthEnc = wrapperedSwerveDriveAzmthEncoder(
-            azmthEncoderPortIdx, subsystemName + moduleName + "/azmthEnc", azmthOffset, invertAzmthEncoder
-        )
-
-        self.wheelMotor.setInverted(invertWheelMotor)
-        self.azmthMotor.setInverted(invertAzmthMotor)
+        self.moduleName, self.wheelMotor, self.azmthMotor, self.azmthEnc = motorModulesAndEncoderSet
 
         self.wheelMotorFF = SimpleMotorFeedforwardMeters(0, 0, 0)
 
@@ -117,10 +88,10 @@ class SwerveModuleControl:
 
         self._prevMotorDesSpeed = 0
 
-        self._azmthDesTopicName = getAzmthDesTopicName(moduleName)
-        self._azmthActTopicName = getAzmthActTopicName(moduleName)
-        self._speedDesTopicName = getSpeedDesTopicName(moduleName)
-        self._speedActTopicName = getSpeedActTopicName(moduleName)
+        self._azmthDesTopicName = getAzmthDesTopicName(self.moduleName)
+        self._azmthActTopicName = getAzmthActTopicName(self.moduleName)
+        self._speedDesTopicName = getSpeedDesTopicName(self.moduleName)
+        self._speedActTopicName = getSpeedActTopicName(self.moduleName)
 
         # Simulation Support Only
         self.wheelSimFilter = SlewRateLimiter(24.0)
