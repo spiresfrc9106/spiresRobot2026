@@ -11,6 +11,7 @@ from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.controlStrategies.autoDrive import AutoDrive
 from drivetrain.controlStrategies.trajectory import Trajectory
+from subsystems.common.encodermoduleio import EncoderModuleIO
 from subsystems.common.motormoduleio import MotorModuleIO
 from utils.allianceTransformUtils import onRed
 from wrappers.wrapperedGyro import wrapperedGyro
@@ -22,15 +23,15 @@ class DrivetrainControl():
     Top-level control class for controlling a swerve drivetrain
     """
 
-    def __init__(self, motorModulesAndEncoderSets: List[Tuple[str, MotorModuleIO, MotorModuleIO, WrapperedRevThroughBoreEncoder]]):
+    def __init__(self, motorModuleIOsAndEncoderIOSets: List[Tuple[str, MotorModuleIO, MotorModuleIO, EncoderModuleIO]]):
         p = DrivetrainPhysical()
         self.name = p.DRIVETRAIN_NAME
         self.gyro = wrapperedGyro()
         self.modules = []
         self.kinematics = p.kinematics
-        for motorModulesAndEncoderSet in motorModulesAndEncoderSets:
+        for motorModuleIOsAndEncoderIOSet in motorModuleIOsAndEncoderIOSets:
             self.modules.append(
-                SwerveModuleControl(motorModulesAndEncoderSet)
+                SwerveModuleControl(motorModuleIOsAndEncoderIOSet)
             )
         self.MAX_FWD_REV_SPEED_MPS = p.MAX_FWD_REV_SPEED_MPS
 

@@ -16,6 +16,10 @@ from wpimath.system.plant import DCMotor, LinearSystemId
 
 from constants import kRobotMode, RobotModes, kRobotUpdatePeriodS
 from humanInterface.operatorInterface import OperatorInterface, FlywheelCommand, InOutCommand
+from subsystems.common.encodermodule import EncoderModule
+from subsystems.common.encodermoduleio import EncoderModuleIO
+from subsystems.common.encodermoduleiowrappered import EncoderModuleIOWrappered
+from subsystems.common.encodermoduleiowrapperedsim import EncoderModuleIOWrapperedSim
 from subsystems.common.sysidmotormodule import SysIdMotorModule
 from subsystems.drivetrain.drivetrainsubsystemio import DrivetrainSubsystemIO
 
@@ -47,7 +51,7 @@ class DrivetrainSubsystem(Subsystem):
     def __init__(
         self,
         io: DrivetrainSubsystemIO,
-        motorModuleIOsAndEncoderSets: List[Tuple[str, MotorModuleIO, MotorModuleIO, WrapperedRevThroughBoreEncoder]]
+        motorModuleIOsAndEncoderIOSets: List[Tuple[str, MotorModuleIO, MotorModuleIO, EncoderModuleIO]]
     ) -> None:
         Subsystem.__init__(self)
         self.name = type(self).__name__
@@ -56,14 +60,14 @@ class DrivetrainSubsystem(Subsystem):
         self.inputs = DrivetrainSubsystemIO.DrivetrainSubsystemIOInputs()
         self.wheelModules = []
         self.azmthModules = []
-        self.azmthEncoders = []
-        for moduleName, wheelModuleIO, azmthModuleIO, azmthEncoder in motorModuleIOsAndEncoderSets:
-            self.wheelModules.append(MotorModule(name=f"wheel{moduleName}Module", io=wheelModuleIO, controller=NullController))
-            self.azmthModules.append(MotorModule(name=f"azmth{moduleName}Module", io=azmthModuleIO, controller=NullController))
-            self.azmthEncoders.append(azmthEncoder)
+        self.azmthEncoderModules = []
+        for moduleName, wheelModuleIO, azmthModuleIO, azmthEncoderIO in motorModuleIOsAndEncoderIOSets:
+            self.wheelModules.append(MotorModule(name=f"wheelMotor{moduleName}Module", io=wheelModuleIO, controller=NullController))
+            self.azmthModules.append(MotorModule(name=f"azmthMotor{moduleName}Module", io=azmthModuleIO, controller=NullController))
+            self.azmthEncoderModules.append(EncoderModule(name=f"azmthEncoder{moduleName}Module", io=azmthEncoderIO))
 
         #TODO note, at the moment we are sending motorModuleIOs to the the DrivetrainControl.
-        self.casseroleDrivetrain = DrivetrainControl(motorModuleIOsAndEncoderSets)
+        self.casseroleDrivetrain = DrivetrainControl(motorModuleIOsAndEncoderIOSets)
         self.initialize()
 
         self.isClosedLoop = True
@@ -84,10 +88,12 @@ class DrivetrainSubsystem(Subsystem):
             module.periodic()
         for module in self.azmthModules:
             module.periodic()
+        for module in self.azmthEncoderModules:
+            module.periodic()
         # We start LogTracing here because the above modules do their own periodic logging.
         LogTracer.resetOuter("drivetrainSubsystem periodic")
         self.io.updateInputs(self.inputs)  # update state of the ionout subsystem
-        Logger.processInputs("inout", self.inputs)
+        Logger.processInputs("drivetrain", self.inputs)
         LogTracer.record("UpdateInputs")
         self.casseroleDrivetrain.update()
         LogTracer.record("casseroleDrivetrain.update")
@@ -257,29 +263,34 @@ def DrivetrainSubsystemFactory() -> DrivetrainSubsystem|None:
                 )
 
 
-        motorModuleIOsAndEncoderSets = []
+        motorModuleIOsAndEncoderIOSets = []
         match kRobotMode:
             case RobotModes.REAL:
                 io=DrivetrainSubsystemIOReal(name="drivetrainIO")
                 for moduleName, wheelMotor, azmthMotor, azmthEncoder in wrapperedMotorsAndEncoderSets:
                     wheelMotor_io=MotorModuleIOWrappered(name=f"{p.DRIVETRAIN_NAME}/{moduleName}WheelMotorModuleIO", motor=wheelMotor)
                     azmthMotor_io=MotorModuleIOWrappered(name=f"{p.DRIVETRAIN_NAME}/{moduleName}AzmthMotorModuleIO", motor=azmthMotor)
-                    motorModuleIOsAndEncoderSets.append(
-                        (moduleName, wheelMotor_io, azmthMotor_io, azmthEncoder))
+                    azmthEncoder_io=EncoderModuleIOWrappered(name=f"{p.DRIVETRAIN_NAME}/{moduleName}AzmthEncoderModuleIO", encoder=azmthEncoder)
+                    motorModuleIOsAndEncoderIOSets.append(
+                        (moduleName, wheelMotor_io, azmthMotor_io, azmthEncoder_io))
             case RobotModes.SIMULATION:
                     io=DrivetrainSubsystemIORealSim(name="drivetrainIO")
                     for moduleName, wheelMotor, azmthMotor, azmthEncoder in wrapperedMotorsAndEncoderSets:
                         wheelMotor_io=MotorModuleIOWrapperedSim(name=f"{p.DRIVETRAIN_NAME}/{moduleName}WheelMotorModuleIO", motor=wheelMotor)
                         azmthMotor_io=MotorModuleIOWrapperedSim(name=f"{p.DRIVETRAIN_NAME}/{moduleName}AzmthMotorModuleIO", motor=azmthMotor)
-                        motorModuleIOsAndEncoderSets.append(
-                            (moduleName, wheelMotor_io, azmthMotor_io, azmthEncoder))
+                        azmthEncoder_io = EncoderModuleIOWrapperedSim(
+                            name=f"{p.DRIVETRAIN_NAME}/{moduleName}AzmthEncoderModuleIO", encoder=azmthEncoder)
+                        motorModuleIOsAndEncoderIOSets.append(
+                            (moduleName, wheelMotor_io, azmthMotor_io, azmthEncoder_io))
             case RobotModes.REPLAY | _:
                     io=DrivetrainSubsystemIO()
                     for moduleName, wheelMotor, azmthMotor, azmthEncoder in wrapperedMotorsAndEncoderSets:
                         wheelMotor_io=MotorModuleIO(name=f"{p.DRIVETRAIN_NAME}/{moduleName}WheelMotorModuleIO", motor=wheelMotor)
                         azmthMotor_io=MotorModuleIO(name=f"{p.DRIVETRAIN_NAME}/{moduleName}AzmthMotorModuleIO", motor=azmthMotor)
-                        motorModuleIOsAndEncoderSets.append(
-                            (moduleName, wheelMotor_io, azmthMotor_io, azmthEncoder))
-        drivetrain = DrivetrainSubsystem(io=io, motorModuleIOsAndEncoderSets=motorModuleIOsAndEncoderSets)
+                        azmthEncoder_io = EncoderModuleIO(
+                            name=f"{p.DRIVETRAIN_NAME}/{moduleName}AzmthEncoderModuleIO", encoder=azmthEncoder)
+                        motorModuleIOsAndEncoderIOSets.append(
+                            (moduleName, wheelMotor_io, azmthMotor_io, azmthEncoder_io))
+        drivetrain = DrivetrainSubsystem(io=io, motorModuleIOsAndEncoderIOSets=motorModuleIOsAndEncoderIOSets)
 
     return drivetrain

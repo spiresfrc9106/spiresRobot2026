@@ -12,6 +12,7 @@ from wpilib import TimedRobot
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.drivetrainPhysical import wrapperedSwerveDriveAzmthEncoder
 from drivetrain.swerveModuleGainSet import SwerveModuleGainSet
+from subsystems.common.encodermoduleio import EncoderModuleIO
 from subsystems.common.motormoduleio import MotorModuleIO
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
 from wrappers.wrapperedRevThroughBoreEncoder import WrapperedRevThroughBoreEncoder
@@ -61,7 +62,7 @@ class SwerveModuleControl:
 
     def __init__(
         self,
-        motorModulesAndEncoderSet: Tuple[str, MotorModuleIO, MotorModuleIO, WrapperedRevThroughBoreEncoder]
+        motorModulesAndEncoderSet: Tuple[str, MotorModuleIO, MotorModuleIO, EncoderModuleIO]
     ):
         """Instantiate one swerve drive module
 
@@ -151,7 +152,7 @@ class SwerveModuleControl:
         """Main update function, call every 40ms"""
 
         # Read from the azimuth angle sensor (encoder)
-        self.azmthEnc.update()
+        #self.azmthEnc.update() This is now being handled by PyKit moduleIO processing.
 
         if TimedRobot.isReal():
             # Real Robot. Use the actual sensors to get data about the module.
