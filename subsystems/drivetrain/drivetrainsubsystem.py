@@ -39,6 +39,7 @@ from utils.units import radPerSec2RPM, rad2Deg
 from westwood.util.logtracer import LogTracer
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
 from wrappers.wrapperedRevThroughBoreEncoder import WrapperedRevThroughBoreEncoder
+from wrappers.wrapperedSparkMax import WrapperedSparkMax
 from wrappers.wrapperedSparkMotor import  WrapperedSparkMotor
 
 
@@ -209,7 +210,7 @@ def makeNameAndWrapperedMotorsAndEncoder(
     wheelMotor = wheelMotorWrapper(
         wheelMotorCanID, subsystemName + moduleName + "/wheelMotor", False
     )
-    azmthMotor = WrapperedSparkMotor.makeSparkMax(
+    azmthMotor = WrapperedSparkMax(
         azmthMotorCanID, subsystemName + moduleName + "/azmthMotor", True
     )
 

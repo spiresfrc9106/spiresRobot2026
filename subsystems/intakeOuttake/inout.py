@@ -88,7 +88,7 @@ class InOutDependentConstants(metaclass=Singleton):
                 "HOPPER_OUTTAKE_SPEED_IPS": 40.0,  # in/sec
                 "GROUND_SHOOT_SPEED_IPS": 80.0,  # in/sec
                 "HOPPER_SHOOT_SPEED_IPS": 80.0,  # in/sec
-                "FLYWHEEL_SPEED_IPS": 500.0,  # in/sec
+                "FLYWHEEL_SPEED_IPS": 400.0,  # in/sec
 
 
             },

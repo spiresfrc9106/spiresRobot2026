@@ -21,7 +21,8 @@ from subsystems.intakeOuttake.inoutsubsystemio import InOutSubsystemIO
 from subsystems.intakeOuttake.inoutsubsystemioreal import InOutSubsystemIOReal
 from subsystems.intakeOuttake.inoutsubsystemiosim import InOutSubsystemIORealSim
 from subsystems.common.motormodule import MotorModule
-from subsystems.common.motormodulecontroller import NullController, SparkSlewRateLimitedVelocityController
+from subsystems.common.motormodulecontroller import NullController, SparkSlewRateLimitedVelocityController, \
+    WPILibFFController, SparkVelocityController
 from subsystems.common.motormoduleio import MotorModuleIO
 from subsystems.common.motormoduleiowrappered import MotorModuleIOWrappered
 from subsystems.common.motormoduleiowrapperedsim import MotorModuleIOWrapperedSim
@@ -30,6 +31,8 @@ from subsystems.state.configsubsystem import ConfigSubsystem
 from utils.units import radPerSec2RPM
 from westwood.util.logtracer import LogTracer
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
+from wrappers.wrapperedSparkFlex import WrapperedSparkFlex
+from wrappers.wrapperedSparkMax import WrapperedSparkMax
 from wrappers.wrapperedSparkMotor import  WrapperedSparkMotor
 
 class FlywheelState(Enum):
@@ -293,9 +296,9 @@ class OperateFlywheelSimulation():
     flywheelSim: FlywheelSim = field(init=False)
 
     def __post_init__(self) -> None:
-        self.gearBox = self.wrapperedMotor.spark.gearBox
-        self.motorCtrl = self.wrapperedMotor.spark.ctrl # TODO Clean this up
-        self.sparkSim = self.wrapperedMotor.spark.sparkSim
+        self.gearBox = self.wrapperedMotor.getGearBox()
+        self.motorCtrl = self.wrapperedMotor.getCtrl() # TODO Clean this up
+        self.sparkSim = self.wrapperedMotor.getSparkSim()
         self.plant = LinearSystemId.flywheelSystem(self.gearBox, self.moi, self.gearRatio) # TODO Investigate if gearRatio and moi and inertia make sense
         self.flywheelSim = FlywheelSim(self.plant, self.gearBox, measurementStdDevs=[0.01])
         # TODO Mike Stitt doesn't think we need this step
@@ -362,20 +365,21 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
                     flywheelMotorGearBox = DCMotor.neoVortex(1)
 
                 inoutCals = InOutCalSet()
-                groundMotor = WrapperedSparkMotor.makeSparkMax(name="groundMotor",
+
+                groundMotor = WrapperedSparkMax(name="groundMotor",
                                                 canID=IODC["GROUND_MOTOR_CANID"],
                                                 gearBox=groundMotorGearBox)
                 groundMotor.setInverted(IODC["GROUND_MOTOR_INVERTED"])
-                hopperMotor = WrapperedSparkMotor.makeSparkMax(name="hopperMotor",
+                hopperMotor = WrapperedSparkMax(name="hopperMotor",
                                                 canID=IODC["HOPPER_MOTOR_CANID"],
                                                 gearBox=hopperMotorGearBox)
                 hopperMotor.setInverted(IODC["HOPPER_MOTOR_INVERTED"])
-                flywheelMotor = WrapperedSparkMotor.makeSparkFlex(name="flywheelMotor",
+                flywheelMotor = WrapperedSparkFlex(name="flywheelMotor",
                                                    canID=IODC["FLYWHEEL_MOTOR_CANID"],
                                                    gearBox=flywheelMotorGearBox)
                 flywheelMotor.setInverted(IODC["FLYWHEEL_MOTOR_INVERTED"])
 
-                """
+
                 groundController = SparkVelocityController(
                     cals=inoutCals.groundCals
                 )
@@ -386,7 +390,7 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
                     cals=inoutCals.flywheelCals
                 )
 
-
+                """
                 groundController = MaxMotionController(
                     cals=inoutCals.groundCals,
                     userUnitsToRadPerSec=InOutSubsystem.groundInPerSToRadPerS
@@ -399,20 +403,18 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
                     cals=inoutCals.flywheelCals,
                     userUnitsToRadPerSec=InOutSubsystem.flywheelInPerSToRadPerS
                 )
-                """
 
-                groundController = SparkSlewRateLimitedVelocityController(
-                    cals=inoutCals.groundCals,
-                    userUnitsToRadPerSec=InOutSubsystem.groundInPerSToRadPerS
+
+                groundController = WPILibFFController(
+                    cals=inoutCals.groundCals
                 )
-                hopperController = SparkSlewRateLimitedVelocityController(
-                    cals=inoutCals.hopperCals,
-                    userUnitsToRadPerSec=InOutSubsystem.hopperInPerSToRadPerS
+                hopperController = WPILibFFController(
+                    cals=inoutCals.hopperCals
                 )
-                flywheelController = SparkSlewRateLimitedVelocityController(
-                    cals=inoutCals.flywheelCals,
-                    userUnitsToRadPerSec=InOutSubsystem.flywheelInPerSToRadPerS
+                flywheelController = WPILibFFController(
+                    cals=inoutCals.flywheelCals
                 )
+                """
 
                 inoutSim = None
                 if kRobotMode == RobotModes.SIMULATION:

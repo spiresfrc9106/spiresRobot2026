@@ -9,6 +9,8 @@ from subsystems.state.configio import RobotTypes
 from utils.singleton import Singleton
 from utils.units import deg2Rad
 from wrappers.wrapperedLimelightCamera import wrapperedLimilightCameraFactory
+from wrappers.wrapperedSparkFlex import WrapperedSparkFlex
+from wrappers.wrapperedSparkMax import WrapperedSparkMax
 from wrappers.wrapperedSparkMotor import  WrapperedSparkMotor
 
 # Camera Mount Offsets
@@ -117,7 +119,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
         drivetrainConstants = {
             RobotTypes.Spires2023: {
                 "HAS_DRIVETRAIN": True,
-                "WHEEL_MOTOR_WRAPPER": WrapperedSparkMotor.makeSparkMax,
+                "WHEEL_MOTOR_WRAPPER": WrapperedSparkMax,
                 "SWERVE_WHEEL_GEAR_RATIO": 5.50,   # Base Low
                 #"SWERVE_WHEEL_GEAR_RATIO": 5.08,  # Base Medium
                 #"SWERVE_WHEEL_GEAR_RATIO": 4.71,  # Base High
@@ -149,7 +151,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
             },
             RobotTypes.Spires2026: {
                 "HAS_DRIVETRAIN": True,
-                "WHEEL_MOTOR_WRAPPER": WrapperedSparkMotor.makeSparkFlex,
+                "WHEEL_MOTOR_WRAPPER": WrapperedSparkFlex,
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.50, # Base Low
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.08, # Base Medium
                 "SWERVE_WHEEL_GEAR_RATIO": 4.71, # Base High
@@ -181,7 +183,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
             },
             RobotTypes.Spires2026Sim: {
                 "HAS_DRIVETRAIN": True,
-                "WHEEL_MOTOR_WRAPPER": WrapperedSparkMotor.makeSparkFlex,
+                "WHEEL_MOTOR_WRAPPER": WrapperedSparkFlex,
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.50, # Base Low
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.08, # Base Medium
                 "SWERVE_WHEEL_GEAR_RATIO": 4.71, # Base High
@@ -213,7 +215,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
             },
             RobotTypes.SpiresTestBoard: {
                 "HAS_DRIVETRAIN": False,
-                "WHEEL_MOTOR_WRAPPER": WrapperedSparkMotor.makeSparkMax,
+                "WHEEL_MOTOR_WRAPPER": WrapperedSparkMax,
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.50, # Base Low
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.08, # Base Medium
                 "SWERVE_WHEEL_GEAR_RATIO": 4.71,  # Base High
@@ -245,7 +247,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
             },
             RobotTypes.SpiresRoboRioV1: {
                 "HAS_DRIVETRAIN": False,
-                "WHEEL_MOTOR_WRAPPER": WrapperedSparkMotor.makeSparkMax,
+                "WHEEL_MOTOR_WRAPPER": WrapperedSparkMax,
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.50, # Base Low
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.08, # Base Medium
                 "SWERVE_WHEEL_GEAR_RATIO": 4.71,  # Base High

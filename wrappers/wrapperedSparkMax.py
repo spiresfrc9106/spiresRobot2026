@@ -231,3 +231,12 @@ class WrapperedSparkMax(WrapperedMotorSuper):
 
     def getOutputTorqueCurrentA(self)->float:
         return self.ctrl.getOutputCurrent()
+
+    def getGearBox(self):
+        return self.gearBox
+
+    def getSparkSim(self):
+        return self.sparkSim
+
+    def getCtrl(self):
+        return self.ctrl

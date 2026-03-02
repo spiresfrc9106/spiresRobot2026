@@ -7,6 +7,7 @@ from pykit.logger import Logger
 from utils.singleton import Singleton
 from subsystems.state.configio import RobotTypes
 from subsystems.state.configsubsystem import ConfigSubsystem
+from wrappers.wrapperedSparkMax import WrapperedSparkMax
 from wrappers.wrapperedSparkMotor import  WrapperedSparkMotor
 
 class MotorDependentConstants:
@@ -46,7 +47,7 @@ class MotorControl(metaclass=Singleton):
     def __init__(self):
 
         # Elevator Motors
-        self.Rmotor = WrapperedSparkMotor.makeSparkMax(TEST_MOTOR_CANID, "Test_Motor", brakeMode=False, currentLimitA=20)
+        self.Rmotor = WrapperedSparkMax(TEST_MOTOR_CANID, "Test_Motor", brakeMode=False, currentLimitA=20)
 
         # Set P gain on motor
         self.Rmotor.setPID(0.00005, 0.0, 0.0)

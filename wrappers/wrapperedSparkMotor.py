@@ -35,6 +35,8 @@ class WrapperedSparkMotor(WrapperedMotorSuper):
     VORTEX_CONFIGURED_FREESPEED_RADPS = DCMotor.neoVortex(1).freeSpeed
 
     def __init__(self, spark:WrapperedSparkImplementation, canID:int, name:str, brakeMode:bool=False, currentLimitA:int=40):
+        assert False, "Rev does not support using SparkBase constants for SparkMax or Flex"
+        # todo put all of the constants in the spark object.
         self.spark = spark
         self.closedLoopCtrl = self.spark.ctrl.getClosedLoopController()
         self.encoder = self.spark.ctrl.getEncoder()
@@ -54,8 +56,8 @@ class WrapperedSparkMotor(WrapperedMotorSuper):
         self.actVolt = 0.0
         self.controlState = MotorControlStates.UNKNOWN
 
-        self.spark.cfg.signals.appliedOutputPeriodMs(200)
-        self.spark.cfg.signals.busVoltagePeriodMs(200)
+        self.spark.cfg.signals.appliedOutputPeriodMs(kRobotUpdatePeriodMs)
+        self.spark.cfg.signals.busVoltagePeriodMs(kRobotUpdatePeriodMs)
         self.spark.cfg.signals.primaryEncoderPositionPeriodMs(kRobotUpdatePeriodMs)
         self.spark.cfg.signals.primaryEncoderVelocityPeriodMs(kRobotUpdatePeriodMs)
         self.spark.cfg.setIdleMode(SparkBaseConfig.IdleMode.kBrake if brakeMode else SparkBaseConfig.IdleMode.kCoast)
@@ -327,6 +329,15 @@ class WrapperedSparkMotor(WrapperedMotorSuper):
 
     def getOutputTorqueCurrentA(self)->float:
         return self.spark.ctrl.getOutputCurrent()
+
+    def getGearBox(self):
+        return self.spark.gearBox
+
+    def getSparkSim(self):
+        return self.spark.sparkSim
+
+    def getCtrl(self):
+        return self.ctrl
 
 def WrapperedSparkBase(canID:int, name:str, brakeMode:bool=False, currentLimitA:int=40, gearBox:Optional[DCMotor]=None )->WrapperedSparkMotor:
     pass
