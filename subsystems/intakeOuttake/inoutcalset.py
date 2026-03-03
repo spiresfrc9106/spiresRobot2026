@@ -30,7 +30,7 @@ class InOutCalSet(metaclass=Singleton):
 
             self.groundMaxAccIPS2 = Calibration( "InOut Ground Max Acc IPS2", depConsts["GROUND_MAX_MOTION_MAX_ACC_IPS2"], "in/sec^2")
             self.hopperMaxAccIPS2 = Calibration( "InOut Hopper Max Acc IPS2", depConsts["HOPPER_MAX_MOTION_MAX_ACC_IPS2"], "in/sec^2")
-            self.flywheelMaxAccIPS2 = Calibration( "InOut Hopper Max Acc IPS2", depConsts["FLYWHEEL_MAX_MOTION_MAX_ACC_IPS2"], "in/sec^2")
+            self.flywheelMaxAccIPS2 = Calibration( "InOut Flywheel Max Acc IPS2", depConsts["FLYWHEEL_MAX_MOTION_MAX_ACC_IPS2"], "in/sec^2")
 
             self.groundCals = MotorModuleCals(
                 kP=self.groundP, kD=self.groundD,

@@ -74,7 +74,8 @@ class WrapperedSparkMotor(WrapperedMotorSuper):
         self.spark.cfg.signals.primaryEncoderPositionPeriodMs(kRobotUpdatePeriodMs)
         self.spark.cfg.signals.primaryEncoderVelocityPeriodMs(kRobotUpdatePeriodMs)
         self.spark.cfg.setIdleMode(SparkBaseConfig.IdleMode.kBrake if brakeMode else SparkBaseConfig.IdleMode.kCoast)
-        self.spark.cfg.smartCurrentLimit(self.currentLimitA,0, self.spark.limitRPM)
+        # was:         self.spark.cfg.smartCurrentLimit(self.currentLimitA,0, self.spark.limitRPM)
+        self.spark.cfg.smartCurrentLimit(self.currentLimitA)
 
         self._spark_config(retries=10, resetMode=ResetMode.kResetSafeParameters, persistMode=PersistMode.kPersistParameters, step="Initial Config")
 
@@ -307,6 +308,7 @@ class WrapperedSparkMotor(WrapperedMotorSuper):
     def setVoltage(self, outputVoltageVolts:float)->None:
         outputVoltageVolts = float(outputVoltageVolts)
         self.desVolt = outputVoltageVolts
+        self.desVelRadps = 0.0
         if self.configSuccess:
             #self.spark.ctrl.setVoltage(outputVoltageVolts)
             err = self.closedLoopCtrl.setReference(

@@ -119,11 +119,11 @@ class InOutDependentConstants(metaclass=Singleton):
                 "FLYWHEEL_KP": 0.000_021_832, #at 192 Max Velocity Error
                 "FLYWHEEL_KD": 0.0,
                 "FLYWHEEL_KS": 0.001,  # volts
-                "FLYWHEEL_KV": 0.015_628,  # volts/radPerSec
-                "FLYWHEEL_KA": 0.014_731,  # volts/radPerSecPerSec
-                "GROUND_MAX_MOTION_MAX_ACC_IPS2": 40.0, # in/sec^2
-                "HOPPER_MAX_MOTION_MAX_ACC_IPS2": 40.0, # in/sec^2
-                "FLYWHEEL_MAX_MOTION_MAX_ACC_IPS2": 100.0, # in/sec^2
+                "FLYWHEEL_KV": 1.0125*1.116*0.015_628, #0.015_628,  # volts/radPerSec
+                "FLYWHEEL_KA": 1.22*0.014_731,  # volts/radPerSecPerSec
+                "GROUND_MAX_MOTION_MAX_ACC_IPS2": 120.0, # in/sec^2
+                "HOPPER_MAX_MOTION_MAX_ACC_IPS2": 120.0, # in/sec^2
+                "FLYWHEEL_MAX_MOTION_MAX_ACC_IPS2": 600.0, # in/sec^2
                 "GROUND_INTAKE_SPEED_IPS": 40.0,  # in/sec
                 "HOPPER_INTAKE_SPEED_IPS": 40.0,  # in/sec
                 "GROUND_OUTTAKE_SPEED_IPS": 40.0,  # in/sec

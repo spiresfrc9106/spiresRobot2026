@@ -366,20 +366,34 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
 
                 inoutCals = InOutCalSet()
 
-                groundMotor = WrapperedSparkMax(name="groundMotor",
+                groundMotor = WrapperedSparkMotor.makeSparkMax(name="groundMotor",
                                                 canID=IODC["GROUND_MOTOR_CANID"],
                                                 gearBox=groundMotorGearBox)
                 groundMotor.setInverted(IODC["GROUND_MOTOR_INVERTED"])
-                hopperMotor = WrapperedSparkMax(name="hopperMotor",
+                hopperMotor = WrapperedSparkMotor.makeSparkMax(name="hopperMotor",
                                                 canID=IODC["HOPPER_MOTOR_CANID"],
                                                 gearBox=hopperMotorGearBox)
                 hopperMotor.setInverted(IODC["HOPPER_MOTOR_INVERTED"])
-                flywheelMotor = WrapperedSparkFlex(name="flywheelMotor",
+                flywheelMotor = WrapperedSparkMotor.makeSparkFlex(name="flywheelMotor",
                                                    canID=IODC["FLYWHEEL_MOTOR_CANID"],
+                                                   currentLimitA=60,
                                                    gearBox=flywheelMotorGearBox)
                 flywheelMotor.setInverted(IODC["FLYWHEEL_MOTOR_INVERTED"])
 
+                groundController = SparkSlewRateLimitedVelocityController(
+                    cals=inoutCals.groundCals,
+                    userUnitsToRadPerSec=InOutSubsystem.groundInPerSToRadPerS
+                )
+                hopperController = SparkSlewRateLimitedVelocityController(
+                    cals=inoutCals.hopperCals,
+                    userUnitsToRadPerSec=InOutSubsystem.hopperInPerSToRadPerS
+                )
+                flywheelController = SparkSlewRateLimitedVelocityController(
+                    cals=inoutCals.flywheelCals,
+                    userUnitsToRadPerSec=InOutSubsystem.flywheelInPerSToRadPerS
+                )
 
+                """
                 groundController = SparkVelocityController(
                     cals=inoutCals.groundCals
                 )
@@ -390,7 +404,6 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
                     cals=inoutCals.flywheelCals
                 )
 
-                """
                 groundController = MaxMotionController(
                     cals=inoutCals.groundCals,
                     userUnitsToRadPerSec=InOutSubsystem.groundInPerSToRadPerS
