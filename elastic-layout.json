@@ -22,7 +22,7 @@
         "layouts": [
           {
             "title": "Drivetrain Module Azmth kP",
-            "x": 512.0,
+            "x": 576.0,
             "y": 0.0,
             "width": 256.0,
             "height": 256.0,
@@ -127,9 +127,36 @@
                 }
               }
             ]
+          },
+          {
+            "title": "List Layout",
+            "x": 256.0,
+            "y": 64.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": []
           }
         ],
-        "containers": []
+        "containers": [
+          {
+            "title": "curValue",
+            "x": 448.0,
+            "y": 384.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/Calibrations/dt/BL/azmthEnc/absEncoder_mountOffset/curValue",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": false
+            }
+          }
+        ]
       }
     },
     {
@@ -321,6 +348,61 @@
                 "type": "Text Display",
                 "properties": {
                   "topic": "/AdvantageKit/inout/hopperTargetIPS",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              }
+            ]
+          },
+          {
+            "title": "Max Acc IPS2",
+            "x": 576.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "hopper",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Calibrations/InOut Hopper Max Acc IPS2/curValue",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "ground",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Calibrations/InOut Ground Max Acc IPS2/curValue",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              },
+              {
+                "title": "flywheel",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Calibrations/InOut Flywheel Max Acc IPS2/curValue",
                   "period": 0.06,
                   "data_type": "double",
                   "show_submit_button": false
@@ -906,7 +988,7 @@
                 "height": 128.0,
                 "type": "Text Display",
                 "properties": {
-                  "topic": "/AdvantageKit/RealOutputs/inout/SysID State ground",
+                  "topic": "/AdvantageKit/RealOutputs/inout ground SysId/state",
                   "period": 0.06,
                   "data_type": "string",
                   "show_submit_button": false
@@ -920,7 +1002,7 @@
                 "height": 128.0,
                 "type": "Text Display",
                 "properties": {
-                  "topic": "/AdvantageKit/RealOutputs/inout/SysID State hopper",
+                  "topic": "/AdvantageKit/RealOutputs/inout hopper SysId/state",
                   "period": 0.06,
                   "show_submit_button": false
                 }
@@ -933,9 +1015,89 @@
                 "height": 128.0,
                 "type": "Text Display",
                 "properties": {
-                  "topic": "/AdvantageKit/RealOutputs/inout/SysID State flywheel",
+                  "topic": "/AdvantageKit/RealOutputs/inout flywheel SysId/state",
                   "period": 0.06,
-                  "data_type": "string",
+                  "show_submit_button": false
+                }
+              }
+            ]
+          },
+          {
+            "title": "InOut Ground kA",
+            "x": 1152.0,
+            "y": 384.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "curValue",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Calibrations/InOut Ground kA/curValue",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              }
+            ]
+          },
+          {
+            "title": "InOut Flywheel kA",
+            "x": 1024.0,
+            "y": 512.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "curValue",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Calibrations/InOut Flywheel kA/curValue",
+                  "period": 0.06,
+                  "data_type": "double",
+                  "show_submit_button": false
+                }
+              }
+            ]
+          },
+          {
+            "title": "InOut Hopper kA",
+            "x": 1280.0,
+            "y": 512.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "curValue",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Text Display",
+                "properties": {
+                  "topic": "/Calibrations/InOut Hopper kA/curValue",
+                  "period": 0.06,
+                  "data_type": "double",
                   "show_submit_button": false
                 }
               }
@@ -1122,6 +1284,20 @@
               "wrap_value": false,
               "show_pointer": true,
               "show_ticks": true
+            }
+          },
+          {
+            "title": "state",
+            "x": 1024.0,
+            "y": 384.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/AdvantageKit/RealOutputs/inout ground SysId/state",
+              "period": 0.06,
+              "data_type": "string",
+              "show_submit_button": false
             }
           }
         ]
