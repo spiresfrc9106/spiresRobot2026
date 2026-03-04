@@ -1,37 +1,38 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from math import isclose
 from typing import Optional
 
 from commands2 import Command, Subsystem, cmd
-from commands2.sysid import SysIdRoutine
-from wpilib import XboxController, Timer
-from wpimath.controller import SimpleMotorFeedforwardRadians
+from wpilib import XboxController
 
 from pykit.autolog import autologgable_output
 from pykit.logger import Logger
-from rev import SparkBase, SparkSim, ClosedLoopSlot
+from rev import SparkBase, SparkSim
 from wpilib.simulation import LinearSystemSim_1_1_1, FlywheelSim, RoboRioSim, BatterySim
-from wpilib.sysid import State
+
 from wpimath.system.plant import DCMotor, LinearSystemId
 
 from constants import kRobotMode, RobotModes, kRobotUpdatePeriodS
 from humanInterface.operatorInterface import OperatorInterface, FlywheelCommand, InOutCommand
+from subsystems.common.sysidmotormodule import SysIdMotorModule
 from subsystems.intakeOuttake.inoutcalset import InOutCalSet
 from subsystems.intakeOuttake.inoutsubsystemio import InOutSubsystemIO
 
 from subsystems.intakeOuttake.inoutsubsystemioreal import InOutSubsystemIOReal
 from subsystems.intakeOuttake.inoutsubsystemiosim import InOutSubsystemIORealSim
-from subsystems.intakeOuttake.motormodule import MotorModule
-from subsystems.intakeOuttake.motormodulecontroller import MaxMotionController, NullController
-from subsystems.intakeOuttake.motormoduleio import MotorModuleIO
-from subsystems.intakeOuttake.motormoduleiowrappered import MotorModuleIOWrappered
-from subsystems.intakeOuttake.motormoduleiowrapperedsim import MotorModuleIOWrapperedSim
+from subsystems.common.motormodule import MotorModule
+from subsystems.common.motormodulecontroller import NullController, SparkSlewRateLimitedVelocityController, \
+    WPILibFFController, SparkVelocityController
+from subsystems.common.motormoduleio import MotorModuleIO
+from subsystems.common.motormoduleiowrappered import MotorModuleIOWrappered
+from subsystems.common.motormoduleiowrapperedsim import MotorModuleIOWrapperedSim
 from subsystems.state.configsubsystem import ConfigSubsystem
 
-from utils.units import radPerSec2RPM, sign
+from utils.units import radPerSec2RPM
 from westwood.util.logtracer import LogTracer
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
+from wrappers.wrapperedSparkFlex import WrapperedSparkFlex
+from wrappers.wrapperedSparkMax import WrapperedSparkMax
 from wrappers.wrapperedSparkMotor import  WrapperedSparkMotor
 
 class FlywheelState(Enum):
@@ -45,18 +46,19 @@ class InOutState(Enum):
     kOutaking = 2
     kShooting = 3
 
-IDP = ConfigSubsystem().inoutDepConstants
-HAS_INOUT = IDP["HAS_INOUT"]
+IODC = ConfigSubsystem().inoutDepConstants
+HAS_INOUT = IODC["HAS_INOUT"]
+
 @autologgable_output
 class InOutSubsystem(Subsystem):
-    GROUND_GEAR_REDUCTION = IDP["GROUND_GEAR_REDUCTION"] if HAS_INOUT else 1.0
-    GROUND_WHEEL_DIAMETER_INCHES = IDP["GROUND_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
+    GROUND_GEAR_REDUCTION = IODC["GROUND_GEAR_REDUCTION"] if HAS_INOUT else 1.0
+    GROUND_WHEEL_DIAMETER_INCHES = IODC["GROUND_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
     GROUND_WHEEL_RADIUS_INCHES = GROUND_WHEEL_DIAMETER_INCHES / 2.0 if HAS_INOUT else 1.0
-    HOPPER_GEAR_REDUCTION = IDP["HOPPER_GEAR_REDUCTION"] if HAS_INOUT else 1.0
-    HOPPER_WHEEL_DIAMETER_INCHES = IDP["HOPPER_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
+    HOPPER_GEAR_REDUCTION = IODC["HOPPER_GEAR_REDUCTION"] if HAS_INOUT else 1.0
+    HOPPER_WHEEL_DIAMETER_INCHES = IODC["HOPPER_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
     HOPPER_WHEEL_RADIUS_INCHES = HOPPER_WHEEL_DIAMETER_INCHES / 2.0 if HAS_INOUT else 1.0
-    FLYWHEEL_GEAR_REDUCTION = IDP["FLYWHEEL_GEAR_REDUCTION"] if HAS_INOUT else 1.0
-    FLYWHEEL_WHEEL_DIAMETER_INCHES = IDP["FLYWHEEL_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
+    FLYWHEEL_GEAR_REDUCTION = IODC["FLYWHEEL_GEAR_REDUCTION"] if HAS_INOUT else 1.0
+    FLYWHEEL_WHEEL_DIAMETER_INCHES = IODC["FLYWHEEL_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
     FLYWHEEL_WHEEL_RADIUS_INCHES = FLYWHEEL_WHEEL_DIAMETER_INCHES / 2.0 if HAS_INOUT else 1.0
 
     def __init__(
@@ -88,6 +90,13 @@ class InOutSubsystem(Subsystem):
 
         self._updateAllCals()
 
+        self.sysIdMotorModule = SysIdMotorModule(
+            XboxController(1),
+            self.sysIdMotorModulePreInit,
+            self.sysIdMotorModulePostInit,
+            self,
+        )
+
         self.oInt = OperatorInterface()
 
         self.initialize()
@@ -100,6 +109,13 @@ class InOutSubsystem(Subsystem):
         for module in self.modules:
             module.reset()
         self.setDefaultCommand(self.aDoNothingCommand())
+
+    def sysIdMotorModulePreInit(self) -> None:
+        self.initialize()
+        self.setClosedLoop(False)
+
+    def sysIdMotorModulePostInit(self) -> None:
+        self.setClosedLoop(True)
 
 
     def periodic(self) -> None:
@@ -213,157 +229,23 @@ class InOutSubsystem(Subsystem):
     def flywheelInPerSToRadPerS(cls, inPerS: float) -> float:
         return inPerS / (cls.FLYWHEEL_WHEEL_RADIUS_INCHES * cls.FLYWHEEL_GEAR_REDUCTION)
 
-    def feedForwardCharacterization(self, motorModule: MotorModule) -> Command:
-        velocitySamples: list[float] = []
-        voltageSamples: list[float] = []
-        timer = Timer()
-
-        def setup():
-            self.initialize()
-            self.setClosedLoop(False)
-            velocitySamples.clear()
-            voltageSamples.clear()
-            timer.restart()
-
-        def run():
-            voltage = timer.get() * motorModule.ffCharacterizationRampVPerS
-            motorModule.setVoltage(voltage)
-            velocitySamples.append(motorModule.getMotorVelocityRadPerSec())
-            voltageSamples.append(voltage)
-
-        def end(_interrupted: bool):
-            n = len(velocitySamples)
-            sumX = sum(velocitySamples)
-            sumY = sum(voltageSamples)
-            sumXY = sum(velocitySamples[i] * voltageSamples[i] for i in range(n))
-            sumX2 = sum(v**2 for v in velocitySamples)
-            kS = 0.0
-            kV = 0.0
-            divisor = (n * sumX2 - sumX * sumX)
-            if divisor != 0.0:
-                kS = (sumY * sumX2 - sumX * sumXY) / divisor
-                kV = (n * sumXY - sumX * sumY) / divisor
-
-            print("************************************************************")
-            print(f"{motorModule.name} Feed Forward Characterization Results: \nkS = {kS}\nkV = {kV}")
-            self.setClosedLoop(True)
-
-        controller = XboxController(1)
-        ffWaitCmd = cmd.waitUntil(
-            lambda: controller.getRightBumper()  and abs(motorModule.getMotorVelocityRadPerSec())<0.1)
-        ffCmd = (cmd.runOnce(setup, self)
-                 .andThen(cmd.run(run, self).withName(f"{motorModule.name} FeedForwardCharacterization"))
-                 .finallyDo(end))
-        ffWithWaits = ffWaitCmd.andThen(ffCmd.onlyWhile(lambda: controller.getRightBumper()))
-
-        return ffWithWaits
-
-
-    def sysIdRoutine(self,
-                     name:str,
-                     motorModule: MotorModule,
-                     voltsPerSec:float=0.5,
-                     stepVolts:float=6.0,
-                     timeoutS:float=10.0) -> Command:
-        """Model the behavior of the system (for better control) by sweeping through the max and min angles."""
-
-        self.loggedStateStr = "none"
-
-        def logOutputs(_)->None:
-
-            volts = motorModule.io.motor.getDesiredVoltageOrFF()
-            Logger.recordOutput(f"inout {name} SysId/voltage", volts)
-            radsPerSec = motorModule.io.motor.getMotorVelocityRadPerSec()
-            Logger.recordOutput(f"inout {name} SysId/radsPerSec", radsPerSec)
-            rad = motorModule.io.motor.getMotorPositionRad()
-            Logger.recordOutput(f"inout {name} SysId/rad", rad)
-
-            #print(f"{Timer.getTimestamp():.6} {name} {self.loggedStateStr} SysID: volts={volts}, radsPerSec={radsPerSec}, rad={rad}")
-            assert type(volts) == float, f"volts is not a float: {volts}"
-            assert type(radsPerSec) == float, f"radsPerSec is not a float: {radsPerSec}"
-            assert type(rad) == float, f"rad is not a float: {rad}"
-            assert -1.0e10 <= volts <= 1.0e10, f"volts is out of bounds: {volts}"
-            assert -1.0e10 <= radsPerSec <= 1.0e10, f"radsPerSec is out of bounds: {radsPerSec}"
-            assert -1.0e10 <= rad <= 1.0e10, f"rad is out of bounds: {rad}"
-
-        def logState(state: State) -> None:
-            match state:
-                case State.kQuasistaticForward:
-                    self.loggedStateStr = "quasistatic-forward"
-                case State.kQuasistaticReverse:
-                    self.loggedStateStr = "quasistatic-reverse"
-                case State.kDynamicForward:
-                    self.loggedStateStr = "dynamic-forward"
-                case State.kDynamicReverse:
-                    self.loggedStateStr = "dynamic-reverse"
-                case State.kNone|_:
-                    self.loggedStateStr = "none"
-            Logger.recordOutput(f"inout {name} SysId/state", self.loggedStateStr)
-
-        charactarizationRoutine = SysIdRoutine(
-            SysIdRoutine.Config(
-                voltsPerSec, # ramp voltage rate in V/sec
-                stepVolts, # step voltage in V
-                timeoutS, # timeout in seconds
-                logState),
-            SysIdRoutine.Mechanism(
-                motorModule.setVoltage,
-                logOutputs,
-                self,
-            ),
-        )
-
-        controller = XboxController(1)
-
-        sysIdQFWaitCmd = cmd.waitUntil(
-            lambda: controller.getRightBumper() and abs(motorModule.getMotorVelocityRadPerSec())<0.1)
-        sysIdQFCmd = charactarizationRoutine.quasistatic(SysIdRoutine.Direction.kForward)
-        sysIdQFWithWaits = sysIdQFWaitCmd.andThen(sysIdQFCmd.onlyWhile(lambda: controller.getRightBumper()))
-
-        sysIdQRWaitCmd = cmd.waitUntil(
-            lambda: controller.getRightBumper() and abs(motorModule.getMotorVelocityRadPerSec())<0.1)
-        sysIdQRCmd = charactarizationRoutine.quasistatic(SysIdRoutine.Direction.kReverse)
-        sysIdQRWithWaits = sysIdQRWaitCmd.andThen(sysIdQRCmd.onlyWhile(lambda: controller.getRightBumper()))
-
-        sysIdDFWaitCmd = cmd.waitUntil(
-            lambda: controller.getRightBumper()  and abs(motorModule.getMotorVelocityRadPerSec())<0.1)
-        sysIdDFCmd = charactarizationRoutine.dynamic(SysIdRoutine.Direction.kForward)
-        sysIdDFWithWaits = sysIdDFWaitCmd.andThen(sysIdDFCmd.onlyWhile(lambda: controller.getRightBumper()))
-
-        sysIdDRWaitCmd = cmd.waitUntil(
-            lambda: controller.getRightBumper()  and abs(motorModule.getMotorVelocityRadPerSec())<0.1)
-        sysIdDRCmd = charactarizationRoutine.dynamic(SysIdRoutine.Direction.kReverse)
-        sysIdDRWithWaits = sysIdDRWaitCmd.andThen(sysIdDRCmd.onlyWhile(lambda: controller.getRightBumper()))
-
-        def beforeTests()->None:
-            self.setClosedLoop(False)
-
-        return cmd.sequence(
-            cmd.runOnce(beforeTests, self),
-            sysIdQFWithWaits,
-            sysIdQRWithWaits,
-            sysIdDFWithWaits,
-            sysIdDRWithWaits,
-            cmd.runOnce(lambda: self.setClosedLoop(True), self),
-        )
-
     def makeCommandFeedForwardCharacterizationGroundMotor(self) -> Command:
-        return self.feedForwardCharacterization(self.groundModule)
+        return self.sysIdMotorModule.feedForwardCharacterization(self.groundModule)
 
     def makeCommandFeedForwardCharacterizationHopperMotor(self) -> Command:
-        return self.feedForwardCharacterization(self.hopperModule)
+        return self.sysIdMotorModule.feedForwardCharacterization(self.hopperModule)
 
     def makeCommandFeedForwardCharacterizationFlywheelMotor(self) -> Command:
-        return self.feedForwardCharacterization(self.flywheelModule)
+        return self.sysIdMotorModule.feedForwardCharacterization(self.flywheelModule)
 
     def makeSysIdCommandGroundMotor(self) -> Command:
-        return self.sysIdRoutine("ground", self.groundModule)
+        return self.sysIdMotorModule.sysIdRoutine("ground", self.groundModule)
 
     def makeSysIdCommandHopperMotor(self) -> Command:
-        return self.sysIdRoutine("hopper", self.hopperModule)
+        return self.sysIdMotorModule.sysIdRoutine("hopper", self.hopperModule)
 
     def makeSysIdCommandFlywheelMotor(self) -> Command:
-        return self.sysIdRoutine("flywheel", self.flywheelModule)
+        return self.sysIdMotorModule.sysIdRoutine("flywheel", self.flywheelModule)
 
     def doNothing(self):
         pass
@@ -414,9 +296,9 @@ class OperateFlywheelSimulation():
     flywheelSim: FlywheelSim = field(init=False)
 
     def __post_init__(self) -> None:
-        self.gearBox = self.wrapperedMotor.spark.gearBox
-        self.motorCtrl = self.wrapperedMotor.spark.ctrl # TODO Clean this up
-        self.sparkSim = self.wrapperedMotor.spark.sparkSim
+        self.gearBox = self.wrapperedMotor.getGearBox()
+        self.motorCtrl = self.wrapperedMotor.getCtrl() # TODO Clean this up
+        self.sparkSim = self.wrapperedMotor.getSparkSim()
         self.plant = LinearSystemId.flywheelSystem(self.gearBox, self.moi, self.gearRatio) # TODO Investigate if gearRatio and moi and inertia make sense
         self.flywheelSim = FlywheelSim(self.plant, self.gearBox, measurementStdDevs=[0.01])
         # TODO Mike Stitt doesn't think we need this step
@@ -448,7 +330,7 @@ class InOutSubsystemSimulation():
         self.groundWheelSim = OperateFlywheelSimulation(
             wrapperedMotor=groundMotor,
             gearRatio=1/InOutSubsystem.GROUND_GEAR_REDUCTION,
-            moi=0.05,
+            moi=0.005,
         )
         self.hopperWheelSim = OperateFlywheelSimulation(
             wrapperedMotor=hopperMotor,
@@ -468,9 +350,8 @@ class InOutSubsystemSimulation():
 
 
 def inoutSubsystemFactory() -> InOutSubsystem|None:
-    config = ConfigSubsystem()
     inout: Optional[InOutSubsystem] = None
-    if config.inoutDepConstants["HAS_INOUT"]:
+    if HAS_INOUT:
         match kRobotMode:
             case RobotModes.REAL | RobotModes.SIMULATION:
 
@@ -484,22 +365,69 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
                     flywheelMotorGearBox = DCMotor.neoVortex(1)
 
                 inoutCals = InOutCalSet()
-                groundMotor = WrapperedSparkMotor.makeSparkMax(name="groundMotor",
-                                                canID=config.inoutDepConstants["GROUND_MOTOR_CANID"],
-                                                gearBox=groundMotorGearBox)
-                groundMotor.setInverted(config.inoutDepConstants["GROUND_MOTOR_INVERTED"])
-                hopperMotor = WrapperedSparkMotor.makeSparkMax(name="hopperMotor",
-                                                canID=config.inoutDepConstants["HOPPER_MOTOR_CANID"],
-                                                gearBox=hopperMotorGearBox)
-                hopperMotor.setInverted(config.inoutDepConstants["HOPPER_MOTOR_INVERTED"])
-                flywheelMotor = WrapperedSparkMotor.makeSparkFlex(name="flywheelMotor",
-                                                   canID=config.inoutDepConstants["FLYWHEEL_MOTOR_CANID"],
-                                                   gearBox=flywheelMotorGearBox)
-                flywheelMotor.setInverted(config.inoutDepConstants["FLYWHEEL_MOTOR_INVERTED"])
 
-                groundController = MaxMotionController(cals=inoutCals.groundCals)
-                hopperController = MaxMotionController(cals=inoutCals.hopperCals)
-                flywheelController = MaxMotionController(cals=inoutCals.flywheelCals)
+                groundMotor = WrapperedSparkMotor.makeSparkMax(name="groundMotor",
+                                                canID=IODC["GROUND_MOTOR_CANID"],
+                                                gearBox=groundMotorGearBox)
+                groundMotor.setInverted(IODC["GROUND_MOTOR_INVERTED"])
+                hopperMotor = WrapperedSparkMotor.makeSparkMax(name="hopperMotor",
+                                                canID=IODC["HOPPER_MOTOR_CANID"],
+                                                gearBox=hopperMotorGearBox)
+                hopperMotor.setInverted(IODC["HOPPER_MOTOR_INVERTED"])
+                flywheelMotor = WrapperedSparkMotor.makeSparkFlex(name="flywheelMotor",
+                                                   canID=IODC["FLYWHEEL_MOTOR_CANID"],
+                                                   currentLimitA=60,
+                                                   gearBox=flywheelMotorGearBox)
+                flywheelMotor.setInverted(IODC["FLYWHEEL_MOTOR_INVERTED"])
+
+                groundController = SparkSlewRateLimitedVelocityController(
+                    cals=inoutCals.groundCals,
+                    userUnitsToRadPerSec=InOutSubsystem.groundInPerSToRadPerS
+                )
+                hopperController = SparkSlewRateLimitedVelocityController(
+                    cals=inoutCals.hopperCals,
+                    userUnitsToRadPerSec=InOutSubsystem.hopperInPerSToRadPerS
+                )
+                flywheelController = SparkSlewRateLimitedVelocityController(
+                    cals=inoutCals.flywheelCals,
+                    userUnitsToRadPerSec=InOutSubsystem.flywheelInPerSToRadPerS
+                )
+
+                """
+                groundController = SparkVelocityController(
+                    cals=inoutCals.groundCals
+                )
+                hopperController = SparkVelocityController(
+                    cals=inoutCals.hopperCals
+                )
+                flywheelController = SparkVelocityController(
+                    cals=inoutCals.flywheelCals
+                )
+
+                groundController = MaxMotionController(
+                    cals=inoutCals.groundCals,
+                    userUnitsToRadPerSec=InOutSubsystem.groundInPerSToRadPerS
+                )
+                hopperController = MaxMotionController(
+                    cals=inoutCals.hopperCals,
+                    userUnitsToRadPerSec=InOutSubsystem.hopperInPerSToRadPerS
+                )
+                flywheelController = MaxMotionController(
+                    cals=inoutCals.flywheelCals,
+                    userUnitsToRadPerSec=InOutSubsystem.flywheelInPerSToRadPerS
+                )
+
+
+                groundController = WPILibFFController(
+                    cals=inoutCals.groundCals
+                )
+                hopperController = WPILibFFController(
+                    cals=inoutCals.hopperCals
+                )
+                flywheelController = WPILibFFController(
+                    cals=inoutCals.flywheelCals
+                )
+                """
 
                 inoutSim = None
                 if kRobotMode == RobotModes.SIMULATION:
@@ -562,8 +490,5 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
                       f" ratioOfMaxSpeed={inout.calFlywheelTargetSpeedIPS/flywheelMaxFreeSpeedIPS:.2f}")
             case RobotModes.REAL|RobotModes.REPLAY | _:
                 pass
-
-
-
 
     return inout

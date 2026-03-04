@@ -1,7 +1,9 @@
 from typing import Optional
 
 from commands2 import Command, cmd, CommandScheduler
+
 from pykit.networktables.loggeddashboardchooser import LoggedDashboardChooser
+from subsystems.drivetrain.drivetrainsubsystem import DrivetrainSubsystemFactory, DrivetrainSubsystem
 from subsystems.intakeOuttake.inoutsubsystem import InOutSubsystem, inoutSubsystemFactory
 
 from subsystems.state.configsubsystem import ConfigSubsystem
@@ -28,6 +30,9 @@ class RobotContainer:
         self.config = ConfigSubsystem()
         self.robotop = RobotTopSubsystem()
         self.inout: InOutSubsystem|None = inoutSubsystemFactory()
+        self.drivetrainSubsystem: DrivetrainSubsystem|None = None
+        if ConfigSubsystem().useCasseroleSwerve():
+            self.drivetrainSubsystem = DrivetrainSubsystemFactory()
 
 
         self.autoChooser: LoggedDashboardChooser[Command] = LoggedDashboardChooser(
@@ -79,6 +84,9 @@ class RobotContainer:
         CommandScheduler.getInstance().cancelAll()
         if self.inout is not None:
            CommandScheduler.getInstance().schedule(self.inout.aOperatorRunsInoutCommand())
+        # clear existing telemetry trajectory
+        if self.drivetrainSubsystem is not None:
+            self.drivetrainSubsystem.casseroleDrivetrain.poseEst._telemetry.setCurAutoTrajectory(None)
 
     def testInit(self) -> None:
         self.autoOrTestCommand = self.testChooser.getSelected()

@@ -1,38 +1,27 @@
 import typing
 from phoenix6 import BaseStatusSignal
-from phoenix6.configs import CANcoderConfiguration, TalonFXConfiguration
+from phoenix6.configs import TalonFXConfiguration
 from phoenix6.configs.talon_fx_configs import (
     InvertedValue,
     NeutralModeValue,
     Slot0Configs,
-    StaticFeedforwardSignValue,
 )
 from phoenix6.controls import (
     MotionMagicVoltage,
     VelocityTorqueCurrentFOC, VelocityVoltage, VoltageOut,
 )
 from phoenix6.hardware.talon_fx import TalonFX
-from phoenix6.hardware.cancoder import CANcoder
-from phoenix6.sim.cancoder_sim_state import CANcoderSimState
 from phoenix6.sim.talon_fx_sim_state import TalonFXSimState
-from pykit.logger import Logger
-from wpimath.geometry import Rotation2d
-from subsystems.intakeOuttake.motormoduleio import MotorModuleIO, MotorModuleConfigParams
+from subsystems.common.motormoduleio import MotorModuleIO, MotorModuleConfigParams
 from westwood.util.phoenixutil import PhoenixUtil, tryUntilOk
 
-from constants import kRobotUpdateFrequency, kRobotUpdatePeriodS
+from constants import kRobotUpdateFrequency
 from westwood.constants.drive import (
     kDrivePGain,
     kDriveIGain,
     kDriveDGain,
     kDriveVGain,
-    kSteerPGain,
-    kSteerIGain,
-    kSteerDGain,
-    kSteerVGain,
-    kSteerSGain,
     kDriveCurrentLimit,
-    kSteerCurrentLimit,
     kDriveGearingRatio,
 )
 

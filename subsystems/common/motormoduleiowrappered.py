@@ -1,4 +1,4 @@
-from subsystems.intakeOuttake.motormoduleio import MotorModuleIO
+from subsystems.common.motormoduleio import MotorModuleIO
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
 
 class MotorModuleIOWrappered(MotorModuleIO):

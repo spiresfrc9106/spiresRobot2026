@@ -2,17 +2,14 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from pykit.logger import Logger
-from wpimath.geometry import Rotation2d
-from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
 
-from subsystems.intakeOuttake.motormoduleio import MotorModuleIO
+from subsystems.common.motormoduleio import MotorModuleIO
 
 from utils.calibration import Calibration
-from westwood.constants.drive import kMinWheelLinearVelocity, kWheelRadius
 from westwood.util.logtracer import LogTracer
 
 if TYPE_CHECKING:
-    from subsystems.intakeOuttake.motormodulecontroller import MotorModuleController
+    from subsystems.common.motormodulecontroller import MotorModuleController
 
 
 @dataclass
@@ -22,7 +19,7 @@ class MotorModuleCals:
     kS: Calibration
     kV: Calibration
     kA: Calibration
-    maxAccIPS2: Calibration
+    maxAccUserUnitsPerS2: Calibration
 
 
 class MotorModule:
@@ -37,9 +34,7 @@ class MotorModule:
 
     def periodic(self) -> None:
         LogTracer.resetOuter("MotorModule/" + self.name)
-        #print(f"{self.name} before: inputs: V={self.inputs.desVoltsOrFfVolts:.2f} Rad={self.inputs.posRad:.2f} Radps={self.inputs.velRadps:.2f}")
         self.io.updateInputs(self.inputs)
-        #print(f"{self.name} after: inputs: V={self.inputs.desVoltsOrFfVolts:.2f} Rad={self.inputs.posRad:.2f} Radps={self.inputs.velRadps:.2f}")
         LogTracer.record("UpdateInputs")
         Logger.processInputs(self.name, self.inputs)
         LogTracer.record("ProcessInputs")

@@ -1,8 +1,8 @@
 from wpilib import RobotController
 from wpilib.simulation import DCMotorSim
 from wpimath.system.plant import DCMotor, LinearSystemId
-from subsystems.intakeOuttake.motormoduleiotalonfx import MotorModuleIOCTRE
-from subsystems.intakeOuttake.motormoduleio import MotorModuleConfigParams, MotorModuleIO
+from subsystems.common.motormoduleiotalonfx import MotorModuleIOCTRE
+from subsystems.common.motormoduleio import MotorModuleConfigParams, MotorModuleIO
 
 from westwood.constants.math import kRadiansPerRevolution
 from westwood.constants.sim import kSimMotorResistance

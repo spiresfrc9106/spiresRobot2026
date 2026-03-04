@@ -34,6 +34,7 @@ def wrapperedSwerveDriveAzmthEncoder(azmthEncoderPortIdx, moduleName, azmthOffse
 
 @dataclass
 class DrivetrainPhysical(metaclass=Singleton):
+    DRIVETRAIN_NAME = "dt"
     c: ConfigSubsystem = field(default_factory=lambda: ConfigSubsystem())
     WHEEL_BASE_HALF_WIDTH_M: float = field(
         default_factory=lambda:inchesToMeters(ConfigSubsystem().drivetrainDepConstants["WIDTH"] / 2.0))

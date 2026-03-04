@@ -130,7 +130,7 @@ class WrapperedSparkFlex(WrapperedMotorSuper):
             # Use the specified persist mode.
             # By default we persist setings (usually we set PID once, then don't think about it again)
             # However, if setPID is getting called in a periodic loop, don't bother persisting the parameters
-            # because the persist operation takes a long time on the spark max.
+            # because the persist operation takes a long time on the spark.
             persist = PersistMode.kPersistParameters
             self.ctrl.configure(self.cfg,
                                 ResetMode.kNoResetSafeParameters,
@@ -232,3 +232,12 @@ class WrapperedSparkFlex(WrapperedMotorSuper):
 
     def getOutputTorqueCurrentA(self)->float:
         return self.ctrl.getOutputCurrent()
+
+    def getGearBox(self):
+        return self.gearBox
+
+    def getSparkSim(self):
+        return self.sparkSim
+
+    def getCtrl(self):
+        return self.ctrl
