@@ -81,7 +81,7 @@ class DriverInterface(metaclass=Singleton):
             vYJoyRaw = self.ctrl.getLeftX() * -1
             vRotJoyRaw = self.ctrl.getRightX() * -1
 
-            # self.robotRelative = self.ctrl.getLeftBumper()
+            self.robotRelative = self.ctrl.getLeftBumper()
 
             if not self.robotRelative:
                 # Correct for alliance

@@ -80,8 +80,6 @@ class WrapperedSparkMotor(WrapperedMotorSuper):
         self._spark_config(retries=10, resetMode=ResetMode.kResetSafeParameters, persistMode=PersistMode.kPersistParameters, step="Initial Config")
 
         print(f"Init of Spark Controller {self.name} CANID={self.canID} is finished")
-        assert False, "Rev does not support using SparkBase constants for SparkMax or Flex"
-        # TODO Mike Stitt thinks he fixed this. But we need to test it out on real hardware.
 
     @classmethod
     def makeMaxImplementaion(cls, canID: int, gearBox: Optional[DCMotor] = None)->WrapperedSparkImplementation:
@@ -365,7 +363,7 @@ class WrapperedSparkMotor(WrapperedMotorSuper):
         return self.spark.sparkSim
 
     def getCtrl(self):
-        return self.ctrl
+        return self.spark.ctrl
 
 def WrapperedSparkBase(canID:int, name:str, brakeMode:bool=False, currentLimitA:int=40, gearBox:Optional[DCMotor]=None )->WrapperedSparkMotor:
     pass

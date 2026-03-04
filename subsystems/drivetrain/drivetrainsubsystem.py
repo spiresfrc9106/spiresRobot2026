@@ -62,13 +62,17 @@ class DrivetrainSubsystem(Subsystem):
         self.wheelModules = []
         self.azmthModules = []
         self.azmthEncoderModules = []
+        self.motorAndEncoderModules = []
         for moduleName, wheelModuleIO, azmthModuleIO, azmthEncoderIO in motorModuleIOsAndEncoderIOSets:
-            self.wheelModules.append(MotorModule(name=f"wheelMotor{moduleName}Module", io=wheelModuleIO, controller=NullController))
-            self.azmthModules.append(MotorModule(name=f"azmthMotor{moduleName}Module", io=azmthModuleIO, controller=NullController))
-            self.azmthEncoderModules.append(EncoderModule(name=f"azmthEncoder{moduleName}Module", io=azmthEncoderIO))
+            wheelMotorModule = MotorModule(name=f"wheelMotor{moduleName}Module", io=wheelModuleIO, controller=NullController)
+            azmuthMotorModule = MotorModule(name=f"azmthMotor{moduleName}Module", io=azmthModuleIO, controller=NullController)
+            azmuthEncoderModule = EncoderModule(name=f"azmthEncoder{moduleName}Module", io=azmthEncoderIO)
+            self.wheelModules.append(wheelMotorModule)
+            self.azmthModules.append(azmuthMotorModule)
+            self.azmthEncoderModules.append(azmuthEncoderModule)
+            self.motorAndEncoderModules.append((moduleName, wheelMotorModule, azmuthMotorModule, azmuthEncoderModule))
 
-        #TODO note, at the moment we are sending motorModuleIOs to the the DrivetrainControl.
-        self.casseroleDrivetrain = DrivetrainControl(motorModuleIOsAndEncoderIOSets)
+        self.casseroleDrivetrain = DrivetrainControl(self.motorAndEncoderModules)
         self.initialize()
 
         self.isClosedLoop = True
