@@ -21,6 +21,7 @@ from wrappers.wrapperedRevThroughBoreEncoder import WrapperedRevThroughBoreEncod
 
 
 class DrivetrainControl():
+    DO_NOTHING_CMD: DrivetrainCommand = DrivetrainCommand()
     """
     Top-level control class for controlling a swerve drivetrain
     """
@@ -54,15 +55,13 @@ class DrivetrainControl():
 
         self._updateAllCals()
 
-    def setManualCmd(self, cmd: DrivetrainCommand, robotRel=False):
+    def setManualCmd(self, cmd: DrivetrainCommand):
         """Send xyzzy to the robot for motion relative to the field
 
         Args:
             cmd (DrivetrainCommand): manual command input
-            robotRel: whether or not we want to be robot-Relative controlled
         """
         self.curManCmd = cmd
-        self.useRobotRelative = robotRel
 
     def setCoastCmd(self, coast:bool):
         self.coastCmd = coast
@@ -83,8 +82,7 @@ class DrivetrainControl():
 
         self.curCmd.scaleBy(self.elevSpeedLimit)
 
-        if self.useRobotRelative:
-            #This isn't working yet? 
+        if self.curCmd.robotRelative:
             tmp = ChassisSpeeds(self.curCmd.velX, self.curCmd.velY, self.curCmd.velT )
         else:
             tmp = ChassisSpeeds.fromFieldRelativeSpeeds(

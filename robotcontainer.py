@@ -4,6 +4,7 @@ from commands2 import Command, cmd, CommandScheduler
 from wpimath.geometry import Pose2d, Rotation2d
 
 from constants import kFieldLengthIn, kFieldWidthIn
+from humanInterface.driverInterface import DriverInterface
 from pykit.networktables.loggeddashboardchooser import LoggedDashboardChooser
 from subsystems.drivetrain.drivetrainsubsystem import DrivetrainSubsystemFactory, DrivetrainSubsystem
 from subsystems.intakeOuttake.inoutsubsystem import InOutSubsystem, inoutSubsystemFactory
@@ -107,6 +108,9 @@ class RobotContainer:
                         Pose2d(in2m(robotStartXIn), in2m(robotStartYIn), Rotation2d(deg2Rad(0)))
                     )
             self.drivetrainSubsystem.casseroleDrivetrain.poseEst._telemetry.setCurAutoTrajectory(None)
+            self.drivetrainSubsystem.setDefaultCommand(
+                self.drivetrainSubsystem.arcadeDriveClosedLoop(DriverInterface().getCmd)
+            )
 
     def testInit(self) -> None:
         self.autoOrTestCommand = self.testChooser.getSelected()

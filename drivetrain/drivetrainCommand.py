@@ -12,6 +12,7 @@ class DrivetrainCommand:
     velX:float = 0.0  # Field X velocity in meters/sec
     velY:float = 0.0  # Field Y velocity in meters/sec
     velT:float = 0.0  # Rotational speed in rad/sec
+    robotRelative:bool = False
     desPose:Pose2d = field(default_factory = lambda: Pose2d())  # Current desired pose of the drivetrain
 
     def scaleBy(self, scale:float):

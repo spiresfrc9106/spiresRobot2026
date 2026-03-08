@@ -153,6 +153,7 @@ class DriverInterface(metaclass=Singleton):
         retval.velX = self.velXCmd
         retval.velY = self.velYCmd
         retval.velT = self.velTCmd
+        retval.robotRelative = self.robotRelative
         return retval
 
     def getAutoDrive(self) -> bool:

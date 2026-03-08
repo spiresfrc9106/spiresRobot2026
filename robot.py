@@ -260,16 +260,14 @@ class MyRobot(LoggedRobot):
 
         # TODO - this is technically one loop delayed, which could induce lag
         if self.container.drivetrainSubsystem is not None:
-            self.container.drivetrainSubsystem.casseroleDrivetrain.setManualCmd(self.dInt.getCmd(), self.dInt.getRobotRelative())
-
-
             # We're enabled as long as the driver is commanding it, and we're _not_ trying to control robot relative.
-            enableAutoSteer = not self.dInt.getRobotRelative() and self.dInt.getAutoSteerEnable()
+            #enableAutoSteer = not self.dInt.getRobotRelative() and self.dInt.getAutoSteerEnable()
             #self.autosteer.setAutoSteerActiveCmd(enableAutoSteer)
             #self.autosteer.setAlignToProcessor(self.dInt.getAutoSteerToAlgaeProcessor())
             #self.autosteer.setAlignDownfield(self.dInt.getAutoSteerDownfield())
         
             #self.autodrive.setRequest(self.dInt.getAutoDrive())
+            pass
 
         if self.dInt.getGyroResetCmd():
             if self.container.drivetrainSubsystem is not None:
