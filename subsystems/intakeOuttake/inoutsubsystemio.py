@@ -16,9 +16,11 @@ class InOutSubsystemIO:
         groundTargetIPS: float = 0.0
         hopperTargetIPS: float = 0.0
         flywheelTargetIPS: float = 0.0
+        agitatorTargetHz: float = 0.0
         groundIPS: float = 0.0
         hopperIPS: float = 0.0
         flywheelIPS: float = 0.0
+        agitatorHz: float = 0.0
 
     def updateInputs(self, inputs: InOutSubsystemIOInputs):
         pass

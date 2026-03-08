@@ -31,6 +31,7 @@ class InOutCalSet(metaclass=Singleton):
             self.groundMaxAccIPS2 = Calibration( "InOut Ground Max Acc IPS2", depConsts["GROUND_MAX_MOTION_MAX_ACC_IPS2"], "in/sec^2")
             self.hopperMaxAccIPS2 = Calibration( "InOut Hopper Max Acc IPS2", depConsts["HOPPER_MAX_MOTION_MAX_ACC_IPS2"], "in/sec^2")
             self.flywheelMaxAccIPS2 = Calibration( "InOut Flywheel Max Acc IPS2", depConsts["FLYWHEEL_MAX_MOTION_MAX_ACC_IPS2"], "in/sec^2")
+            self.agitatorMaxAccHz2 = Calibration("InOut Agitator Max Acc Hz per s", depConsts["AGITATOR_MAX_MOTION_MAX_ACC_HZPS"], "Hz/sec^2")
 
             self.groundCals = MotorModuleCals(
                 kP=self.groundP, kD=self.groundD,
@@ -44,7 +45,17 @@ class InOutCalSet(metaclass=Singleton):
                 kP=self.flywheelP, kD=self.flywheelD,
                 kS=self.flywheelS, kV=self.flywheelV, kA=self.flywheelA,
                 maxAccUserUnitsPerS2=self.flywheelMaxAccIPS2)
-    
+
+            self.agitatorP = Calibration("InOut Agitator kP", depConsts["AGITATOR_KP"])
+            self.agitatorD = Calibration("InOut Agitator kD", depConsts["AGITATOR_KD"])
+            self.agitatorS = Calibration("InOut Agitator kS", depConsts["AGITATOR_KS"], "volts")
+            self.agitatorV = Calibration("InOut Agitator kV", depConsts["AGITATOR_KV"], "volts/radPerSec")
+            self.agitatorA = Calibration("InOut Agitator kA", depConsts["AGITATOR_KA"], "volts/radPerSecPerSec")
+            self.agitatorCals = MotorModuleCals(
+                kP=self.agitatorP, kD=self.agitatorD,
+                kS=self.agitatorS, kV=self.agitatorV, kA=self.agitatorA,
+                maxAccUserUnitsPerS2=self.agitatorMaxAccHz2)
+
             self.groundIntakeSpeedIPS = Calibration("Ground Intake Speed IPS", depConsts["GROUND_INTAKE_SPEED_IPS"], "in/sec")
             self.groundOuttakeSpeedIPS = Calibration("Ground Outtake Speed IPS", depConsts["GROUND_OUTTAKE_SPEED_IPS"], "in/sec")
             self.groundShootSpeedIPS = Calibration("Ground Shoot Speed IPS", depConsts["GROUND_SHOOT_SPEED_IPS"], "in/sec")
@@ -54,6 +65,10 @@ class InOutCalSet(metaclass=Singleton):
             self.hopperShootSpeedIPS = Calibration("Hopper Shoot Speed IPS", depConsts["HOPPER_SHOOT_SPEED_IPS"], "in/sec")
     
             self.flywheelSpeedIPS = Calibration("Flywheel Speed IPS", depConsts["FLYWHEEL_SPEED_IPS"], "in/sec")
+
+            self.agitatorIntakeSpeedHz = Calibration("Agitator Intake Speed Hz", depConsts["AGITATOR_INTAKE_SPEED_HZ"], "Hz")
+            self.agitatorOuttakeSpeedHz = Calibration("Agitator Outtake Speed Hz", depConsts["AGITATOR_OUTTAKE_SPEED_HZ"], "Hz")
+            self.agitatorShootSpeedHz = Calibration("Agitator Shoot Speed Hz", depConsts["AGITATOR_SHOOT_SPEED_HZ"], "Hz")
 
     def hasChanged(self)->bool:
         """
@@ -86,6 +101,15 @@ class InOutCalSet(metaclass=Singleton):
             or self.hopperOuttakeSpeedIPS.isChanged()
             or self.hopperShootSpeedIPS.isChanged()
             or self.flywheelSpeedIPS.isChanged()
+            or self.agitatorP.isChanged()
+            or self.agitatorD.isChanged()
+            or self.agitatorS.isChanged()
+            or self.agitatorV.isChanged()
+            or self.agitatorA.isChanged()
+            or self.agitatorMaxAccHz2.isChanged()
+            or self.agitatorIntakeSpeedHz.isChanged()
+            or self.agitatorOuttakeSpeedHz.isChanged()
+            or self.agitatorShootSpeedHz.isChanged()
         )
 
     def setGroundP(self, ground_P):
@@ -162,3 +186,30 @@ class InOutCalSet(metaclass=Singleton):
 
     def setFlywheelSpeedIPS(self, flywheelSpeed_IPS):
         self.flywheelSpeedIPS = flywheelSpeed_IPS
+
+    def setAgitatorP(self, agitator_P):
+        self.agitatorP = agitator_P
+
+    def setAgitatorD(self, agitator_D):
+        self.agitatorD = agitator_D
+
+    def setAgitatorS(self, agitator_S):
+        self.agitatorS = agitator_S
+
+    def setAgitatorV(self, agitator_V):
+        self.agitatorV = agitator_V
+
+    def setAgitatorA(self, agitator_A):
+        self.agitatorA = agitator_A
+
+    def setAgitatorMaxAccHz2(self, agitator_maxAccHz2):
+        self.agitatorMaxAccHz2 = agitator_maxAccHz2
+
+    def setAgitatorIntakeSpeedHz(self, agitatorIntake_Hz):
+        self.agitatorIntakeSpeedHz = agitatorIntake_Hz
+
+    def setAgitatorOuttakeSpeedHz(self, agitatorOuttake_Hz):
+        self.agitatorOuttakeSpeedHz = agitatorOuttake_Hz
+
+    def setAgitatorShootSpeedHz(self, agitatorShoot_Hz):
+        self.agitatorShootSpeedHz = agitatorShoot_Hz
