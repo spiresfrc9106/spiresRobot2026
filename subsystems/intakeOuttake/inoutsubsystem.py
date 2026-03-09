@@ -367,12 +367,16 @@ class InOutSubsystemSimulation():
             gearRatio=1/InOutSubsystem.FLYWHEEL_GEAR_REDUCTION,
             moi=0.01,
         )
-        self.agitatorWheelSim = OperateFlywheelSimulation(
-            wrapperedMotor=agitatorMotor,
-            gearRatio=1/InOutSubsystem.AGITATOR_GEAR_REDUCTION,
-            moi=0.005,
-        )
-        self.simulations = (self.groundWheelSim, self.hopperWheelSim, self.flywheelWheelSim, self.agitatorWheelSim)
+        if IODC["HAS_AGITATOR"]:
+            self.agitatorWheelSim = OperateFlywheelSimulation(
+                wrapperedMotor=agitatorMotor,
+                gearRatio=1/InOutSubsystem.AGITATOR_GEAR_REDUCTION,
+                moi=0.005,
+            )
+            self.simulations = (self.groundWheelSim, self.hopperWheelSim, self.flywheelWheelSim, self.agitatorWheelSim)
+        else:
+            self.simulations = (self.groundWheelSim, self.hopperWheelSim, self.flywheelWheelSim)
+
 
     def periodic(self):
         for simulation in self.simulations:
@@ -411,10 +415,12 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
                                                    currentLimitA=60,
                                                    gearBox=flywheelMotorGearBox)
                 flywheelMotor.setInverted(IODC["FLYWHEEL_MOTOR_INVERTED"])
-                agitatorMotor = WrapperedSparkMotor.makeSparkMax(name="agitatorMotor",
-                                                canID=IODC["AGITATOR_MOTOR_CANID"],
-                                                gearBox=agitatorMotorGearBox)
-                agitatorMotor.setInverted(IODC["AGITATOR_MOTOR_INVERTED"])
+                agitatorMotor = None
+                if IODC["HAS_AGITATOR"]:
+                    agitatorMotor = WrapperedSparkMotor.makeSparkMax(name="agitatorMotor",
+                                                    canID=IODC["AGITATOR_MOTOR_CANID"],
+                                                    gearBox=agitatorMotorGearBox)
+                    agitatorMotor.setInverted(IODC["AGITATOR_MOTOR_INVERTED"])
 
                 groundController = SparkSlewRateLimitedVelocityController(
                     cals=inoutCals.groundCals,
@@ -433,41 +439,6 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
                     userUnitsToRadPerSec=InOutSubsystem.agitatorHzToRadPerS
                 )
 
-                """
-                groundController = SparkVelocityController(
-                    cals=inoutCals.groundCals
-                )
-                hopperController = SparkVelocityController(
-                    cals=inoutCals.hopperCals
-                )
-                flywheelController = SparkVelocityController(
-                    cals=inoutCals.flywheelCals
-                )
-
-                groundController = MaxMotionController(
-                    cals=inoutCals.groundCals,
-                    userUnitsToRadPerSec=InOutSubsystem.groundInPerSToRadPerS
-                )
-                hopperController = MaxMotionController(
-                    cals=inoutCals.hopperCals,
-                    userUnitsToRadPerSec=InOutSubsystem.hopperInPerSToRadPerS
-                )
-                flywheelController = MaxMotionController(
-                    cals=inoutCals.flywheelCals,
-                    userUnitsToRadPerSec=InOutSubsystem.flywheelInPerSToRadPerS
-                )
-
-
-                groundController = WPILibFFController(
-                    cals=inoutCals.groundCals
-                )
-                hopperController = WPILibFFController(
-                    cals=inoutCals.hopperCals
-                )
-                flywheelController = WPILibFFController(
-                    cals=inoutCals.flywheelCals
-                )
-                """
 
                 inoutSim = None
                 if kRobotMode == RobotModes.SIMULATION:
@@ -482,7 +453,10 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
                     groundModule_io=MotorModuleIOWrappered(name="inoutGroundModuleIO", motor=groundMotor),
                     hopperModule_io=MotorModuleIOWrappered(name="inoutHopperModuleIO", motor=hopperMotor),
                     flywheelModule_io=MotorModuleIOWrappered(name="inoutFlywheelModuleIO", motor=flywheelMotor),
-                    agitatorModule_io=MotorModuleIOWrappered(name="inoutAgitatorModuleIO", motor=agitatorMotor),
+                    agitatorModule_io=
+                        MotorModuleIOWrappered(name="inoutAgitatorModuleIO", motor=agitatorMotor)\
+                        if IODC["HAS_AGITATOR"]
+                        else MotorModuleIO(name="inoutAgitatorModuleIO"),
                     groundModule_controller=groundController,
                     hopperModule_controller=hopperController,
                     flywheelModule_controller=flywheelController,
@@ -494,7 +468,9 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
                     groundModule_io=MotorModuleIOWrapperedSim(name="inoutGroundModuleIO", motor=groundMotor),
                     hopperModule_io=MotorModuleIOWrapperedSim(name="inoutHopperModuleIO", motor=hopperMotor),
                     flywheelModule_io=MotorModuleIOWrapperedSim(name="inoutFlywheelModuleIO", motor=flywheelMotor),
-                    agitatorModule_io=MotorModuleIOWrapperedSim(name="inoutAgitatorModuleIO", motor=agitatorMotor),
+                    agitatorModule_io=MotorModuleIOWrapperedSim(name="inoutAgitatorModuleIO", motor=agitatorMotor)\
+                        if IODC["HAS_AGITATOR"]
+                        else MotorModuleIO(name="inoutAgitatorModuleIO"),
                     groundModule_controller=groundController,
                     hopperModule_controller=hopperController,
                     flywheelModule_controller=flywheelController,

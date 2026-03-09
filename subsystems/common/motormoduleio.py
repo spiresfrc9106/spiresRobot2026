@@ -49,8 +49,6 @@ class MotorModuleIO:
     def setPIDFF(self, kP: float, kI: float, kD: float, kS: float, kV: float, kA: float) -> None:
         pass
 
-    def setMaxMotionVelParams(self, maxAccRadps2: float) -> None:
-        pass
 
     def setPosCmd(self, posCmdRad:float, arbFF:float=0.0)->None:
         """_summary_
@@ -59,7 +57,6 @@ class MotorModuleIO:
             posCmdRad (float): motor desired shaft rotations in radians
             arbFF (float, optional): _description_. Defaults to 0.
         """
-
 
     def setVelCmd(self, velCmdRadps:float, arbFF:float=0.0)->None:
         """_summary_

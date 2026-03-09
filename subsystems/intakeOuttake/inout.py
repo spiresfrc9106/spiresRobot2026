@@ -9,6 +9,7 @@ class InOutDependentConstants(metaclass=Singleton):
             },
             RobotTypes.Spires2026: {
                 "HAS_INOUT": True,
+                "HAS_AGITATOR": False,
                 "GROUND_MOTOR_CANID": 16,
                 "HOPPER_MOTOR_CANID": 15,
                 "FLYWHEEL_MOTOR_CANID": 18,
@@ -61,6 +62,7 @@ class InOutDependentConstants(metaclass=Singleton):
             },
             RobotTypes.Spires2026Sim: {
                 "HAS_INOUT": True,
+                "HAS_AGITATOR": True,
                 "GROUND_MOTOR_CANID": 17,
                 "HOPPER_MOTOR_CANID": 11,
                 "FLYWHEEL_MOTOR_CANID": 13,
@@ -113,6 +115,7 @@ class InOutDependentConstants(metaclass=Singleton):
             },
             RobotTypes.SpiresTestBoard: {
                 "HAS_INOUT": True,
+                "HAS_AGITATOR": False,
                 "GROUND_MOTOR_CANID": 17,
                 "HOPPER_MOTOR_CANID": 11,
                 "FLYWHEEL_MOTOR_CANID": 13,
@@ -165,6 +168,7 @@ class InOutDependentConstants(metaclass=Singleton):
             },
             RobotTypes.SpiresRoboRioV1: {
                 "HAS_INOUT": True,
+                "HAS_AGITATOR": False,
                 "GROUND_MOTOR_CANID": 16,
                 "HOPPER_MOTOR_CANID": 15,
                 "FLYWHEEL_MOTOR_CANID": 18,
