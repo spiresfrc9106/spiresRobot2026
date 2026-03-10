@@ -9,6 +9,7 @@ from ntcore import NetworkTableInstance
 from choreo.trajectory import SwerveTrajectory
 
 from drivetrain.controlStrategies.autoSteer import AutoSteer
+from pykit.logger import Logger
 from utils.allianceTransformUtils import transform
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from utils.autonomousTransformUtils import flip
@@ -87,22 +88,32 @@ class DrivetrainPoseTelemetry:
 
     def update(self, estPose:Pose2d, moduleAngles):
         self.field.getRobotObject().setPose(estPose)
-        self.field.getObject("ModulePoses").setPoses(
-            [
-                estPose.transformBy(Transform2d(self.robotToModuleTranslations[0], moduleAngles[0])),
-                estPose.transformBy(Transform2d(self.robotToModuleTranslations[1], moduleAngles[1])),
-                estPose.transformBy(Transform2d(self.robotToModuleTranslations[2], moduleAngles[2])),
-                estPose.transformBy(Transform2d(self.robotToModuleTranslations[3], moduleAngles[3])),
-            ]
-        )
+        Logger.recordOutput("Robot/dt/Pose/estPose", estPose)
+
+        Logger.recordOutput("Robot/dt/Pose/ModulePoses/FL", estPose.transformBy(Transform2d(self.robotToModuleTranslations[0], moduleAngles[0])))
+        Logger.recordOutput("Robot/dt/Pose/ModulePoses/FR", estPose.transformBy(Transform2d(self.robotToModuleTranslations[1], moduleAngles[1])))
+        Logger.recordOutput("Robot/dt/Pose/ModulePoses/BL", estPose.transformBy(Transform2d(self.robotToModuleTranslations[2], moduleAngles[2])))
+        Logger.recordOutput("Robot/dt/Pose/ModulePoses/BR", estPose.transformBy(Transform2d(self.robotToModuleTranslations[3], moduleAngles[3])))
+
 
         self.field.getObject("desPose").setPose(self.desPose)
         self.field.getObject("desTraj").setTrajectory(self.curTraj)
         self.field.getObject("desTrajWaypoints").setPoses(self.curTrajWaypoints)
         self.field.getObject("curObstaclesFixed").setPoses([Pose2d(x, Rotation2d()) for x in self.fixedObstacles])
-        self.field.getObject("curObstaclesFull").setPoses([Pose2d(x, Rotation2d()) for x in self.fullObstacles])
-        self.field.getObject("curObstaclesThird").setPoses([Pose2d(x, Rotation2d()) for x in self.thirdObstacles])
-        self.field.getObject("curObstaclesAlmostGone").setPoses([Pose2d(x, Rotation2d()) for x in self.almostGoneObstacles])
+        #self.field.getObject("curObstaclesFull").setPoses([Pose2d(x, Rotation2d()) for x in self.fullObstacles])
+        #self.field.getObject("curObstaclesThird").setPoses([Pose2d(x, Rotation2d()) for x in self.thirdObstacles])
+        #self.field.getObject("curObstaclesAlmostGone").setPoses([Pose2d(x, Rotation2d()) for x in self.almostGoneObstacles])
+
+        Logger.recordOutput("Robot/dt/Pose/desPose", self.desPose)
+
+        """
+        Logger.recordOutput("Robot/dt/Pose/EstimatorPose", estimatedFieldPose)
+        Logger.recordOutput("Robot/dt/Pose/OdometryPose", cls.odometry.getPose())
+        Logger.recordOutput("Robot/dt/Heading", cls.robotHeading)
+        Logger.recordOutput("Robot/dt/HeadingVelocity", robotYawVelocity)
+        Logger.recordOutput("Robot/dt/Velocity", fieldRelativeRobotVelocity)
+        Logger.recordOutput("Robot/dt/HeadingOffset", cls.headingOffset)
+        """
         
         asGoal = AutoSteer().getCurGoalPose()
         if(asGoal is not None):
