@@ -92,7 +92,7 @@ class DrivetrainControl():
 
         # Set the desired pose for telemetry purposes
         self.poseEst._telemetry.setDesiredPose(self.curCmd.desPose)
-        self.poseEst._telemetry.setAutoDriveGoalPose(AutoDrive().getGoal())
+        #self.poseEst._telemetry.setAutoDriveGoalPose(AutoDrive().getGoal())
 
         # pylint: disable=condition-evals-to-constant
         if (False and
