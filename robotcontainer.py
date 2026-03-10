@@ -1,15 +1,18 @@
 from typing import Optional
 
 from commands2 import Command, cmd, CommandScheduler
+from wpimath.geometry import Pose2d, Rotation2d
 
+from constants import kFieldLengthIn, kFieldWidthIn
+from humanInterface.driverInterface import DriverInterface
 from pykit.networktables.loggeddashboardchooser import LoggedDashboardChooser
 from subsystems.drivetrain.drivetrainsubsystem import DrivetrainSubsystemFactory, DrivetrainSubsystem
 from subsystems.intakeOuttake.inoutsubsystem import InOutSubsystem, inoutSubsystemFactory
 
 from subsystems.state.configsubsystem import ConfigSubsystem
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
-
-
+from utils.allianceTransformUtils import onRed
+from utils.units import deg2Rad, in2m
 
 
 class RobotContainer:
@@ -33,6 +36,8 @@ class RobotContainer:
         self.drivetrainSubsystem: DrivetrainSubsystem|None = None
         if ConfigSubsystem().useCasseroleSwerve():
             self.drivetrainSubsystem = DrivetrainSubsystemFactory()
+
+        self.autoHasRun = False
 
 
         self.autoChooser: LoggedDashboardChooser[Command] = LoggedDashboardChooser(
@@ -78,6 +83,7 @@ class RobotContainer:
     def autonomousInit(self) -> None:
         self.autoOrTestCommand = self.autoChooser.getSelected()
         self.autonomousOrTestCommonInit()
+        self.autoHasRun = True
 
 
     def teleopInit(self) -> None:
@@ -86,7 +92,25 @@ class RobotContainer:
            CommandScheduler.getInstance().schedule(self.inout.aOperatorRunsInoutCommand())
         # clear existing telemetry trajectory
         if self.drivetrainSubsystem is not None:
+            # xyzzy todo
+            # we always have a default autonoumous pose?
+            # that if auto hasn't run, we set our default poss to the default, or selected autonoumous pose?
+            # -Thanks Coach Mike
+            if not self.autoHasRun:
+                robotStartXIn = 40.0
+                robotStartYIn = 80.0
+                if onRed():
+                    self.drivetrainSubsystem.casseroleDrivetrain.poseEst.setKnownPose(
+                        Pose2d(in2m(kFieldLengthIn-robotStartXIn), in2m(kFieldWidthIn-robotStartYIn), Rotation2d(deg2Rad(180)))
+                    )
+                else:
+                    self.drivetrainSubsystem.casseroleDrivetrain.poseEst.setKnownPose(
+                        Pose2d(in2m(robotStartXIn), in2m(robotStartYIn), Rotation2d(deg2Rad(0)))
+                    )
             self.drivetrainSubsystem.casseroleDrivetrain.poseEst._telemetry.setCurAutoTrajectory(None)
+            self.drivetrainSubsystem.setDefaultCommand(
+                self.drivetrainSubsystem.arcadeDriveClosedLoop(DriverInterface().getCmd)
+            )
 
     def testInit(self) -> None:
         self.autoOrTestCommand = self.testChooser.getSelected()

@@ -12,7 +12,9 @@ from wpilib import TimedRobot
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.drivetrainPhysical import wrapperedSwerveDriveAzmthEncoder
 from drivetrain.swerveModuleGainSet import SwerveModuleGainSet
+from subsystems.common.encodermodule import EncoderModule
 from subsystems.common.encodermoduleio import EncoderModuleIO
+from subsystems.common.motormodule import MotorModule
 from subsystems.common.motormoduleio import MotorModuleIO
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
 from wrappers.wrapperedRevThroughBoreEncoder import WrapperedRevThroughBoreEncoder
@@ -62,7 +64,7 @@ class SwerveModuleControl:
 
     def __init__(
         self,
-        motorModulesAndEncoderSet: Tuple[str, MotorModuleIO, MotorModuleIO, EncoderModuleIO]
+        motorModulesAndEncoderSet: Tuple[str, MotorModule, MotorModule, EncoderModule]
     ):
         """Instantiate one swerve drive module
 

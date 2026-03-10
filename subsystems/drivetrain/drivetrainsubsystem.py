@@ -1,10 +1,11 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Callable
 
 from commands2 import Command, Subsystem, cmd
 from wpilib import XboxController
 
+from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.drivetrainControl import DrivetrainControl
 from drivetrain.drivetrainPhysical import wrapperedSwerveDriveAzmthEncoder, DrivetrainPhysical
 from pykit.autolog import autologgable_output
@@ -62,19 +63,25 @@ class DrivetrainSubsystem(Subsystem):
         self.wheelModules = []
         self.azmthModules = []
         self.azmthEncoderModules = []
+        self.motorAndEncoderModules = []
         for moduleName, wheelModuleIO, azmthModuleIO, azmthEncoderIO in motorModuleIOsAndEncoderIOSets:
-            self.wheelModules.append(MotorModule(name=f"wheelMotor{moduleName}Module", io=wheelModuleIO, controller=NullController))
-            self.azmthModules.append(MotorModule(name=f"azmthMotor{moduleName}Module", io=azmthModuleIO, controller=NullController))
-            self.azmthEncoderModules.append(EncoderModule(name=f"azmthEncoder{moduleName}Module", io=azmthEncoderIO))
+            wheelMotorModule = MotorModule(name=f"wheelMotor{moduleName}Module", io=wheelModuleIO, controller=NullController)
+            azmuthMotorModule = MotorModule(name=f"azmthMotor{moduleName}Module", io=azmthModuleIO, controller=NullController)
+            azmuthEncoderModule = EncoderModule(name=f"azmthEncoder{moduleName}Module", io=azmthEncoderIO)
+            self.wheelModules.append(wheelMotorModule)
+            self.azmthModules.append(azmuthMotorModule)
+            self.azmthEncoderModules.append(azmuthEncoderModule)
+            self.motorAndEncoderModules.append((moduleName, wheelMotorModule, azmuthMotorModule, azmuthEncoderModule))
 
-        #TODO note, at the moment we are sending motorModuleIOs to the the DrivetrainControl.
-        self.casseroleDrivetrain = DrivetrainControl(motorModuleIOsAndEncoderIOSets)
+        self.casseroleDrivetrain = DrivetrainControl(self.motorAndEncoderModules)
         self.initialize()
+        self.setDefaultCommand(self.aDoNothingCommand())
 
         self.isClosedLoop = True
 
     def initialize(self):
-        self.setDefaultCommand(self.aDoNothingCommand())
+        self.casseroleDrivetrain.setManualCmd(self.casseroleDrivetrain.DO_NOTHING_CMD)
+
 
     def sysIdMotorModulePreInit(self) -> None:
         self.initialize()
@@ -153,11 +160,11 @@ class DrivetrainSubsystem(Subsystem):
             cmd.run(lambda: self.doNothing(), self),
         )
 
-    def aOperatorRunsInoutCommand(self) -> Optional[Command]:
-        return cmd.sequence(
-            cmd.runOnce(lambda: self.initialize(), self),
-            cmd.run(lambda: self.useOperatorControls(), self),
-        )
+    def arcadeDriveClosedLoop(self, getCmd: Callable[[], DrivetrainCommand]) -> Command:
+        def run():
+            cmd = getCmd()
+            self.casseroleDrivetrain.setManualCmd(cmd)
+        return cmd.run(run, self).withName("Arcade Drive Closed Loop")
 
 
 def makeNameAndWrapperedMotorsAndEncoder(

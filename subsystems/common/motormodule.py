@@ -49,6 +49,18 @@ class MotorModule:
     def reset(self) -> None:
         self.controller.reset(self.io)
 
+    def setPID(self, kP: float, kI: float, kD: float) -> None:
+        self.io.setPID(kP, kI, kD)
+
+    def setPIDFF(self, kP: float, kI: float, kD: float, kS: float, kV: float, kA: float) -> None:
+        self.io.setPIDFF(kP, kI, kD, kS, kV, kA)
+
+    def setMaxMotionVelParams(self, maxAccRadps2: float) -> None:
+        self.io.setMaxMotionVelParams(maxAccRadps2)
+
+    def setFeedForwardKA(self, kA: float) -> None:
+        self.io.setFeedForwardKA(kA)
+
     def setPosCmd(self, posCmdRad:float, arbFF:float=0.0)->None:
         self.io.setPosCmd(posCmdRad, arbFF)
 
