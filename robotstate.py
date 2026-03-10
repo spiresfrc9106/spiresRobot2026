@@ -2,26 +2,43 @@ from typing import Callable
 from commands2.button import Trigger
 from pykit.logger import Logger
 from wpilib import RobotBase, DriverStation
-from wpimath.geometry import Pose2d, Rotation2d
+from wpimath.geometry import (
+    Pose2d,
+    Pose3d,
+    Rotation2d,
+    Rotation3d,
+    Transform3d,
+    Translation2d,
+)
 from wpimath.kinematics import ChassisSpeeds, SwerveDrive4Odometry, SwerveModulePosition
 
-from westwood.util.robotposeestimator import (
+from util.convenientmath import pose3dFrom2d
+from util.fliputil import FlipUtil
+from util.robotposeestimator import (
     OdometryObservation,
     TurretObservation,
     TurretedRobotPoseEstimator,
+    TurretedVisionObservation,
     VisionObservation,
 )
 from util.logtracer import LogTracer
-from westwood.constants.drive import kDriveKinematics
-#from westwood.constants.turret import kTurretLocation
-from westwood.constants.auto import kAutoDistanceTolerance, kAutoRotationTolerance
-from westwood.constants.field import kEndgameDuration, kShiftDuration
+from constants.drive import kDriveKinematics
+from constants.turret import kTurretLocation
+from constants.auto import kAutoDistanceTolerance, kAutoRotationTolerance
+from constants.field import kEndgameDuration, kShiftDuration, kCloseHubLocation
+from constants.vision import kRedHubAprilTags, kBlueHubAprilTags
+from constants.field import kEndgameDuration, kShiftDuration, kCloseHubLocation
+from constants.vision import kRedHubAprilTags, kBlueHubAprilTags
+
+from drivetrain.drivetrainPhysical import DrivetrainPhysical
 
 
+# pylint: disable-next=too-many-public-methods
 class RobotState:
     headingOffset: Rotation2d = Rotation2d()
     robotHeading: Rotation2d = Rotation2d()
-    #turretRotation: Rotation2d = Rotation2d()
+    turretRotation: Rotation2d = Rotation2d()
+    intakeRotation: Rotation2d = Rotation2d()
 
     modulePositions: tuple[
         SwerveModulePosition,
@@ -35,27 +52,62 @@ class RobotState:
         SwerveModulePosition(),
     )
 
-    estimator: TurretedRobotPoseEstimator = TurretedRobotPoseEstimator(
+    """
+    fieldEstimator: TurretedRobotPoseEstimator = TurretedRobotPoseEstimator(
         kDriveKinematics, Rotation2d(), modulePositions, Pose2d(), (0.1, 0.1, 0.1)
     )
+    hubEstimator: TurretedRobotPoseEstimator = TurretedRobotPoseEstimator(
+        kDriveKinematics, Rotation2d(), modulePositions, Pose2d(), (0.1, 0.1, 0.1)
+    )
+    """
+    """hub estimator is a pose estimator that cares about being relative to the hub.
+    Its poses will be returned as full field, but only use apriltags that are on the hub."""
     odometry: SwerveDrive4Odometry = SwerveDrive4Odometry(
-        kDriveKinematics, Rotation2d(), modulePositions, Pose2d()
+        DrivetrainPhysical().kinematics, Rotation2d(), modulePositions, Pose2d()
     )
 
     simResetPoseConsumers: list[Callable[[Pose2d], None]] = []
-    simPoseRecieverConsumers: list[Callable[[], Pose2d]] = []
+    simPoseReceiverConsumers: list[Callable[[], Pose2d]] = []
 
     robotFieldVelocity: ChassisSpeeds = ChassisSpeeds()
 
     targetAutonomousStartingLocation: Pose2d = Pose2d()
 
+    flywheelAtSpeed: bool = False
+    turretAtAngle: bool = False
+
+    brownoutFlag: bool = False
+
     @classmethod
-    def setAutonomousStartingLogation(cls, location: Pose2d):
+    def readyToShoot(cls) -> bool:
+        """
+        Returns true if the robot is ready to shoot, which is determined by whether the flywheel is at speed and the turret is facing the hub
+        """
+        return cls.flywheelAtSpeed and cls.turretAtAngle
+
+    @classmethod
+    def hubTags(cls) -> list[int]:
+        """
+        Returns the april tag IDs of the hubs we are scoring on
+        This is determined by the alliance color
+        Defaults to blue hub tags if alliance is unknown
+        """
+        if DriverStation.getAlliance() == DriverStation.Alliance.kRed:
+            return kRedHubAprilTags
+        else:
+            return kBlueHubAprilTags
+
+    @classmethod
+    def setAutonomousStartingLocation(cls, location: Pose2d):
         cls.targetAutonomousStartingLocation = location
 
     @classmethod
     def addVisionMeasurement(cls, measurement: VisionObservation):
-        cls.estimator.addVisionMeasurement(measurement)
+        cls.fieldEstimator.addVisionMeasurement(measurement)
+        if len(measurement.tagsUsed) == 0:
+            return
+        if set(measurement.tagsUsed).issubset(set(cls.hubTags())):
+            cls.hubEstimator.addVisionMeasurement(measurement)
 
     @classmethod
     def getAutoWinner(cls) -> DriverStation.Alliance | None:
@@ -89,6 +141,22 @@ class RobotState:
         if autoWinner is None:  # we are likely in auto currently
             return False
         return autoWinner == DriverStation.getAlliance()
+
+    @classmethod
+    def hubAboutToChange(cls) -> bool:
+        """
+        Returns true during 3 seconds before a hub change, which happens at
+        2:10, 1:45, 1:20, 55, and 30 seconds remaining
+        """
+        time = DriverStation.getMatchTime()
+        if time <= 0:
+            return False  # safety net for negative time, assume it's not about to change (testing)
+        return any(
+            kEndgameDuration + kShiftDuration * i + 3
+            >= time
+            >= kEndgameDuration + kShiftDuration * i
+            for i in range(0, 5)
+        )
 
     @classmethod
     def hubActive(cls) -> bool:
@@ -137,7 +205,7 @@ class RobotState:
     def shiftTrigger(cls) -> Trigger:
         """
         Returns a trigger that is active when the hub we are scoring on is active
-        This is used for command based programming to enable/disable xyzzy based on hub activity
+        This is used for command based programming to enable/disable commands based on hub activity
         See https://docs.wpilib.org/en/stable/docs/software/commandbased/binding-commands-to-triggers.html
         """
         return Trigger(cls.hubActive)
@@ -156,26 +224,43 @@ class RobotState:
             SwerveModulePosition,
         ],
         turretRotation: Rotation2d,
+        intakeRotation: Rotation2d,
     ) -> None:
         LogTracer.resetOuter("RobotState")
         cls.turretRotation = turretRotation
+        cls.intakeRotation = intakeRotation
         cls.robotHeading = heading
         cls.modulePositions = modulePositions
         cls.odometry.update(heading, modulePositions)
 
         cls.robotFieldVelocity = fieldRelativeRobotVelocity
         LogTracer.record("OdometryUpdate")
-        cls.estimator.addOdometryMeasurement(
+        cls.fieldEstimator.addOdometryMeasurement(
             OdometryObservation(modulePositions, heading, headingTimestamp)
         )
-        cls.estimator.addTurretMeasurement(
+        cls.fieldEstimator.addTurretMeasurement(
+            TurretObservation(turretRotation, headingTimestamp)
+        )
+        cls.hubEstimator.addOdometryMeasurement(
+            OdometryObservation(modulePositions, heading, headingTimestamp)
+        )
+        cls.hubEstimator.addTurretMeasurement(
             TurretObservation(turretRotation, headingTimestamp)
         )
         LogTracer.record("EstimatorUpdate")
 
-        estimatedFieldPose = cls.getPose()
-        Logger.recordOutput("Robot/Pose/EstimatorPose", estimatedFieldPose)
+        estimatedFieldPose = cls.getFieldPose()
+        Logger.recordOutput("Robot/Pose/Estimator/Pose", estimatedFieldPose)
+        Logger.recordOutput(
+            "Robot/Pose/Estimator/LastVisionUpdate",
+            cls.fieldEstimator.lastMeasurementTime,
+        )
         Logger.recordOutput("Robot/Pose/OdometryPose", cls.odometry.getPose())
+        Logger.recordOutput("Robot/Pose/HubEstimator/Pose", cls.getHubPose())
+        Logger.recordOutput(
+            "Robot/Pose/HubEstimator/LastVisionUpdate",
+            cls.hubEstimator.lastMeasurementTime,
+        )
         Logger.recordOutput("Robot/TurretRotation", cls.turretRotation)
         Logger.recordOutput("Robot/Heading", cls.robotHeading)
         Logger.recordOutput("Robot/HeadingVelocity", robotYawVelocity)
@@ -194,27 +279,53 @@ class RobotState:
         )
         Logger.recordOutput("Auto/StartingPose", cls.targetAutonomousStartingLocation)
         Logger.recordOutput("Game/WonAuto", cls.didWinAuto())
+        Logger.recordOutput("Game/HubAboutToChange", cls.hubAboutToChange())
         Logger.recordOutput("Game/HubActive", cls.hubActive())
 
         if not RobotBase.isReal():
             Logger.recordOutput("Robot/SimPose", cls.getSimPose())
-            #Logger.recordOutput("Robot/SimTurretPose", cls.getSimTurretPose())
+            Logger.recordOutput("Robot/SimTurretPose", cls.getSimTurretPose())
+
+        cls.brownoutFlag = (
+            cls.brownoutFlag
+            or DriverStation.getBatteryVoltage()
+            < 7.0  # brownout threshold is around 6.5V, add some buffer
+        )
 
         LogTracer.recordTotal()
 
     @classmethod
-    def getPose(cls) -> Pose2d:
-        return cls.estimator.estimatedPose
+    def getFieldPose(cls) -> Pose2d:
+        return cls.fieldEstimator.estimatedPose
+
+    @classmethod
+    def getHubPose(cls) -> Pose2d:
+        return cls.hubEstimator.estimatedPose
+
+    @classmethod
+    def hubLocation(cls) -> Translation2d:
+        """
+        Returns the global field-space location of the hub as a Translation2d from the origin, based on the alliance color
+        """
+        return FlipUtil.fieldTranslation(kCloseHubLocation)
+
+    @classmethod
+    def distanceToHub(cls) -> float:
+        """
+        Returns the distance from the robot to the hub in meters, based on the hub estimator
+        """
+        return cls.hubLocation().distance(cls.getHubPose().translation())
 
     @classmethod
     def getRotation(cls) -> Rotation2d:
-        return cls.getPose().rotation()
+        return cls.getFieldPose().rotation()
 
     @classmethod
     def resetPose(cls, pose: Pose2d = Pose2d()) -> None:
         cls.headingOffset = cls.robotHeading - pose.rotation()
         cls.odometry.resetPosition(cls.robotHeading, cls.modulePositions, pose)
-        cls.estimator.resetPosition(cls.robotHeading, cls.modulePositions, pose)
+        cls.fieldEstimator.resetPosition(cls.robotHeading, cls.modulePositions, pose)
+        cls.hubEstimator.resetPosition(cls.robotHeading, cls.modulePositions, pose)
 
         if RobotBase.isSimulation() and not Logger.isReplay():
             cls.resetSimPose(pose)
@@ -225,7 +336,7 @@ class RobotState:
             for consumer in cls.simResetPoseConsumers:
                 consumer(pose)
             return
-        print("resetSimPose - This is not supposed to happen")
+        print("This is not supposed to happen")
 
     @classmethod
     def registerSimPoseResetConsumer(cls, consumer: Callable[[Pose2d], None]) -> None:
@@ -233,11 +344,19 @@ class RobotState:
 
     @classmethod
     def getSimPose(cls) -> Pose2d:
-        if len(cls.simPoseRecieverConsumers) == 1:
-            return cls.simPoseRecieverConsumers[0]()
-        #print("getSimPose - This is not supposed to happen")
-        return cls.getPose()
+        if len(cls.simPoseReceiverConsumers) == 1:
+            return cls.simPoseReceiverConsumers[0]()
+        print("This is not supposed to happen")
+        return cls.getFieldPose()
 
     @classmethod
-    def registerSimPoseRecieverConsumer(cls, consumer: Callable[[], Pose2d]) -> None:
-        cls.simPoseRecieverConsumers.append(consumer)
+    def getSimTurretPose(cls) -> Pose3d:
+        return (
+            pose3dFrom2d(cls.getSimPose())
+            + kTurretLocation
+            + Transform3d(0, 0, 0, Rotation3d(0, 0, cls.turretRotation.radians()))
+        )
+
+    @classmethod
+    def registerSimPoseReceiverConsumer(cls, consumer: Callable[[], Pose2d]) -> None:
+        cls.simPoseReceiverConsumers.append(consumer)

@@ -7,7 +7,7 @@ from subsystems.state.configio import ConfigIO, RobotTypes
 from subsystems.intakeOuttake.inout import InOutDependentConstants
 from utils.singleton import _instances
 from constants import kRobotMode
-from westwood.util.logtracer import LogTracer
+from util.logtracer import LogTracer
 
 # pylint: disable-next=too-many-instance-attributes
 @autologgable_output

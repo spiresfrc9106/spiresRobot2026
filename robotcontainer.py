@@ -3,17 +3,25 @@ from typing import Optional
 from commands2 import Command, cmd, CommandScheduler
 from wpimath.geometry import Pose2d, Rotation2d
 
-from constants import kFieldLengthIn, kFieldWidthIn
+from constants import kFieldLengthIn, kFieldWidthIn, kRobotMode, RobotModes
 from humanInterface.driverInterface import DriverInterface
 from pykit.networktables.loggeddashboardchooser import LoggedDashboardChooser
+from robotstate import RobotState
 from subsystems.drivetrain.drivetrainsubsystem import DrivetrainSubsystemFactory, DrivetrainSubsystem
 from subsystems.intakeOuttake.inoutsubsystem import InOutSubsystem, inoutSubsystemFactory
 
 from subsystems.state.configsubsystem import ConfigSubsystem
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
+from subsystems.vision.visionio import VisionSubsystemIO
+from subsystems.vision.visioniolimelight import VisionSubsystemIOLimelight
+from subsystems.vision.visioniophoton import VisionSubsystemIOPhotonVision
+from subsystems.vision.visionsubsystem import VisionSubsystem
 from utils.allianceTransformUtils import onRed
 from utils.units import deg2Rad, in2m
 
+if kRobotMode == RobotModes.SIMULATION:  # required since opencv can't go on rio
+    # pylint:disable-next=ungrouped-imports
+    from subsystems.vision.visioniophotonsim import VisionSubsystemIOPhotonSim
 
 class RobotContainer:
     """
@@ -36,6 +44,66 @@ class RobotContainer:
         self.drivetrainSubsystem: DrivetrainSubsystem|None = None
         if ConfigSubsystem().useCasseroleSwerve():
             self.drivetrainSubsystem = DrivetrainSubsystemFactory()
+
+        match kRobotMode:
+            case RobotModes.REAL:
+
+                self.vision = VisionSubsystem(
+                    RobotState.addVisionMeasurement,
+                    RobotState.addTurretedVisionMeasurement,
+                    [
+                        VisionSubsystemIOPhotonVision(
+                            "back_center",
+                            kRobotToCamera1Transform, #TODO
+                            RobotState.getRotation,
+                        ),
+                        VisionSubsystemIOPhotonVision(
+                            "front_left",
+                            kRobotToCamera2Transform, #TODO
+                            RobotState.getRotation,
+                        ),
+                        VisionSubsystemIOPhotonVision(
+                            "front_right",
+                            kRobotToCamera2Transform, #TODO
+                            RobotState.getRotation,
+                        ),
+                    ],
+                )
+
+
+            case RobotModes.SIMULATION:
+
+                self.vision = VisionSubsystem(
+                    RobotState.addVisionMeasurement,
+                    RobotState.addTurretedVisionMeasurement,
+                    [
+                        VisionSubsystemIOPhotonSim(
+                            "back_center",
+                            kRobotToCamera1Transform, #TODO
+                            RobotState.getRotation,
+                        ),
+                        VisionSubsystemIOPhotonSim(
+                            "front_left",
+                            kRobotToCamera2Transform, #TODO
+                            RobotState.getRotation,
+                        ),
+                        VisionSubsystemIOPhotonSim(
+                            "front_right",
+                            kRobotToCamera2Transform, #TODO
+                            RobotState.getRotation,
+                        ),
+                    ],
+                )
+
+
+            case _:
+                self.vision = VisionSubsystem(
+                    RobotState.addVisionMeasurement,
+                    RobotState.addTurretedVisionMeasurement,
+                    [VisionSubsystemIO(), VisionSubsystemIO(), VisionSubsystemIO()],
+                )
+
+
 
         self.autoHasRun = False
 

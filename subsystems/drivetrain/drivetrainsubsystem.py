@@ -37,7 +37,7 @@ from utils.constants import DT_FL_AZMTH_CANID, DT_FL_AZMTH_ENC_PORT, DT_FL_WHEEL
     DT_BR_WHEEL_CANID, DT_BR_AZMTH_CANID, DT_BR_AZMTH_ENC_PORT
 
 from utils.units import radPerSec2RPM, rad2Deg
-from westwood.util.logtracer import LogTracer
+from util.logtracer import LogTracer
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
 from wrappers.wrapperedRevThroughBoreEncoder import WrapperedRevThroughBoreEncoder
 from wrappers.wrapperedSparkMax import WrapperedSparkMax

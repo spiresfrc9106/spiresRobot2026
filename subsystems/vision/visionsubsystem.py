@@ -2,18 +2,19 @@ from typing import Callable, List
 from commands2 import Subsystem
 from pykit.logger import Logger
 
-from westwood.subsystems.vision.visionio import VisionSubsystemIO
+from subsystems.vision.visionio import VisionSubsystemIO
 
-from constants import (
+from constants.vision import (
     kApriltagFieldLayout,
     kMaxVisionZError,
     kMaxVisionAmbiguity,
     kXyStdDevCoeff,
     kThetaStdDevCoeff,
 )
-#from westwood.constants.turret import kTurretLocation
+from constants.turret import kTurretLocation
+from util.convenientmath import pose3dFromTransform3d
 from util.logtracer import LogTracer
-from westwood.util.robotposeestimator import TurretedVisionObservation, VisionObservation
+from util.robotposeestimator import TurretedVisionObservation, VisionObservation
 
 
 class VisionSubsystem(Subsystem):
@@ -31,7 +32,7 @@ class VisionSubsystem(Subsystem):
         for _ in io:
             self.inputs.append(VisionSubsystemIO.VisionSubsystemIOInputs())
 
-    # pylint:disable-next=too-many-locals, too-many-statements
+    # pylint:disable-next=too-many-locals, too-many-statements, too-many-branches
     def periodic(self) -> None:
         LogTracer.resetOuter("VisionSubsystem")
         for idx, (i, inp) in enumerate(zip(self.io, self.inputs)):
@@ -96,15 +97,23 @@ class VisionSubsystem(Subsystem):
 
                 # here you can also factor in per-camera weighting
 
+                observedTags = []
+                tagsList = observation.tagsList
+                for tagId in range(32):
+                    if tagsList & (1 << tagId):
+                        observedTags.append(
+                            tagId + 1
+                        )  # need to add 1 since tag IDs are 1 indexed but our bitmask is 0 indexed
+
                 self.consumer(
                     VisionObservation(
                         observation.pose.toPose2d(),
                         observation.timestamp,
                         [linearStdDev, linearStdDev, angularStdDev],
+                        observedTags,
                     )
                 )
             LogTracer.record(f"Camera{idx} ProcessObservations")
-            """
             for observation in camera.turretedObservations:
                 rejectPose = (
                     observation.tagCount == 0
@@ -141,14 +150,22 @@ class VisionSubsystem(Subsystem):
                 linearStdDev = kXyStdDevCoeff * stdDevFactor
                 angularStdDev = kThetaStdDevCoeff * stdDevFactor
                 # here you can also factor in per-camera weighting
+                observedTags = []
+                tagsList = observation.tagsList
+                # extract tag list from bit masks
+                for tagId in range(32):
+                    if tagsList & (1 << tagId):
+                        observedTags.append(tagId + 1)
+
                 self.turretedConsumer(
                     TurretedVisionObservation(
                         observation.fieldToTurret,
                         observation.timestamp,
                         [linearStdDev, linearStdDev, angularStdDev],
+                        observedTags,
                     )
                 )
-            """
+
             Logger.recordOutput(f"Vision/Camera{idx}/TagPose", tagPoses)
             Logger.recordOutput(f"Vision/Camera{idx}/RobotPoses", robotPoses)
             Logger.recordOutput(

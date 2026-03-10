@@ -23,7 +23,7 @@ from utils.calibration import CalibrationWrangler
 
 if DrivetrainDependentConstants().useWestwoodSwerve:
     from westwood.westwoodrobotcontainer import WestwoodRobotContainer
-from westwood.util.logtracer import LogTracer
+from util.logtracer import LogTracer
 from westwood.util.phoenixutil import PhoenixUtil
 
 from testingMotors.motorCtrl import motorDepConstants, MotorControl

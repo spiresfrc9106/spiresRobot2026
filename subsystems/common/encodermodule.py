@@ -3,7 +3,7 @@ from pykit.logger import Logger
 
 from subsystems.common.encodermoduleio import EncoderModuleIO
 
-from westwood.util.logtracer import LogTracer
+from util.logtracer import LogTracer
 
 
 class EncoderModule:
