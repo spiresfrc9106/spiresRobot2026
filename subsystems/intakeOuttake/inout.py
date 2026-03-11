@@ -55,7 +55,7 @@ class InOutDependentConstants(metaclass=Singleton):
                 "HOPPER_OUTTAKE_SPEED_IPS": 40.0,  # in/sec
                 "GROUND_SHOOT_SPEED_IPS": 80.0,  # in/sec
                 "HOPPER_SHOOT_SPEED_IPS": 80.0,  # in/sec
-                "FLYWHEEL_SPEED_IPS": 500.0,  # in/sec
+                "FLYWHEEL_SPEED_IPS": 650.0,  # in/sec
                 "AGITATOR_INTAKE_SPEED_HZ": 10.0,  # Hz, TBD
                 "AGITATOR_OUTTAKE_SPEED_HZ": 10.0,  # Hz, TBD
                 "AGITATOR_SHOOT_SPEED_HZ": 10.0,  # Hz, TBD
@@ -108,7 +108,7 @@ class InOutDependentConstants(metaclass=Singleton):
                 "HOPPER_OUTTAKE_SPEED_IPS": 20.0, # in/sec
                 "GROUND_SHOOT_SPEED_IPS": 40.0,  # in/sec
                 "HOPPER_SHOOT_SPEED_IPS": 20.0, # in/sec
-                "FLYWHEEL_SPEED_IPS": 100.0, # in/sec
+                "FLYWHEEL_SPEED_IPS": 650.0, # in/sec
                 "AGITATOR_INTAKE_SPEED_HZ": 10.0,  # Hz, TBD
                 "AGITATOR_OUTTAKE_SPEED_HZ": 10.0,  # Hz, TBD
                 "AGITATOR_SHOOT_SPEED_HZ": 10.0,  # Hz, TBD

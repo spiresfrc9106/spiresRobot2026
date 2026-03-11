@@ -2,9 +2,11 @@ from typing import Optional
 
 from commands2 import Command, cmd, CommandScheduler
 from wpimath.geometry import Pose2d, Rotation2d
+from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 
 from constants import kFieldLengthIn, kFieldWidthIn, kRobotMode, RobotModes
 from humanInterface.driverInterface import DriverInterface
+from pykit.logger import Logger
 from pykit.networktables.loggeddashboardchooser import LoggedDashboardChooser
 from robotstate import RobotState
 from subsystems.drivetrain.drivetrainsubsystem import DrivetrainSubsystemFactory, DrivetrainSubsystem
@@ -15,13 +17,9 @@ from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from subsystems.vision.visionio import VisionSubsystemIO
 from subsystems.vision.visioniolimelight import VisionSubsystemIOLimelight
 from subsystems.vision.visioniophoton import VisionSubsystemIOPhotonVision
-from subsystems.vision.visionsubsystem import VisionSubsystem
+from subsystems.vision.visionsubsystem import VisionSubsystem, VisionSubsystemFactory
 from utils.allianceTransformUtils import onRed
 from utils.units import deg2Rad, in2m
-
-if kRobotMode == RobotModes.SIMULATION:  # required since opencv can't go on rio
-    # pylint:disable-next=ungrouped-imports
-    from subsystems.vision.visioniophotonsim import VisionSubsystemIOPhotonSim
 
 class RobotContainer:
     """
@@ -44,66 +42,7 @@ class RobotContainer:
         self.drivetrainSubsystem: DrivetrainSubsystem|None = None
         if ConfigSubsystem().useCasseroleSwerve():
             self.drivetrainSubsystem = DrivetrainSubsystemFactory()
-
-        match kRobotMode:
-            case RobotModes.REAL:
-
-                self.vision = VisionSubsystem(
-                    RobotState.addVisionMeasurement,
-                    RobotState.addTurretedVisionMeasurement,
-                    [
-                        VisionSubsystemIOPhotonVision(
-                            "back_center",
-                            kRobotToCamera1Transform, #TODO
-                            RobotState.getRotation,
-                        ),
-                        VisionSubsystemIOPhotonVision(
-                            "front_left",
-                            kRobotToCamera2Transform, #TODO
-                            RobotState.getRotation,
-                        ),
-                        VisionSubsystemIOPhotonVision(
-                            "front_right",
-                            kRobotToCamera2Transform, #TODO
-                            RobotState.getRotation,
-                        ),
-                    ],
-                )
-
-
-            case RobotModes.SIMULATION:
-
-                self.vision = VisionSubsystem(
-                    RobotState.addVisionMeasurement,
-                    RobotState.addTurretedVisionMeasurement,
-                    [
-                        VisionSubsystemIOPhotonSim(
-                            "back_center",
-                            kRobotToCamera1Transform, #TODO
-                            RobotState.getRotation,
-                        ),
-                        VisionSubsystemIOPhotonSim(
-                            "front_left",
-                            kRobotToCamera2Transform, #TODO
-                            RobotState.getRotation,
-                        ),
-                        VisionSubsystemIOPhotonSim(
-                            "front_right",
-                            kRobotToCamera2Transform, #TODO
-                            RobotState.getRotation,
-                        ),
-                    ],
-                )
-
-
-            case _:
-                self.vision = VisionSubsystem(
-                    RobotState.addVisionMeasurement,
-                    RobotState.addTurretedVisionMeasurement,
-                    [VisionSubsystemIO(), VisionSubsystemIO(), VisionSubsystemIO()],
-                )
-
-
+        self.visionSubsystem: VisionSubsystem|None = VisionSubsystemFactory()
 
         self.autoHasRun = False
 
@@ -146,7 +85,28 @@ class RobotContainer:
         self.testChooser.setDefaultOption("Do Nothing Once", cmd.none())
 
     def robotPeriodic(self) -> None:
-        pass
+        if self.drivetrainSubsystem is None:
+            RobotState.periodic(
+                Rotation2d().fromDegrees(0.0), #self.drive.getRawRotation(),
+                Logger.getTimestamp() / 1e6,
+                0.0, #self.drive.getAngularVelocity(),
+                ChassisSpeeds(), #self.drive.getFieldRelativeSpeeds(),
+                (SwerveModulePosition(), SwerveModulePosition(), SwerveModulePosition(), SwerveModulePosition()), #self.drive.getModulePositions(),
+                Rotation2d().fromDegrees(0.0),  # self.turret.position,
+                Rotation2d().fromDegrees(0.0),  # self.intake.position,
+            )
+        else:
+            RobotState.periodic(
+                Rotation2d().fromDegrees(0.0),  # self.drive.getRawRotation(),
+                Logger.getTimestamp()/1e6,
+                0.0,  # self.drive.getAngularVelocity(),
+                ChassisSpeeds(),  # self.drive.getFieldRelativeSpeeds(),
+                (SwerveModulePosition(), SwerveModulePosition(), SwerveModulePosition(), SwerveModulePosition()),
+                # self.drive.getModulePositions(),
+                Rotation2d().fromDegrees(0.0),  # self.turret.position,
+                Rotation2d().fromDegrees(0.0),  # self.intake.position,
+            )
+
 
     def autonomousInit(self) -> None:
         self.autoOrTestCommand = self.autoChooser.getSelected()

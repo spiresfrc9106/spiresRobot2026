@@ -3,12 +3,13 @@ from enum import Enum
 from typing import Optional, List, Tuple, Callable
 
 from commands2 import Command, Subsystem, cmd
-from wpilib import XboxController
+from wpilib import XboxController, RobotBase
+from wpimath.kinematics import ChassisSpeeds
 
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.drivetrainControl import DrivetrainControl
 from drivetrain.drivetrainPhysical import wrapperedSwerveDriveAzmthEncoder, DrivetrainPhysical
-from pykit.autolog import autologgable_output
+from pykit.autolog import autologgable_output, autolog_output
 from pykit.logger import Logger
 from rev import SparkBase, SparkSim
 from wpilib.simulation import LinearSystemSim_1_1_1, FlywheelSim, RoboRioSim, BatterySim
@@ -81,6 +82,22 @@ class DrivetrainSubsystem(Subsystem):
 
     def initialize(self):
         self.casseroleDrivetrain.setManualCmd(self.casseroleDrivetrain.DO_NOTHING_CMD)
+
+    @autolog_output(key="Robot/velocity")
+    def getAngularVelocity(self) -> float:
+        """radians"""
+        if RobotBase.isSimulation() and not Logger.isReplay():
+            # todo value: ChassisSpeeds = self.simVelocityGetter.get()
+            #value: ChassisSpeeds = self.simVelocityGetter.get()
+            #return value.omega
+            return self.inputs.gyro_yaw_rate_rad_per_sec
+        return self.inputs.gyro_yaw_rate_rad_per_sec
+
+    def getFieldRelativeSpeeds(self):
+        pass
+
+    def getModulePositions(self):
+        pass
 
 
     def sysIdMotorModulePreInit(self) -> None:

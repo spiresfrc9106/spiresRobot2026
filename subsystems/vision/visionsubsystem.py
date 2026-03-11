@@ -1,6 +1,11 @@
-from typing import Callable, List
+from typing import Callable, List, Optional
 from commands2 import Subsystem
+
+from constants import kRobotMode, RobotModes
 from pykit.logger import Logger
+from robotstate import RobotState
+from subsystems.state.configsubsystem import ConfigSubsystem
+from subsystems.vision.vision import CameraConfiguration
 
 from subsystems.vision.visionio import VisionSubsystemIO
 
@@ -208,3 +213,32 @@ class VisionSubsystem(Subsystem):
             allTurretedTransformsAccepted,
         )
         LogTracer.recordTotal()
+
+def VisionSubsystemFactory() -> VisionSubsystem | None:
+    VDC = ConfigSubsystem().visionDepConstants
+    vision: Optional[VisionSubsystem] = None
+    if VDC["HAS_VISION"]:
+        io: List[VisionSubsystemIO] = []
+
+        for cam in VDC["CAMS"]:
+            config: CameraConfiguration = VDC[cam]
+
+            match kRobotMode:
+                case RobotModes.REAL:
+                    io.append(config.realCameraIO(config.cameraName, config.robotToCameraTransform))
+                case RobotModes.SIMULATION:
+                    io.append(config.simCameraIO(
+                        config.cameraName,
+                        config.robotToCameraTransform,
+                        # pylint: disable-next=unnecessary-lambda
+                        lambda: RobotState.getSimPose(),))
+                case _:
+                    io.append(VisionSubsystemIO())
+
+        vision = VisionSubsystem(
+            RobotState.addVisionMeasurement,
+            lambda: None,
+            io=io
+        )
+
+    return vision

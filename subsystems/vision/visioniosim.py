@@ -9,6 +9,8 @@ from wpimath.geometry import (
     Transform3d,
     Translation3d,
 )
+
+from constants import RobotModes
 from subsystems.vision.visionio import (
     ObservationType,
     VisionSubsystemIO,

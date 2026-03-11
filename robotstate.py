@@ -52,14 +52,14 @@ class RobotState:
         SwerveModulePosition(),
     )
 
-    """
+
     fieldEstimator: TurretedRobotPoseEstimator = TurretedRobotPoseEstimator(
         kDriveKinematics, Rotation2d(), modulePositions, Pose2d(), (0.1, 0.1, 0.1)
     )
     hubEstimator: TurretedRobotPoseEstimator = TurretedRobotPoseEstimator(
         kDriveKinematics, Rotation2d(), modulePositions, Pose2d(), (0.1, 0.1, 0.1)
     )
-    """
+
     """hub estimator is a pose estimator that cares about being relative to the hub.
     Its poses will be returned as full field, but only use apriltags that are on the hub."""
     odometry: SwerveDrive4Odometry = SwerveDrive4Odometry(
@@ -336,7 +336,7 @@ class RobotState:
             for consumer in cls.simResetPoseConsumers:
                 consumer(pose)
             return
-        print("This is not supposed to happen")
+        #print("This is not supposed to happen")
 
     @classmethod
     def registerSimPoseResetConsumer(cls, consumer: Callable[[Pose2d], None]) -> None:
@@ -346,7 +346,7 @@ class RobotState:
     def getSimPose(cls) -> Pose2d:
         if len(cls.simPoseReceiverConsumers) == 1:
             return cls.simPoseReceiverConsumers[0]()
-        print("This is not supposed to happen")
+        #print("This is not supposed to happen")
         return cls.getFieldPose()
 
     @classmethod
