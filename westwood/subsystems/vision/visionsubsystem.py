@@ -50,7 +50,10 @@ class VisionSubsystem(Subsystem):
         allTurretedTransformsAccepted = []
 
         LogTracer.reset()
+        cameras = 0
+        observations = 0
         for idx, camera in enumerate(self.inputs):
+            cameras += 1
             tagPoses = []
             robotPoses = []
             robotPosesAccepted = []
@@ -66,6 +69,7 @@ class VisionSubsystem(Subsystem):
                     tagPoses.append(tagPose)
 
             for observation in camera.poseObservations:
+                observations += 1
                 rejectPose = (
                     observation.tagCount == 0
                     or (
@@ -190,4 +194,6 @@ class VisionSubsystem(Subsystem):
             "Vision/Summary/TurretedTransformsAccepted",
             allTurretedTransformsAccepted,
         )
+        Logger.recordOutput("Vision/Summary/cameras", cameras)
+        Logger.recordOutput("Vision/Summary/observations", observations)
         LogTracer.recordTotal()

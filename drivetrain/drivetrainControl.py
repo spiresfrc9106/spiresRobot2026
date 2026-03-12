@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-from wpimath.kinematics import ChassisSpeeds, SwerveModuleState
+from wpimath.kinematics import ChassisSpeeds, SwerveModuleState, SwerveModulePosition
 from wpimath.geometry import Pose2d, Rotation2d
 
 from constants import kRobotUpdatePeriodS
@@ -131,7 +131,7 @@ class DrivetrainControl():
         for module in self.modules:
             module.setClosedLoopGains(self.gainsSwerveModule)
 
-    def getModulePositions(self):
+    def getModulePositions(self)->Tuple[SwerveModulePosition,SwerveModulePosition,SwerveModulePosition,SwerveModulePosition]:
         """
         Returns:
             Tuple of the actual module positions (as read from sensors)
@@ -151,6 +151,24 @@ class DrivetrainControl():
             Tuple of the actual module speeds (as read from sensors)
         """
         return tuple(mod.getActualState() for mod in self.modules)
+
+    def getRawRotation(self)->Rotation2d:
+        return self.gyro.getGyroAngleRotation2d()
+
+    def getFieldRelativeChassisSpeeds(self)->ChassisSpeeds:
+        robotRelativeSpeeds: ChassisSpeeds = self.kinematics.toChassisSpeeds(self.getModuleStates())
+        # getPose() returns a Pose2d, which has a rotation() method to get the Rotation2d
+        currentAngle: Rotation2d = self.poseEstimator.getEstimatedPosition().rotation()
+
+        # Convert robot-relative speeds to field-relative speeds
+        fieldRelativeSpeeds: ChassisSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
+            robotRelativeSpeeds.vx,
+            robotRelativeSpeeds.vy,
+            robotRelativeSpeeds.omega,
+            currentAngle
+        )
+
+        return fieldRelativeSpeeds
 
     def resetGyro(self):
         # Update pose estimator to think we're at the same translation,

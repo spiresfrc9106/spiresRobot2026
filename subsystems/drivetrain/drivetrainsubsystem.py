@@ -4,7 +4,8 @@ from typing import Optional, List, Tuple, Callable
 
 from commands2 import Command, Subsystem, cmd
 from wpilib import XboxController, RobotBase
-from wpimath.kinematics import ChassisSpeeds
+from wpimath.geometry import Rotation2d
+from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.drivetrainControl import DrivetrainControl
@@ -83,21 +84,27 @@ class DrivetrainSubsystem(Subsystem):
     def initialize(self):
         self.casseroleDrivetrain.setManualCmd(self.casseroleDrivetrain.DO_NOTHING_CMD)
 
+    def getRawRotation(self) -> Rotation2d:
+        return self.casseroleDrivetrain.getRawRotation()
+
     @autolog_output(key="Robot/velocity")
     def getAngularVelocity(self) -> float:
-        """radians"""
-        if RobotBase.isSimulation() and not Logger.isReplay():
-            # todo value: ChassisSpeeds = self.simVelocityGetter.get()
-            #value: ChassisSpeeds = self.simVelocityGetter.get()
-            #return value.omega
-            return self.inputs.gyro_yaw_rate_rad_per_sec
-        return self.inputs.gyro_yaw_rate_rad_per_sec
+        """radians per sec"""
+        #TODO to get playback to work this needs to become an input/output module.
+        #if RobotBase.isSimulation() and not Logger.isReplay():
+        #    # todo value: ChassisSpeeds = self.simVelocityGetter.get()
+        #    #value: ChassisSpeeds = self.simVelocityGetter.get()
+        #    #return value.omega
+        #    #return self.casseroleDrivetrain.gyro.getRate()
+        return self.casseroleDrivetrain.gyro.getRate()
 
-    def getFieldRelativeSpeeds(self):
-        pass
 
-    def getModulePositions(self):
-        pass
+    def getFieldRelativeChassisSpeeds(self)->ChassisSpeeds:
+        return self.casseroleDrivetrain.getFieldRelativeChassisSpeeds()
+
+    def getModulePositions(self)->Tuple[SwerveModulePosition,SwerveModulePosition,SwerveModulePosition,SwerveModulePosition]:
+        return self.casseroleDrivetrain.getModulePositions()
+
 
 
     def sysIdMotorModulePreInit(self) -> None:

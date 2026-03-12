@@ -87,11 +87,11 @@ class RobotContainer:
     def robotPeriodic(self) -> None:
         if self.drivetrainSubsystem is None:
             RobotState.periodic(
-                Rotation2d().fromDegrees(0.0), #self.drive.getRawRotation(),
+                self.drivetrainSubsystem.getRawRotation(),
                 Logger.getTimestamp() / 1e6,
-                0.0, #self.drive.getAngularVelocity(),
-                ChassisSpeeds(), #self.drive.getFieldRelativeSpeeds(),
-                (SwerveModulePosition(), SwerveModulePosition(), SwerveModulePosition(), SwerveModulePosition()), #self.drive.getModulePositions(),
+                self.drivetrainSubsystem.getAngularVelocity(),
+                self.drivetrainSubsystem.getFieldRelativeChassisSpeeds(),
+                self.drivetrainSubsystem.getModulePositions(),
                 Rotation2d().fromDegrees(0.0),  # self.turret.position,
                 Rotation2d().fromDegrees(0.0),  # self.intake.position,
             )

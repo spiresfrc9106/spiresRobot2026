@@ -47,7 +47,7 @@ class VisionDependentConstants(metaclass=Singleton):
                 "back_center_cam": None,
             },
             RobotTypes.Spires2026: {
-                "HAS_VISION": True,
+                "HAS_VISION": False,
                 "CAMS": ["back_center_cam"],
                 "back_center_cam": kBackCenterCamConfiguration,
             },

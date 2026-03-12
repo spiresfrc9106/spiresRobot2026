@@ -336,7 +336,7 @@ class RobotState:
             for consumer in cls.simResetPoseConsumers:
                 consumer(pose)
             return
-        #print("This is not supposed to happen")
+        print(f"resetSimPose: len={len(cls.simPoseReceiverConsumers)} This is not supposed to happen")
 
     @classmethod
     def registerSimPoseResetConsumer(cls, consumer: Callable[[Pose2d], None]) -> None:
@@ -346,7 +346,7 @@ class RobotState:
     def getSimPose(cls) -> Pose2d:
         if len(cls.simPoseReceiverConsumers) == 1:
             return cls.simPoseReceiverConsumers[0]()
-        #print("This is not supposed to happen")
+        print(f"getSimPose: len={len(cls.simPoseReceiverConsumers)} This is not supposed to happen")
         return cls.getFieldPose()
 
     @classmethod

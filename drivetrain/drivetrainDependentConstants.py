@@ -81,6 +81,8 @@ class DrivetrainDependentConstants(metaclass=Singleton):
         print(f"DrivetrainDependentConstants __init__ self={id(self)}")
 
     def getCommonCams(self, robotType: RobotTypes):
+        COMMON_CAMS = []
+        """
         COMMON_CAMS = [
             {
                 "CAM": wrapperedLimilightCameraFactory("limelight-fl", ROBOT_TO_LIME_1,
@@ -113,6 +115,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "USE_IN_TC_BACK": False,
             },
         ]
+        """
         return COMMON_CAMS
 
     def getDivetrainConstants(self, robotType: RobotTypes):
