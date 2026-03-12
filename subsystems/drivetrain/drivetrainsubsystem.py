@@ -102,6 +102,9 @@ class DrivetrainSubsystem(Subsystem):
     def getFieldRelativeChassisSpeeds(self)->ChassisSpeeds:
         return self.casseroleDrivetrain.getFieldRelativeChassisSpeeds()
 
+    def getRobotRelativeChassisSpeeds(self)->ChassisSpeeds:
+        return self.casseroleDrivetrain.getRobotRelativeChassisSpeeds()
+
     def getModulePositions(self)->Tuple[SwerveModulePosition,SwerveModulePosition,SwerveModulePosition,SwerveModulePosition]:
         return self.casseroleDrivetrain.getModulePositions()
 
