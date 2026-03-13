@@ -53,6 +53,12 @@ class RobotContainer:
             "Test Choices"
         )
 
+        if self.drivetrainSubsystem is not None:
+            self.testChooser.addOption(
+                "drivetrain SysId wheel",
+                self.drivetrainSubsystem.makeSysIdCommandWheelMotors()
+            )
+
         if self.inout is not None:
             self.testChooser.addOption(
                 "inout FF ground",

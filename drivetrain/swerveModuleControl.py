@@ -96,6 +96,8 @@ class SwerveModuleControl:
         self._speedDesTopicName = getSpeedDesTopicName(self.moduleName)
         self._speedActTopicName = getSpeedActTopicName(self.moduleName)
 
+        self.wheelMotorIsClosedLoop = True
+
         # Simulation Support Only
         self.wheelSimFilter = SlewRateLimiter(24.0)
 
@@ -189,7 +191,8 @@ class SwerveModuleControl:
             motorVoltageFF = 0
         else:
             motorVoltageFF = self.wheelMotorFF.calculate(motorDesSpd, motorDesAccel)
-        self.wheelMotor.setVelCmd(motorDesSpd, motorVoltageFF)
+        if self.wheelMotorIsClosedLoop:
+            self.wheelMotor.setVelCmd(motorDesSpd, motorVoltageFF)
 
         self._prevMotorDesSpeed = motorDesSpd  # save for next loop
 

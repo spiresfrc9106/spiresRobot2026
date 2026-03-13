@@ -24,6 +24,7 @@ from subsystems.common.encodermoduleio import EncoderModuleIO
 from subsystems.common.encodermoduleiowrappered import EncoderModuleIOWrappered
 from subsystems.common.encodermoduleiowrapperedsim import EncoderModuleIOWrapperedSim
 from subsystems.common.sysidmotormodule import SysIdMotorModule
+from subsystems.common.sysidmotormodules import SysIdMotorModules
 from subsystems.drivetrain.drivetrainsubsystemio import DrivetrainSubsystemIO
 
 from subsystems.drivetrain.drivetrainsubsystemioreal import DrivetrainSubsystemIOReal
@@ -79,7 +80,12 @@ class DrivetrainSubsystem(Subsystem):
         self.initialize()
         self.setDefaultCommand(self.aDoNothingCommand())
 
-        self.isClosedLoop = True
+        self.sysIdWheelMotors = SysIdMotorModules(
+            XboxController(1),
+            self.sysIdMotorModulePreInit,
+            self.sysIdMotorModulePostInit,
+            self,
+        )
 
     def initialize(self):
         self.casseroleDrivetrain.setManualCmd(self.casseroleDrivetrain.DO_NOTHING_CMD)
@@ -108,14 +114,12 @@ class DrivetrainSubsystem(Subsystem):
     def getModulePositions(self)->Tuple[SwerveModulePosition,SwerveModulePosition,SwerveModulePosition,SwerveModulePosition]:
         return self.casseroleDrivetrain.getModulePositions()
 
-
-
     def sysIdMotorModulePreInit(self) -> None:
         self.initialize()
-        self.setClosedLoop(False)
+        self.casseroleDrivetrain.wheelMotorsAreExternallyControlled()
 
     def sysIdMotorModulePostInit(self) -> None:
-        self.setClosedLoop(True)
+        self.casseroleDrivetrain.wheelMotorsAreClosedLoop()
 
     def periodic(self) -> None:
         """Run ongoing subsystem periodic process."""
@@ -137,45 +141,8 @@ class DrivetrainSubsystem(Subsystem):
     def _updateAllCals(self):
         pass
 
-
-    def _updatePIDGainsAndFeedForward(self) -> None:
-        """
-        for module in motorsAndEncoderSets:
-            module.updatePIDandFF()
-        """
-
-    def periodicUpdateClosedLoopOutputs(self) -> None:
-        """
-        self.groundModule.updateClosedLoopOutput(
-            self.groundInPerSToRadPerS(self.inputs.groundTargetIPS))
-        self.hopperModule.updateClosedLoopOutput(
-            self.hopperInPerSToRadPerS(self.inputs.hopperTargetIPS))
-        self.flywheelModule.updateClosedLoopOutput(
-            self.flywheelInPerSToRadPerS(self.inputs.flywheelTargetIPS))
-        """
-
-    def setClosedLoop(self, closedLoop: bool) -> None:
-        self.isClosedLoop = closedLoop
-
-    """
-    def makeCommandFeedForwardCharacterizationGroundMotor(self) -> Command:
-        return self.sysIdMotorModule.feedForwardCharacterization(self.groundModule)
-
-    def makeCommandFeedForwardCharacterizationHopperMotor(self) -> Command:
-        return self.sysIdMotorModule.feedForwardCharacterization(self.hopperModule)
-
-    def makeCommandFeedForwardCharacterizationFlywheelMotor(self) -> Command:
-        return self.sysIdMotorModule.feedForwardCharacterization(self.flywheelModule)
-
-    def makeSysIdCommandGroundMotor(self) -> Command:
-        return self.sysIdMotorModule.sysIdRoutine("ground", self.groundModule)
-
-    def makeSysIdCommandHopperMotor(self) -> Command:
-        return self.sysIdMotorModule.sysIdRoutine("hopper", self.hopperModule)
-
-    def makeSysIdCommandFlywheelMotor(self) -> Command:
-        return self.sysIdMotorModule.sysIdRoutine("flywheel", self.flywheelModule)
-    """
+    def makeSysIdCommandWheelMotors(self) -> Command:
+        return self.sysIdWheelMotors.sysIdRoutine("wheel", self.wheelModules)
 
     def doNothing(self):
         pass

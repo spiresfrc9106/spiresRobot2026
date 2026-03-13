@@ -33,7 +33,7 @@ class WrapperedSparkFlex(WrapperedMotorSuper):
         self.currentLimitA = round(currentLimitA)
         self.configSuccess = False
         self.disconFault = Fault(f"Spark Controller {name} ID {canID} disconnected")
-        self.simActPos = 0
+        self.simActPos = 0.0
         self.canID = canID
 
         # pylint: disable= R0801

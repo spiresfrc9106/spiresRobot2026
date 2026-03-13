@@ -192,6 +192,15 @@ class DrivetrainControl():
     def setElevLimiter(self, elevLimit):
         self.elevSpeedLimit = elevLimit
 
+    def wheelMotorsAreClosedLoop(self):
+        for module in self.modules:
+            module.wheelMotorIsClosedLoop = True
+
+    def wheelMotorsAreExternallyControlled(self):
+        for module in self.modules:
+            module.wheelMotorIsClosedLoop = False
+
+
 
 def _discretizeChSpd(chSpd):
     """See https://www.chiefdelphi.com/t/whitepaper-swerve-drive-skew-and-second-order-kinematics/416964/30
