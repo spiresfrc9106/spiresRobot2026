@@ -2,6 +2,7 @@ import random
 import math
 from typing import Tuple
 
+from wpimath._controls._controls.controller import SimpleMotorFeedforwardRadians
 from wpimath.controller import SimpleMotorFeedforwardMeters
 from wpimath.controller import PIDController
 from wpimath.kinematics import SwerveModuleState
@@ -9,6 +10,8 @@ from wpimath.kinematics import SwerveModulePosition
 from wpimath.geometry import Rotation2d
 from wpimath.filter import SlewRateLimiter
 from wpilib import TimedRobot
+
+from constants import kRobotUpdatePeriodS
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.drivetrainPhysical import wrapperedSwerveDriveAzmthEncoder
 from drivetrain.swerveModuleGainSet import SwerveModuleGainSet
@@ -96,6 +99,8 @@ class SwerveModuleControl:
         self._speedDesTopicName = getSpeedDesTopicName(self.moduleName)
         self._speedActTopicName = getSpeedActTopicName(self.moduleName)
 
+        self.wheelMotorIsClosedLoop = True
+
         # Simulation Support Only
         self.wheelSimFilter = SlewRateLimiter(24.0)
 
@@ -135,8 +140,9 @@ class SwerveModuleControl:
                 math.isclose(gains.wheelA.get(), 0):
             self.wheelMotorFF = None
         else:
-            self.wheelMotorFF = SimpleMotorFeedforwardMeters(
-                gains.wheelS.get(), gains.wheelV.get(), gains.wheelA.get()
+            self.wheelMotorFF = SimpleMotorFeedforwardRadians(
+                gains.wheelS.get(), gains.wheelV.get(), gains.wheelA.get(),
+                kRobotUpdatePeriodS
             )
         self.azmthCtrl.setPID(
             gains.azmthP.get(), gains.azmthI.get(), gains.azmthD.get()
@@ -184,12 +190,13 @@ class SwerveModuleControl:
 
         # Send voltage and speed xyzzy to the wheel motor
         motorDesSpd = self.dtLinearToMotorRot(self.optimizedDesiredState.speed)
-        motorDesAccel = (motorDesSpd - self._prevMotorDesSpeed) / 0.02
+        motorDesAccel = (motorDesSpd - self._prevMotorDesSpeed) / kRobotUpdatePeriodS
         if self.wheelMotorFF is None:
             motorVoltageFF = 0
         else:
             motorVoltageFF = self.wheelMotorFF.calculate(motorDesSpd, motorDesAccel)
-        self.wheelMotor.setVelCmd(motorDesSpd, motorVoltageFF)
+        if self.wheelMotorIsClosedLoop:
+            self.wheelMotor.setVelCmd(motorDesSpd, motorVoltageFF)
 
         self._prevMotorDesSpeed = motorDesSpd  # save for next loop
 

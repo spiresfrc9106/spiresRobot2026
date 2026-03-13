@@ -68,6 +68,7 @@ class DrivetrainPoseEstimator:
         # Using just inverse kinematics, no kalman filter. This is used only
         # to produce a reasonable-looking simulated gyroscope.
         self._simPose = Pose2d()
+        self._knownPose = Pose2d()
         self.lastCamEstRobotPos = Pose2d()
 
 
@@ -79,6 +80,7 @@ class DrivetrainPoseEstimator:
             knownPose (Pose2d): The pose we know we're at
         """
         if wpilib.TimedRobot.isSimulation():
+            self._knownPose = knownPose
             self._simPose = knownPose
             self._curRawGyroAngle = knownPose.rotation()
 
@@ -160,6 +162,12 @@ class DrivetrainPoseEstimator:
     # Local helper to wrap the real hardware angle into a Rotation2d
     def _getGyroAngle(self)->Rotation2d:
          return self._gyro.getGyroAngleRotation2d()
+
+    def getRealOrSimRawGyroAngle(self)->Rotation2d:
+        if wpilib.TimedRobot.isSimulation():
+            return self._curRawGyroAngle - self._knownPose.rotation()
+        else:
+           return self._curRawGyroAngle
     
     def _adjustOutsideReef(self, poseIn: Pose2d, reefTrans: Translation2d) -> Pose2d:
         # TODO-rms was:if (poseIn.translation().distance(reefTrans) < SCORE_DIST_FROM_REEF_CENTER):

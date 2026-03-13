@@ -55,7 +55,7 @@ from westwood.constants.trajectory import (
     kPathFollowingRotationConstants,
 )
 from constants import kRobotUpdatePeriodS
-from westwood.util.logtracer import LogTracer
+from util.logtracer import LogTracer
 from westwood.util import convenientmath
 
 

@@ -5,7 +5,7 @@ from pykit.autolog import autolog_output, autologgable_output
 
 from subsystems.state.robottopio import RobotTopIO
 from utils.singleton import _instances
-from westwood.util.logtracer import LogTracer
+from util.logtracer import LogTracer
 
 # pylint: disable-next=too-many-instance-attributes
 @autologgable_output

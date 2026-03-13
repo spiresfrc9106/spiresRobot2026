@@ -6,7 +6,7 @@ from pykit.logger import Logger
 from subsystems.common.motormoduleio import MotorModuleIO
 
 from utils.calibration import Calibration
-from westwood.util.logtracer import LogTracer
+from util.logtracer import LogTracer
 
 if TYPE_CHECKING:
     from subsystems.common.motormodulecontroller import MotorModuleController

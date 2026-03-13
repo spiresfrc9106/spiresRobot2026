@@ -5,9 +5,10 @@ from pykit.autolog import autologgable_output
 
 from subsystems.state.configio import ConfigIO, RobotTypes
 from subsystems.intakeOuttake.inout import InOutDependentConstants
+from subsystems.vision.vision import VisionDependentConstants
 from utils.singleton import _instances
 from constants import kRobotMode
-from westwood.util.logtracer import LogTracer
+from util.logtracer import LogTracer
 
 # pylint: disable-next=too-many-instance-attributes
 @autologgable_output
@@ -47,10 +48,10 @@ class ConfigSubsystem(Subsystem):
         from drivetrain.drivetrainDependentConstants import DrivetrainDependentConstants, CameraDependentConstants
         self.dpc = DrivetrainDependentConstants()
         self.drivetrainDepConstants = self.dpc.get(self._robotType)
-        self.cameraDepConstants = CameraDependentConstants().get(self._robotType)
 
         self.cameraDepConstants = CameraDependentConstants().get(self._robotType)
         self.inoutDepConstants = InOutDependentConstants().get(self._robotType)
+        self.visionDepConstants = VisionDependentConstants().get(self._robotType)
         print(f":::::::::::")
         print(f"::::::::::: ConfigSubsystem: {kRobotMode} {self._robotType}")
         print(f":::::::::::")
@@ -89,11 +90,4 @@ class ConfigSubsystem(Subsystem):
     def useWestwoodSwerve(self) -> bool:
         return self.drivetrainDepConstants["HAS_DRIVETRAIN"] and self.dpc.useWestwoodSwerve
 
-    def getFPGATimeUS(self) -> int:
-        """The time of the current robot periodic loop in microseconds."""
-        return self.inputs.timeUSec
-
-    def getFPGATimestampS(self) -> float:
-        """The time of the current robot periodic loop in seconds."""
-        return self.inputs.timeUSec / 1.0e6
 

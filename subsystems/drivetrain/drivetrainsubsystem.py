@@ -3,12 +3,14 @@ from enum import Enum
 from typing import Optional, List, Tuple, Callable
 
 from commands2 import Command, Subsystem, cmd
-from wpilib import XboxController
+from wpilib import XboxController, RobotBase
+from wpimath.geometry import Rotation2d
+from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.drivetrainControl import DrivetrainControl
 from drivetrain.drivetrainPhysical import wrapperedSwerveDriveAzmthEncoder, DrivetrainPhysical
-from pykit.autolog import autologgable_output
+from pykit.autolog import autologgable_output, autolog_output
 from pykit.logger import Logger
 from rev import SparkBase, SparkSim
 from wpilib.simulation import LinearSystemSim_1_1_1, FlywheelSim, RoboRioSim, BatterySim
@@ -22,6 +24,7 @@ from subsystems.common.encodermoduleio import EncoderModuleIO
 from subsystems.common.encodermoduleiowrappered import EncoderModuleIOWrappered
 from subsystems.common.encodermoduleiowrapperedsim import EncoderModuleIOWrapperedSim
 from subsystems.common.sysidmotormodule import SysIdMotorModule
+from subsystems.common.sysidmotormodules import SysIdMotorModules
 from subsystems.drivetrain.drivetrainsubsystemio import DrivetrainSubsystemIO
 
 from subsystems.drivetrain.drivetrainsubsystemioreal import DrivetrainSubsystemIOReal
@@ -37,7 +40,7 @@ from utils.constants import DT_FL_AZMTH_CANID, DT_FL_AZMTH_ENC_PORT, DT_FL_WHEEL
     DT_BR_WHEEL_CANID, DT_BR_AZMTH_CANID, DT_BR_AZMTH_ENC_PORT
 
 from utils.units import radPerSec2RPM, rad2Deg
-from westwood.util.logtracer import LogTracer
+from util.logtracer import LogTracer
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
 from wrappers.wrapperedRevThroughBoreEncoder import WrapperedRevThroughBoreEncoder
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
@@ -77,18 +80,48 @@ class DrivetrainSubsystem(Subsystem):
         self.initialize()
         self.setDefaultCommand(self.aDoNothingCommand())
 
-        self.isClosedLoop = True
+        self.sysIdWheelMotors = SysIdMotorModules(
+            XboxController(1),
+            self.sysIdMotorModulePreInit,
+            self.sysIdMotorModulePostInit,
+            self,
+        )
 
     def initialize(self):
         self.casseroleDrivetrain.setManualCmd(self.casseroleDrivetrain.DO_NOTHING_CMD)
 
+    def getRawRotation(self) -> Rotation2d:
+        return self.casseroleDrivetrain.getRawRotation()
+
+    @autolog_output(key="Robot/velocity")
+    def getAngularVelocity(self) -> float:
+        """radians per sec"""
+        #TODO to get playback to work this needs to become an input/output module.
+        #if RobotBase.isSimulation() and not Logger.isReplay():
+        #    # todo value: ChassisSpeeds = self.simVelocityGetter.get()
+        #    #value: ChassisSpeeds = self.simVelocityGetter.get()
+        #    #return value.omega
+        #    #return self.casseroleDrivetrain.gyro.getRate()
+        return self.casseroleDrivetrain.gyro.getRate()
+
+
+    def getFieldRelativeChassisSpeeds(self)->ChassisSpeeds:
+        return self.casseroleDrivetrain.getFieldRelativeChassisSpeeds()
+
+    def getRobotRelativeChassisSpeeds(self)->ChassisSpeeds:
+        return self.casseroleDrivetrain.getRobotRelativeChassisSpeeds()
+
+    def getModulePositions(self)->Tuple[SwerveModulePosition,SwerveModulePosition,SwerveModulePosition,SwerveModulePosition]:
+        return self.casseroleDrivetrain.getModulePositions()
 
     def sysIdMotorModulePreInit(self) -> None:
         self.initialize()
-        self.setClosedLoop(False)
+        self.casseroleDrivetrain.wheelMotorsAreExternallyControlled()
+        cmd = DrivetrainCommand(velX=1.0, velY=0.0, velT=0.0, robotRelative=True)
+        self.casseroleDrivetrain.setManualCmd(cmd)
 
     def sysIdMotorModulePostInit(self) -> None:
-        self.setClosedLoop(True)
+        self.casseroleDrivetrain.wheelMotorsAreClosedLoop()
 
     def periodic(self) -> None:
         """Run ongoing subsystem periodic process."""
@@ -110,45 +143,8 @@ class DrivetrainSubsystem(Subsystem):
     def _updateAllCals(self):
         pass
 
-
-    def _updatePIDGainsAndFeedForward(self) -> None:
-        """
-        for module in motorsAndEncoderSets:
-            module.updatePIDandFF()
-        """
-
-    def periodicUpdateClosedLoopOutputs(self) -> None:
-        """
-        self.groundModule.updateClosedLoopOutput(
-            self.groundInPerSToRadPerS(self.inputs.groundTargetIPS))
-        self.hopperModule.updateClosedLoopOutput(
-            self.hopperInPerSToRadPerS(self.inputs.hopperTargetIPS))
-        self.flywheelModule.updateClosedLoopOutput(
-            self.flywheelInPerSToRadPerS(self.inputs.flywheelTargetIPS))
-        """
-
-    def setClosedLoop(self, closedLoop: bool) -> None:
-        self.isClosedLoop = closedLoop
-
-    """
-    def makeCommandFeedForwardCharacterizationGroundMotor(self) -> Command:
-        return self.sysIdMotorModule.feedForwardCharacterization(self.groundModule)
-
-    def makeCommandFeedForwardCharacterizationHopperMotor(self) -> Command:
-        return self.sysIdMotorModule.feedForwardCharacterization(self.hopperModule)
-
-    def makeCommandFeedForwardCharacterizationFlywheelMotor(self) -> Command:
-        return self.sysIdMotorModule.feedForwardCharacterization(self.flywheelModule)
-
-    def makeSysIdCommandGroundMotor(self) -> Command:
-        return self.sysIdMotorModule.sysIdRoutine("ground", self.groundModule)
-
-    def makeSysIdCommandHopperMotor(self) -> Command:
-        return self.sysIdMotorModule.sysIdRoutine("hopper", self.hopperModule)
-
-    def makeSysIdCommandFlywheelMotor(self) -> Command:
-        return self.sysIdMotorModule.sysIdRoutine("flywheel", self.flywheelModule)
-    """
+    def makeSysIdCommandWheelMotors(self) -> Command:
+        return self.sysIdWheelMotors.sysIdRoutine("wheel", self.wheelModules)
 
     def doNothing(self):
         pass

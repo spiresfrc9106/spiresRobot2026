@@ -5,7 +5,7 @@ from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
 from westwood.subsystems.drive.swervemoduleio import SwerveModuleIO
 
 from westwood.constants.drive import kMinWheelLinearVelocity, kWheelRadius
-from westwood.util.logtracer import LogTracer
+from util.logtracer import LogTracer
 
 
 class SwerveModule:

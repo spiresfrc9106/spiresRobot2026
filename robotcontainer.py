@@ -2,18 +2,21 @@ from typing import Optional
 
 from commands2 import Command, cmd, CommandScheduler
 from wpimath.geometry import Pose2d, Rotation2d
+from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 
-from constants import kFieldLengthIn, kFieldWidthIn
+from constants import kFieldLengthIn, kFieldWidthIn, kRobotMode, RobotModes
 from humanInterface.driverInterface import DriverInterface
+from pykit.logger import Logger
 from pykit.networktables.loggeddashboardchooser import LoggedDashboardChooser
+from robotstate import RobotState
 from subsystems.drivetrain.drivetrainsubsystem import DrivetrainSubsystemFactory, DrivetrainSubsystem
 from subsystems.intakeOuttake.inoutsubsystem import InOutSubsystem, inoutSubsystemFactory
 
 from subsystems.state.configsubsystem import ConfigSubsystem
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
+from subsystems.vision.visionsubsystem import VisionSubsystem, VisionSubsystemFactory
 from utils.allianceTransformUtils import onRed
 from utils.units import deg2Rad, in2m
-
 
 class RobotContainer:
     """
@@ -36,6 +39,7 @@ class RobotContainer:
         self.drivetrainSubsystem: DrivetrainSubsystem|None = None
         if ConfigSubsystem().useCasseroleSwerve():
             self.drivetrainSubsystem = DrivetrainSubsystemFactory()
+        self.visionSubsystem: VisionSubsystem|None = VisionSubsystemFactory()
 
         self.autoHasRun = False
 
@@ -48,6 +52,12 @@ class RobotContainer:
         self.testChooser: LoggedDashboardChooser[Command] = LoggedDashboardChooser(
             "Test Choices"
         )
+
+        if self.drivetrainSubsystem is not None:
+            self.testChooser.addOption(
+                "drivetrain SysId wheel",
+                self.drivetrainSubsystem.makeSysIdCommandWheelMotors()
+            )
 
         if self.inout is not None:
             self.testChooser.addOption(
@@ -78,7 +88,29 @@ class RobotContainer:
         self.testChooser.setDefaultOption("Do Nothing Once", cmd.none())
 
     def robotPeriodic(self) -> None:
-        pass
+        if self.visionSubsystem is not None:
+            if self.drivetrainSubsystem is None:
+                RobotState.periodic(
+                    Rotation2d().fromDegrees(0.0),  # self.drive.getRawRotation(),
+                    Logger.getTimestamp()/1e6,
+                    0.0,  # self.drive.getAngularVelocity(),
+                    ChassisSpeeds(),  # self.drive.getFieldRelativeSpeeds(),
+                    (SwerveModulePosition(), SwerveModulePosition(), SwerveModulePosition(), SwerveModulePosition()),
+                    # self.drive.getModulePositions(),
+                    Rotation2d().fromDegrees(0.0),  # self.turret.position,
+                    Rotation2d().fromDegrees(0.0),  # self.intake.position,
+                )
+            else:
+                RobotState.periodic(
+                    self.drivetrainSubsystem.getRawRotation(),
+                    Logger.getTimestamp() / 1e6,
+                    self.drivetrainSubsystem.getAngularVelocity(),
+                    self.drivetrainSubsystem.getFieldRelativeChassisSpeeds(),
+                    self.drivetrainSubsystem.getModulePositions(),
+                    Rotation2d().fromDegrees(0.0),  # self.turret.position,
+                    Rotation2d().fromDegrees(0.0),  # self.intake.position,
+                )
+
 
     def autonomousInit(self) -> None:
         self.autoOrTestCommand = self.autoChooser.getSelected()
@@ -100,13 +132,12 @@ class RobotContainer:
                 robotStartXIn = 40.0
                 robotStartYIn = 80.0
                 if onRed():
-                    self.drivetrainSubsystem.casseroleDrivetrain.poseEst.setKnownPose(
-                        Pose2d(in2m(kFieldLengthIn-robotStartXIn), in2m(kFieldWidthIn-robotStartYIn), Rotation2d(deg2Rad(180)))
-                    )
+                    startPose = Pose2d(in2m(kFieldLengthIn-robotStartXIn), in2m(kFieldWidthIn-robotStartYIn), Rotation2d(deg2Rad(180)))
                 else:
-                    self.drivetrainSubsystem.casseroleDrivetrain.poseEst.setKnownPose(
-                        Pose2d(in2m(robotStartXIn), in2m(robotStartYIn), Rotation2d(deg2Rad(0)))
-                    )
+                    startPose = Pose2d(in2m(robotStartXIn), in2m(robotStartYIn), Rotation2d(deg2Rad(0)))
+            self.drivetrainSubsystem.casseroleDrivetrain.poseEst.setKnownPose(startPose)
+            if self.visionSubsystem is not None:
+                RobotState.resetPose(startPose)
             self.drivetrainSubsystem.casseroleDrivetrain.poseEst._telemetry.setCurAutoTrajectory(None)
             self.drivetrainSubsystem.setDefaultCommand(
                 self.drivetrainSubsystem.arcadeDriveClosedLoop(DriverInterface().getCmd)

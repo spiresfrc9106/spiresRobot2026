@@ -11,7 +11,7 @@ from westwood.util.robotposeestimator import (
     TurretedRobotPoseEstimator,
     VisionObservation,
 )
-from westwood.util.logtracer import LogTracer
+from util.logtracer import LogTracer
 from westwood.constants.drive import kDriveKinematics
 #from westwood.constants.turret import kTurretLocation
 from westwood.constants.auto import kAutoDistanceTolerance, kAutoRotationTolerance

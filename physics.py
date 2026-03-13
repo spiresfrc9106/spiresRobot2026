@@ -9,14 +9,12 @@
 # of your robot code without too much extra effort.
 #
 
-from phoenix6.unmanaged import feed_enable
 from wpilib import RobotController
 from wpimath.geometry import Pose2d, Rotation2d, Transform2d
 from pyfrc.physics.core import PhysicsInterface
 from robot import MyRobot
-from westwood.robotstate import RobotState
-from westwood.subsystems.drive.swervemoduleiotalonfx import SwerveModuleIOCTRE
-from westwood.subsystems.drive.drivesubsystem import DriveSubsystem
+from robotstate import RobotState
+from subsystems.drivetrain.drivetrainsubsystem import DrivetrainSubsystem
 
 from westwood.constants.sim import (
     kSimDefaultRobotLocation,
@@ -24,8 +22,8 @@ from westwood.constants.sim import (
 
 
 class SwerveDriveSim:
-    def __init__(self, driveSubsystem: DriveSubsystem) -> None:
-        self.driveSubsystem = driveSubsystem
+    def __init__(self, drivetrainSubsystem: DrivetrainSubsystem) -> None:
+        self.drivetrainSubsystem = drivetrainSubsystem
         self.pose = kSimDefaultRobotLocation
 
     def resetPose(self, pose) -> None:
@@ -43,7 +41,7 @@ class SwerveDriveSim:
     def update(self, tm_diff: float, _robotVoltage: float) -> None:
         deltaT = tm_diff
 
-        chassisSpeed = self.driveSubsystem.getRobotRelativeSpeeds()
+        chassisSpeed = self.drivetrainSubsystem.getRobotRelativeChassisSpeeds()
         deltaHeading = chassisSpeed.omega * deltaT
         deltaX = chassisSpeed.vx * deltaT
         deltaY = chassisSpeed.vy * deltaT
@@ -91,23 +89,25 @@ class PhysicsEngine:
 
         print(f"{self.bot.count} PhysicsEngine.__init__")
 
-        driveSubsystem: DriveSubsystem|None = None
-        if robot.westwoodContainer is not None:
-            driveSubsystem: DriveSubsystem = robot.westwoodContainer.drive
+        drivetrainSubsystem: DrivetrainSubsystem|None = None
+        if robot.container.drivetrainSubsystem is not None:
+            drivetrainSubsystem = robot.container.drivetrainSubsystem
+        #if robot.westwoodContainer is not None:
+        #    drivetrainSubsystem: DrivetrainSubsystem = robot.westwoodContainer.drive
 
-        if driveSubsystem is None or not isinstance(driveSubsystem.frontLeftModule.io, SwerveModuleIOCTRE):
-            # do not simulation
-            self.doSim = False
-            print("[Physics] WARNING: Westwood Swerve is Not simulating")
-            return
+        #if drivetrainSubsystem is None or not isinstance(drivetrainSubsystem.frontLeftModule.io, SwerveModuleIOCTRE):
+        #    # do not simulation
+        #    self.doSim = False
+        #    print("[Physics] WARNING: Westwood Swerve is Not simulating")
+        #    return
 
         self.doSim = True
         print("[Physics] beginning simulation")
 
-        self.driveSim = SwerveDriveSim(driveSubsystem)
+        self.driveSim = SwerveDriveSim(drivetrainSubsystem)
 
         RobotState.registerSimPoseResetConsumer(self.driveSim.resetPose)
-        RobotState.registerSimPoseRecieverConsumer(self.driveSim.getSimPose)
+        RobotState.registerSimPoseReceiverConsumer(self.driveSim.getSimPose)
 
         self.sim_initialized = False
 
@@ -124,7 +124,6 @@ class PhysicsEngine:
         """
         if not self.doSim:
             return
-        feed_enable(tm_diff)
 
         if not self.sim_initialized:
             self.sim_initialized = True

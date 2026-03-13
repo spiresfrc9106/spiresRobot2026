@@ -30,7 +30,7 @@ from subsystems.common.motormoduleiowrapperedsim import MotorModuleIOWrapperedSi
 from subsystems.state.configsubsystem import ConfigSubsystem
 
 from utils.units import radPerSec2RPM
-from westwood.util.logtracer import LogTracer
+from util.logtracer import LogTracer
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
 from wrappers.wrapperedSparkFlex import WrapperedSparkFlex
 from wrappers.wrapperedSparkMax import WrapperedSparkMax

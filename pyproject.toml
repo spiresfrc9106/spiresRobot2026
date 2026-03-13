@@ -13,7 +13,7 @@ dependencies = [
     "black~=26.1.0",
     "mypy>=1.19.1",
     "phoenix6>=26.1.0",
-    "photonlibpy~=2026.1.1",
+    "photonlibpy~=2026.3.1",
     "pylint>=4.0.2",
     "robotpy>=2026.2.1.1",
     "robotpy-apriltag>=2026.2.1",
@@ -63,7 +63,7 @@ components = [
 # Other pip packages to install
 requires = [
     #"robotpy-pykit==1.0.3",
-    "photonlibpy==2026.1.1",
+    "photonlibpy==2026.3.1",
     "robotpy-pathplannerlib>=2026.1.1",
     "debugpy",
     "phoenix6",
