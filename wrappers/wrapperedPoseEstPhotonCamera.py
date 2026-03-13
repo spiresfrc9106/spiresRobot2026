@@ -1,16 +1,21 @@
 from dataclasses import dataclass
 import wpilib
+from photonlibpy.targeting import PhotonPipelineResult
+from robotpy_apriltag import AprilTagFieldLayout, AprilTagField
 from wpimath.units import feetToMeters, degreesToRadians
 from wpimath.geometry import Pose2d
 
+from constants.vision import kMaxVisionAmbiguity
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from wrappers.casserolePhotonCamera import PhotonCamera
 from photonlibpy.targeting.photonTrackedTarget import PhotonTrackedTarget
 from photonlibpy.photonCamera import setVersionCheckEnabled
+from photonlibpy import PhotonPoseEstimator, PhotonCamera, EstimatedRobotPose
+
 from utils.fieldTagLayout import FieldTagLayout
 from utils.faults import Fault
 
-# Describes one on-field pose estimate from the a camera at a specific time.
+# Describes one on-field pose estimate from the acamera at a specific time.
 @dataclass
 class CameraPoseObservation:
     time:float
@@ -44,6 +49,11 @@ class WrapperedPoseEstPhotonCamera:
         self.prevTimestampSec = 0.0
         self.singleTagModeTagList = None #not currently used
 
+        self.camPoseEst = PhotonPoseEstimator(
+            AprilTagFieldLayout.loadField(AprilTagField.kDefaultField),
+            self.robotToCam,
+        )
+
 
         self.lastCaptureTime = RobotTopSubsystem().getFPGATimestampS()
         self.CAP_PERIOD_SEC = 0.025
@@ -62,99 +72,20 @@ class WrapperedPoseEstPhotonCamera:
             # Faulted - no estimates, just return.
             self.disconFault.setFaulted()
             return
-        
-        # Periodically trigger a photo capture
-        if(wpilib.DriverStation.isEnabled()):
-            if( (startTime - self.lastCaptureTime) > self.CAP_PERIOD_SEC):
-                self.lastCaptureTime = startTime
-                self.cam.takeOutputSnapshot()
-        
 
-        # Grab whatever the camera last reported for observations in all camera frames
-        res = self.cam.getLatestResult()
+        for result in self.cam.getAllUnreadResults():
+            if RobotTopSubsystem().getFPGATimestampS()-result.getTimestampSeconds()<0.1:
+                camEstPose: EstimatedRobotPose  = self.camPoseEst.estimateCoprocMultiTagPose(result)
+                if camEstPose is None:
+                    camEstPose = self.camPoseEst.estimateLowestAmbiguityPose(result)
 
-        if (res.getTimestampSeconds() != self.prevTimestampSec): # Only process if new timestamp
-            resIdx = 0
-            self.prevTimestampSec = res.getTimestampSeconds()
-            obsTime = res.getTimestampSeconds()
-            self.lastLatency = RobotTopSubsystem().getFPGATimestampS() - obsTime
-            self.disconFault.setNoFault()
-
-
-            # Process each target.
-            # Each target has multiple solutions for where you could have been at on the field
-            # when you observed it
-            # (https://docs.wpilib.org/en/stable/docs/software/vision-processing/
-            # apriltag/apriltag-intro.html#d-to-3d-ambiguity)
-            # We want to select the best possible pose per target
-            # We should also filter out targets that are too far away, and poses which
-            # don't make sense.
-            for tgtIdx, target in enumerate(res.getTargets()):
-                # Transform both poses to on-field poses
-                tgtID = target.getFiducialId()
-
-                if tgtID >= 0:
-                    # Only handle valid ID's
-                    tagFieldPose = FieldTagLayout().lookup(tgtID)
-
-                    if tagFieldPose is not None:
-                        # Only handle known tags
-                        poseCandidates:list[Pose2d] = []
-                        if target.getPoseAmbiguity() <= 0.05:
-                            # Only use very non-ambiguous estimates, throw the ambiguous ones out
-                            poseCandidates.append(
-                                self._toFieldPose(tagFieldPose, target.getBestCameraToTarget())
-                            )
-                            poseCandidates.append(
-                                self._toFieldPose(tagFieldPose, target.getAlternateCameraToTarget())
-                            )
-
-
-                        # Filter candidates in this frame to only the valid ones
-                        filteredCandidates:list[Pose2d] = []
-                        for poseCandidate in poseCandidates:
-
-                            # True if we're either not in single tag mode, 
-                            # or (if we are) the tag matches
-                            matchesSingleTag = (self.singleTagModeTagList is None or tgtID in self.singleTagModeTagList)
-
-                            # Discard the bad tags on our practice field at least
-                            isHorrible = tgtID in HUMAN_STATION_TAG_IDS or tgtID in BARGE_TAG_IDS
-
-                            # is on field
-                            onField = self._poseIsOnField(poseCandidate)
-                            closeEnough = self._closeEnoughToCamera(target)
-                            # Add other filter conditions here
-                            if onField and closeEnough and not isHorrible and matchesSingleTag:
-                                filteredCandidates.append(poseCandidate)
-
-
-                        # Pick the candidate closest to the last estimate
-                        bestCandidate:(Pose2d|None) = None
-                        bestCandidateDist = 99999999.0
-                        for poseCandidate in filteredCandidates:
-                            delta = (poseCandidate - prevEstPose).translation().norm()
-                            if delta < bestCandidateDist:
-                                # This candidate is better, use it
-                                bestCandidate = poseCandidate
-                                bestCandidateDist = delta
-
-
-                        # Finally, add our best candidate the list of pose observations
-                        if bestCandidate is not None:
-                            # TODO: we can probably get better standard deviations than just
-                            # assuming the default. Check out what 254 did in 2024:
-                            # https://github.com/Team254/FRC-2024-Public/blob/040f653744c9b18182be5f6bc51a7e505e346e59/src/main/java/com/team254/frc2024/subsystems/vision/VisionSubsystem.java#L381
-                            
-                            # First pass - we trust reef tags more
-                            stdDev = 1.0 if tgtID in REEF_TAG_IDS else 3.0
-                            
-                            self.poseEstimates.append(
-                                CameraPoseObservation(obsTime, 
-                                                    bestCandidate, 
-                                                    xyStdDev=stdDev)
-                            )
-
+                if camEstPose is not None:
+                    self.poseEstimates.append(
+                        CameraPoseObservation(time=camEstPose.timestampSeconds,
+                                              estFieldPose=camEstPose.estimatedPose.toPose2d(),
+                                              xyStdDev=1.0,
+                                              rotStdDev=degreesToRadians(60.0))
+                    )
 
         endTime = RobotTopSubsystem().getFPGATimestampS()
         self.updateDuration = (endTime - startTime)*1000.0

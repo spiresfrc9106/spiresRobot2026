@@ -1,5 +1,6 @@
 from typing import Callable, List, Optional
 from commands2 import Subsystem
+from wpimath.geometry import Transform3d
 
 from constants import kRobotMode, RobotModes
 from pykit.logger import Logger
@@ -222,6 +223,8 @@ def VisionSubsystemFactory() -> VisionSubsystem | None:
 
         for cam in VDC["CAMS"]:
             config: CameraConfiguration = VDC[cam]
+            t:Transform3d = config.robotToCameraTransform
+            print(f"{cam} {t.X()} {t.Y()} {t.Z()} {t.rotation().X()} {t.rotation().Y()} {t.rotation().Z()}")
 
             match kRobotMode:
                 case RobotModes.REAL:

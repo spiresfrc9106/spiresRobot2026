@@ -31,6 +31,8 @@ kRobotToBackCenterCamTransform = Transform3d(
     ),
 )
 
+# Joey is designing the second back center camera to tilt up 40 degrees.
+
 kBackCenterCamConfiguration = CameraConfiguration(
     cameraName="back_center_cam",
     realCameraIO=VisionSubsystemIOPhotonVision,

@@ -14,9 +14,6 @@ from subsystems.intakeOuttake.inoutsubsystem import InOutSubsystem, inoutSubsyst
 
 from subsystems.state.configsubsystem import ConfigSubsystem
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
-from subsystems.vision.visionio import VisionSubsystemIO
-from subsystems.vision.visioniolimelight import VisionSubsystemIOLimelight
-from subsystems.vision.visioniophoton import VisionSubsystemIOPhotonVision
 from subsystems.vision.visionsubsystem import VisionSubsystem, VisionSubsystemFactory
 from utils.allianceTransformUtils import onRed
 from utils.units import deg2Rad, in2m
@@ -85,27 +82,28 @@ class RobotContainer:
         self.testChooser.setDefaultOption("Do Nothing Once", cmd.none())
 
     def robotPeriodic(self) -> None:
-        if self.drivetrainSubsystem is None:
-            RobotState.periodic(
-                Rotation2d().fromDegrees(0.0),  # self.drive.getRawRotation(),
-                Logger.getTimestamp()/1e6,
-                0.0,  # self.drive.getAngularVelocity(),
-                ChassisSpeeds(),  # self.drive.getFieldRelativeSpeeds(),
-                (SwerveModulePosition(), SwerveModulePosition(), SwerveModulePosition(), SwerveModulePosition()),
-                # self.drive.getModulePositions(),
-                Rotation2d().fromDegrees(0.0),  # self.turret.position,
-                Rotation2d().fromDegrees(0.0),  # self.intake.position,
-            )
-        else:
-            RobotState.periodic(
-                self.drivetrainSubsystem.getRawRotation(),
-                Logger.getTimestamp() / 1e6,
-                self.drivetrainSubsystem.getAngularVelocity(),
-                self.drivetrainSubsystem.getFieldRelativeChassisSpeeds(),
-                self.drivetrainSubsystem.getModulePositions(),
-                Rotation2d().fromDegrees(0.0),  # self.turret.position,
-                Rotation2d().fromDegrees(0.0),  # self.intake.position,
-            )
+        if self.visionSubsystem is not None:
+            if self.drivetrainSubsystem is None:
+                RobotState.periodic(
+                    Rotation2d().fromDegrees(0.0),  # self.drive.getRawRotation(),
+                    Logger.getTimestamp()/1e6,
+                    0.0,  # self.drive.getAngularVelocity(),
+                    ChassisSpeeds(),  # self.drive.getFieldRelativeSpeeds(),
+                    (SwerveModulePosition(), SwerveModulePosition(), SwerveModulePosition(), SwerveModulePosition()),
+                    # self.drive.getModulePositions(),
+                    Rotation2d().fromDegrees(0.0),  # self.turret.position,
+                    Rotation2d().fromDegrees(0.0),  # self.intake.position,
+                )
+            else:
+                RobotState.periodic(
+                    self.drivetrainSubsystem.getRawRotation(),
+                    Logger.getTimestamp() / 1e6,
+                    self.drivetrainSubsystem.getAngularVelocity(),
+                    self.drivetrainSubsystem.getFieldRelativeChassisSpeeds(),
+                    self.drivetrainSubsystem.getModulePositions(),
+                    Rotation2d().fromDegrees(0.0),  # self.turret.position,
+                    Rotation2d().fromDegrees(0.0),  # self.intake.position,
+                )
 
 
     def autonomousInit(self) -> None:
@@ -132,7 +130,8 @@ class RobotContainer:
                 else:
                     startPose = Pose2d(in2m(robotStartXIn), in2m(robotStartYIn), Rotation2d(deg2Rad(0)))
             self.drivetrainSubsystem.casseroleDrivetrain.poseEst.setKnownPose(startPose)
-            RobotState.resetPose(startPose)
+            if self.visionSubsystem is not None:
+                RobotState.resetPose(startPose)
             self.drivetrainSubsystem.casseroleDrivetrain.poseEst._telemetry.setCurAutoTrajectory(None)
             self.drivetrainSubsystem.setDefaultCommand(
                 self.drivetrainSubsystem.arcadeDriveClosedLoop(DriverInterface().getCmd)
