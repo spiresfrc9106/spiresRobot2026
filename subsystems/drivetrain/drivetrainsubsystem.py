@@ -117,6 +117,8 @@ class DrivetrainSubsystem(Subsystem):
     def sysIdMotorModulePreInit(self) -> None:
         self.initialize()
         self.casseroleDrivetrain.wheelMotorsAreExternallyControlled()
+        cmd = DrivetrainCommand(velX=1.0, velY=0.0, velT=0.0, robotRelative=True)
+        self.casseroleDrivetrain.setManualCmd(cmd)
 
     def sysIdMotorModulePostInit(self) -> None:
         self.casseroleDrivetrain.wheelMotorsAreClosedLoop()

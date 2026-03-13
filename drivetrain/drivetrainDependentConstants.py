@@ -117,7 +117,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "WHEEL_D": 0.0,
                 "WHEEL_A": 0.0,
                 "WHEEL_V": 0.0,
-                "WHEEL_S": 0.0,
+                "WHEEL_S": 0.2,
                 "AZMTH_P": 0.12,
                 "AZMTH_I": 0.0,
                 "AZMTH_D": 0.0,
