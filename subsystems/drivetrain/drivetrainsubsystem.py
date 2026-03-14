@@ -3,6 +3,9 @@ from enum import Enum
 from typing import Optional, List, Tuple, Callable
 
 from commands2 import Command, Subsystem, cmd
+from pathplannerlib.auto import AutoBuilder
+from pathplannerlib.controller import PPHolonomicDriveController
+from pathplannerlib.path import RobotConfig
 from wpilib import XboxController, RobotBase
 from wpimath.geometry import Rotation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
@@ -35,6 +38,7 @@ from subsystems.common.motormoduleio import MotorModuleIO
 from subsystems.common.motormoduleiowrappered import MotorModuleIOWrappered
 from subsystems.common.motormoduleiowrapperedsim import MotorModuleIOWrapperedSim
 from subsystems.state.configsubsystem import ConfigSubsystem
+from utils.allianceTransformUtils import onRed
 from utils.constants import DT_FL_AZMTH_CANID, DT_FL_AZMTH_ENC_PORT, DT_FL_WHEEL_CANID, DT_FR_WHEEL_CANID, \
     DT_FR_AZMTH_CANID, DT_FR_AZMTH_ENC_PORT, DT_BL_AZMTH_CANID, DT_BL_AZMTH_ENC_PORT, DT_BL_WHEEL_CANID, \
     DT_BR_WHEEL_CANID, DT_BR_AZMTH_CANID, DT_BR_AZMTH_ENC_PORT
@@ -145,6 +149,9 @@ class DrivetrainSubsystem(Subsystem):
 
     def makeSysIdCommandWheelMotors(self) -> Command:
         return self.sysIdWheelMotors.sysIdRoutine("wheel", self.wheelModules)
+
+    def drivePathPlanned(self, chassisSpeeds: ChassisSpeeds, _feedForward):
+        self.casseroleDrivetrain.setManualCmdViaChassisSpeeds(chassisSpeeds)
 
     def doNothing(self):
         pass

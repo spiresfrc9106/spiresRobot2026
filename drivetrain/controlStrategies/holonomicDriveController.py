@@ -42,6 +42,7 @@ class HolonomicDriveController:
 
         self.MAX_FWD_REV_SPEED_MPS = p.MAX_FWD_REV_SPEED_MPS
         self.MAX_ROTATE_SPEED_RAD_PER_SEC = p.MAX_ROTATE_SPEED_RAD_PER_SEC
+        print(f"MAX_ROTATE_SPEED_RAD_PER_SEC={self.MAX_ROTATE_SPEED_RAD_PER_SEC}")
 
         self.xFF = 0.0
         self.yFF = 0.0

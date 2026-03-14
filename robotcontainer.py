@@ -1,10 +1,16 @@
+import os
 from typing import Optional
 
+import wpilib
 from commands2 import Command, cmd, CommandScheduler
+from pathplannerlib.auto import PathPlannerAuto, AutoBuilder, NamedCommands
+from pathplannerlib.config import RobotConfig
+from pathplannerlib.controller import PPHolonomicDriveController
 from wpimath.geometry import Pose2d, Rotation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 
 from constants import kFieldLengthIn, kFieldWidthIn, kRobotMode, RobotModes
+from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from humanInterface.driverInterface import DriverInterface
 from pykit.logger import Logger
 from pykit.networktables.loggeddashboardchooser import LoggedDashboardChooser
@@ -41,12 +47,40 @@ class RobotContainer:
             self.drivetrainSubsystem = DrivetrainSubsystemFactory()
         self.visionSubsystem: VisionSubsystem|None = VisionSubsystemFactory()
 
+        if self.inout is not None:
+            NamedCommands.registerCommand("spinUpFlywheel", self.inout.spinUpFlywheelCommand())
+            NamedCommands.registerCommand("shoot", self.inout.shootCommand())
+        if self.drivetrainSubsystem is not None:
+            p = DrivetrainPhysical()
+            AutoBuilder.configure(
+                self.drivetrainSubsystem.casseroleDrivetrain.getCurEstPose,
+                self.drivetrainSubsystem.casseroleDrivetrain.poseEst.setKnownPose,
+                self.drivetrainSubsystem.casseroleDrivetrain.getRobotRelativeChassisSpeeds,
+                self.drivetrainSubsystem.drivePathPlanned,
+                PPHolonomicDriveController(
+                    p.kPathFollowingTranslationConstantsAuto,
+                    p.kPathFollowingRotationConstants,
+                ),
+                # controller
+                RobotConfig.fromGUISettings(),
+                # robot_config
+                onRed,
+                self.drivetrainSubsystem,
+            )
+
         self.autoHasRun = False
 
 
         self.autoChooser: LoggedDashboardChooser[Command] = LoggedDashboardChooser(
-            "Move Auto Choices Here"
+            "Auto Choices"
         )
+        pathsPath = os.path.join(wpilib.getDeployDirectory(), "pathplanner", "autos")
+        for file in os.listdir(pathsPath):
+            relevantName = file.split(".")[0]
+            print(f"Adding auto {relevantName}")
+            auton = PathPlannerAuto(relevantName)
+            self.autoChooser.addOption(relevantName, auton)
+
         self.autoChooser.setDefaultOption("Do Nothing Once", cmd.none())
 
         self.testChooser: LoggedDashboardChooser[Command] = LoggedDashboardChooser(
@@ -114,7 +148,7 @@ class RobotContainer:
 
 
     def autonomousInit(self) -> None:
-        self.setStartpose()
+        self.setDefaultStartpose()
         self.autoOrTestCommand = self.autoChooser.getSelected()
         self.autonomousOrTestCommonInit()
         self.autoHasRun = True
@@ -130,13 +164,13 @@ class RobotContainer:
             # we always have a default autonoumous pose?
             # that if auto hasn't run, we set our default poss to the default, or selected autonoumous pose?
             # -Thanks Coach Mike
-            self.setStartpose()
-            self.drivetrainSubsystem.casseroleDrivetrain.poseEst._telemetry.setCurAutoTrajectory(None)
+            self.setDefaultStartpose()
+            #self.drivetrainSubsystem.casseroleDrivetrain.poseEst._telemetry.setCurAutoTrajectory(None)
             self.drivetrainSubsystem.setDefaultCommand(
                 self.drivetrainSubsystem.arcadeDriveClosedLoop(DriverInterface().getCmd)
             )
 
-    def setStartpose(self) -> None:
+    def setDefaultStartpose(self) -> None:
         if self.drivetrainSubsystem is not None:
             if not self.autoHasRun:
                 robotStartXIn = 40.0

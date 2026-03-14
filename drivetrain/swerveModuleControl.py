@@ -205,14 +205,18 @@ class SwerveModuleControl:
             # sensor data for the next loop.
 
             # Very simple voltage/motor model of azimuth rotation
-            self.actualState.angle += Rotation2d.fromDegrees(self.azmthVoltage / 12.0 * 1500.0 * 0.04)
+            azmthVoltage = self.azmthVoltage
+            if abs(azmthVoltage) < 0.1:
+                azmthVoltage = 0.0
+            self.actualState.angle += Rotation2d.fromDegrees(azmthVoltage / 12.0 * 1500.0 * kRobotUpdatePeriodS)
             self.actualPosition.angle = self.actualState.angle
 
             # Wheel speed is slew-rate filtered to roughly simulate robot inertia
-            speed = self.wheelSimFilter.calculate(self.desiredState.speed)
-            self.actualState.speed = speed + random.uniform(-0.0, 0.0)
-            self.actualPosition.distance += self.actualState.speed * 0.04
+            speed = self.desiredState.speed #self.wheelSimFilter.calculate(self.desiredState.speed)
+            self.actualState.speed = speed # + random.uniform(-0.0, 0.0)
+            self.actualPosition.distance += self.actualState.speed * kRobotUpdatePeriodS
 
+        Logger.recordOutput(f"{self._azmthDesTopicName}_v", self.azmthVoltage)
         Logger.recordOutput(f"{self._azmthDesTopicName}_deg", self.optimizedDesiredState.angle.degrees())
         Logger.recordOutput(f"{self._azmthActTopicName}_deg", self.actualState.angle.degrees())
         Logger.recordOutput(f"{self._speedDesTopicName}_frac", self.optimizedDesiredState.speed / self.MAX_FWD_REV_SPEED_MPS)

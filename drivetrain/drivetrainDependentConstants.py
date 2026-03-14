@@ -65,6 +65,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "USE_IN_TC_BACK": True,
             },
         ]
+        COMMON_CAMS = []
         return COMMON_CAMS
 
     def getDivetrainConstants(self, robotType: RobotTypes):
@@ -130,7 +131,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "BR_OFFSET_RAD": deg2Rad(142.5),
                 "GYRO": "ADIS16470_IMU",
                 "CAMS": self.getCommonCams(RobotTypes.Spires2026),
-                "USE_PHOTON_NAV": True,
+                "USE_PHOTON_NAV": False,
                 "SPEED_MULTIPLIER": 2,
             },
             RobotTypes.Spires2026Sim: {

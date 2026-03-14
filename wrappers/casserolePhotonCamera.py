@@ -30,6 +30,7 @@ from photonlibpy.targeting.photonPipelineResult import PhotonPipelineResult
 from photonlibpy.timesync.timeSyncServer import inst
 from photonlibpy.version import PHOTONLIB_VERSION  # type: ignore[import-untyped]
 
+from constants import kRobotUpdatePeriodS
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
 
 
@@ -64,7 +65,7 @@ class PhotonCamera:
         self._rawBytesEntry = self._cameraTable.getRawTopic("rawBytes").subscribe(
             f"photonstruct:PhotonPipelineResult:{PhotonPipelineResult.photonStruct.MESSAGE_VERSION}",
             bytes([]),
-            ntcore.PubSubOptions(periodic=0.04), #default photonvision settings are too aggressive for us, send less data?
+            ntcore.PubSubOptions(periodic=kRobotUpdatePeriodS), #default photonvision settings are too aggressive for us, send less data?
         )
 
         self._driverModePublisher = self._cameraTable.getBooleanTopic(

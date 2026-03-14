@@ -189,6 +189,9 @@ TOTAL_LENGTH_bumpers = 26"+2*4"= 34" = 0.8636m
 (4.0,4.3)
 (2.3,5.9)
 
+sim was: self.MAX_FWD_REV_SPEED_MPS=11.380736981619897
+sim was: MAX_ROTATE_SPEED_RAD_PER_SEC=12.566370614359172
+
 ## useful commands:
 
 ```

@@ -11,6 +11,7 @@ from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.controlStrategies.autoDrive import AutoDrive
 from drivetrain.controlStrategies.trajectory import Trajectory
+from pykit.logger import Logger
 from subsystems.common.encodermodule import EncoderModule
 from subsystems.common.encodermoduleio import EncoderModuleIO
 from subsystems.common.motormodule import MotorModule
@@ -38,6 +39,8 @@ class DrivetrainControl():
             )
         self.MAX_FWD_REV_SPEED_MPS = p.MAX_FWD_REV_SPEED_MPS
 
+        print(f"self.MAX_FWD_REV_SPEED_MPS={self.MAX_FWD_REV_SPEED_MPS}")
+
         self.coastCmd = False
 
         self.desChSpd = ChassisSpeeds()
@@ -45,7 +48,7 @@ class DrivetrainControl():
         self.curManCmd = DrivetrainCommand()
         self.curCmd = DrivetrainCommand()
 
-        self.elevSpeedLimit = 1.0
+        #self.elevSpeedLimit = 1.0
 
         self.useRobotRelative = False
 
@@ -63,6 +66,11 @@ class DrivetrainControl():
         """
         self.curManCmd = cmd
 
+    def setManualCmdViaChassisSpeeds(self, chassisSpeeds:ChassisSpeeds)->None:
+        cmd = DrivetrainCommand()
+        cmd.desChassisSpeeds = chassisSpeeds
+        self.curManCmd = cmd
+
     def setCoastCmd(self, coast:bool):
         self.coastCmd = coast
 
@@ -76,22 +84,34 @@ class DrivetrainControl():
         # calculate the current drivetrain xyzzy.
 
         self.curCmd = self.curManCmd
-        self.curCmd = Trajectory().update(self.curCmd, curEstPose)
+        #self.curCmd = Trajectory().update(self.curCmd, curEstPose)
         # self.curCmd = AutoSteer().update(self.curCmd, curEstPose)
         # self.curCmd = AutoDrive().update(self.curCmd, curEstPose)
 
-        self.curCmd.scaleBy(self.elevSpeedLimit)
+        #self.curCmd.scaleBy(self.elevSpeedLimit)
 
-        if self.curCmd.robotRelative:
-            tmp = ChassisSpeeds(self.curCmd.velX, self.curCmd.velY, self.curCmd.velT )
+        if self.curCmd.desChassisSpeeds is not None:
+            robotRelativeChassisSpeeds = self.curCmd.desChassisSpeeds
+        elif self.curCmd.robotRelative:
+            robotRelativeChassisSpeeds = ChassisSpeeds(self.curCmd.velX, self.curCmd.velY, self.curCmd.velT )
         else:
-            tmp = ChassisSpeeds.fromFieldRelativeSpeeds(
+            robotRelativeChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
                 self.curCmd.velX, self.curCmd.velY, self.curCmd.velT, curEstPose.rotation()
             )
-        self.desChSpd = _discretizeChSpd(tmp)
+
+        Logger.recordOutput("Robot/dt/auto", 1.0 if self.curCmd.desChassisSpeeds is not None else 0.0)
+        Logger.recordOutput("Robot/dt/vX", robotRelativeChassisSpeeds.vx)
+        Logger.recordOutput("Robot/dt/vY", robotRelativeChassisSpeeds.vy)
+        Logger.recordOutput("Robot/dt/omega", robotRelativeChassisSpeeds.omega)
+
+        self.desChSpd = _discretizeChSpd(robotRelativeChassisSpeeds)
+
+        #Logger.recordOutput("Robot/dt/vX_d", self.desChSpd.vx)
+        #Logger.recordOutput("Robot/dt/vY_d", self.desChSpd.vy)
+        #Logger.recordOutput("Robot/dt/omega_d", self.desChSpd.omega)
 
         # Set the desired pose for telemetry purposes
-        self.poseEst._telemetry.setDesiredPose(self.curCmd.desPose)
+        #self.poseEst._telemetry.setDesiredPose(self.curCmd.desPose)
         #self.poseEst._telemetry.setAutoDriveGoalPose(AutoDrive().getGoal())
 
         # pylint: disable=condition-evals-to-constant
@@ -189,8 +209,8 @@ class DrivetrainControl():
         # Return the current best-guess at our pose on the field.
         return self.poseEst.getCurEstPose()
     
-    def setElevLimiter(self, elevLimit):
-        self.elevSpeedLimit = elevLimit
+    #def setElevLimiter(self, elevLimit):
+    #    self.elevSpeedLimit = elevLimit
 
     def wheelMotorsAreClosedLoop(self):
         for module in self.modules:
