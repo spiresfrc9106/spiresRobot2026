@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.4911693834148645,
-        "y": 6.686576895811883
+        "x": 2.176194188518782,
+        "y": 6.088766832034018
       },
       "isLocked": false,
       "linkedName": "lc_shoot_point"
     },
     {
       "anchor": {
-        "x": 3.4746633593184786,
-        "y": 7.406520198434136
+        "x": 1.4369666902905742,
+        "y": 6.0759107016300495
       },
       "prevControl": {
-        "x": 2.8639971651299603,
-        "y": 7.457944720050014
+        "x": 2.047632884479093,
+        "y": 6.474450744153082
       },
       "nextControl": null,
       "isLocked": false,
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": null,
