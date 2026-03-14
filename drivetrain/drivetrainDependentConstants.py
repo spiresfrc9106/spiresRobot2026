@@ -104,10 +104,10 @@ class DrivetrainDependentConstants(metaclass=Singleton):
             RobotTypes.Spires2026: {
                 "HAS_DRIVETRAIN": True,
                 "WHEEL_MOTOR_WRAPPER": WrapperedSparkFlex,
-                # "SWERVE_WHEEL_GEAR_RATIO": 5.50, # Base Low
+                "SWERVE_WHEEL_GEAR_RATIO": 5.50, # Base Low
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.08, # Base Medium
-                "SWERVE_WHEEL_GEAR_RATIO": 4.71, # Base High
-                "SWERVE_WHEEL_DIAMETER_IN": 3.0,
+                #"SWERVE_WHEEL_GEAR_RATIO": 4.71, # Base High
+                "SWERVE_WHEEL_DIAMETER_IN": 2.65,
                 "SWERVE_WHEEL_MAX_SPEED_RADPS": WrapperedSparkMotor.VORTEX_CONFIGURED_FREESPEED_RADPS,
                 "WIDTH": 24.5,
                 "LENGTH": 22.5,

@@ -87,6 +87,7 @@ class RobotContainer:
 
         self.testChooser.setDefaultOption("Do Nothing Once", cmd.none())
 
+
     def robotPeriodic(self) -> None:
         if self.visionSubsystem is not None:
             if self.drivetrainSubsystem is None:
@@ -113,6 +114,7 @@ class RobotContainer:
 
 
     def autonomousInit(self) -> None:
+        self.setStartpose()
         self.autoOrTestCommand = self.autoChooser.getSelected()
         self.autonomousOrTestCommonInit()
         self.autoHasRun = True
@@ -128,20 +130,27 @@ class RobotContainer:
             # we always have a default autonoumous pose?
             # that if auto hasn't run, we set our default poss to the default, or selected autonoumous pose?
             # -Thanks Coach Mike
-            if not self.autoHasRun:
-                robotStartXIn = 40.0
-                robotStartYIn = 80.0
-                if onRed():
-                    startPose = Pose2d(in2m(kFieldLengthIn-robotStartXIn), in2m(kFieldWidthIn-robotStartYIn), Rotation2d(deg2Rad(180)))
-                else:
-                    startPose = Pose2d(in2m(robotStartXIn), in2m(robotStartYIn), Rotation2d(deg2Rad(0)))
-            self.drivetrainSubsystem.casseroleDrivetrain.poseEst.setKnownPose(startPose)
-            if self.visionSubsystem is not None:
-                RobotState.resetPose(startPose)
+            self.setStartpose()
             self.drivetrainSubsystem.casseroleDrivetrain.poseEst._telemetry.setCurAutoTrajectory(None)
             self.drivetrainSubsystem.setDefaultCommand(
                 self.drivetrainSubsystem.arcadeDriveClosedLoop(DriverInterface().getCmd)
             )
+
+    def setStartpose(self) -> None:
+        if self.drivetrainSubsystem is not None:
+            if not self.autoHasRun:
+                robotStartXIn = 40.0
+                robotStartYIn = 80.0
+                if onRed():
+                    startPose = Pose2d(in2m(kFieldLengthIn - robotStartXIn), in2m(kFieldWidthIn - robotStartYIn),
+                                       Rotation2d(deg2Rad(0)))
+                    print(f"onRed startPose: {startPose}")
+                else:
+                    startPose = Pose2d(in2m(robotStartXIn), in2m(robotStartYIn), Rotation2d(deg2Rad(180)))
+                    print(f"onBlue startPose: {startPose}")
+                self.drivetrainSubsystem.casseroleDrivetrain.poseEst.setKnownPose(startPose)
+                if self.visionSubsystem is not None:
+                    RobotState.resetPose(startPose)
 
     def testInit(self) -> None:
         self.autoOrTestCommand = self.testChooser.getSelected()

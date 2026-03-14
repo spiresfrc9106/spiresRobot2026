@@ -211,7 +211,7 @@ def makeNameAndWrapperedMotorsAndEncoder(
 
     print(f"{moduleName} azmthOffset={rad2Deg(azmthOffset):7.1f} deg")
     wheelMotor = wheelMotorWrapper(
-        wheelMotorCanID, subsystemName + moduleName + "/wheelMotor", False
+        wheelMotorCanID, subsystemName + moduleName + "/wheelMotor", brakeMode=False, currentLimitA=60
     )
     azmthMotor = WrapperedSparkMax(
         azmthMotorCanID, subsystemName + moduleName + "/azmthMotor", True

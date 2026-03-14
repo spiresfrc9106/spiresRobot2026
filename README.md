@@ -175,7 +175,19 @@ C:\Program Files (x86)\National Instruments\LabVIEW 2023\project\roboRIO Tool\FR
 use roborio team number setter to set the team number
 
 
+## Notes
 
+                "WIDTH": 24.5,
+                "LENGTH": 22.5,
+
+TOTAL_WIDTH = 28" = 0.711m
+TOTAL_LENGTH = 26" = 0.660m
+
+TOTAL_WIDTH_bumpers = 28"+2*4"= 36" = 0.9144m
+TOTAL_LENGTH_bumpers = 26"+2*4"= 34" = 0.8636m
+
+(4.0,4.3)
+(2.3,5.9)
 
 ## useful commands:
 
