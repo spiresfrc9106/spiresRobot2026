@@ -113,11 +113,12 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "WIDTH": 24.5,
                 "LENGTH": 22.5,
                 "MASS_LBS": 100.0,
-                "WHEEL_P": 0.000_03,
+                "WHEEL_P": 0.000_2
+                ,
                 "WHEEL_I": 0.0,
                 "WHEEL_D": 0.0,
                 "WHEEL_A": 0.0,
-                "WHEEL_V": 0.0003,
+                "WHEEL_V": 0.000_8,
                 "WHEEL_S": 0.12,
                 "AZMTH_P": 0.12,
                 "AZMTH_I": 0.0,
@@ -132,7 +133,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "GYRO": "ADIS16470_IMU",
                 "CAMS": self.getCommonCams(RobotTypes.Spires2026),
                 "USE_PHOTON_NAV": False,
-                "SPEED_MULTIPLIER": 2,
+                "SPEED_MULTIPLIER": 1,
             },
             RobotTypes.Spires2026Sim: {
                 "HAS_DRIVETRAIN": True,
@@ -164,7 +165,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "CAMS": self.getCommonCams(RobotTypes.Spires2026Sim),
                 "GYRO": "ADIS16470_IMU",
                 "USE_PHOTON_NAV": True,
-                "SPEED_MULTIPLIER": 2,
+                "SPEED_MULTIPLIER": 1,
             },
             RobotTypes.SpiresTestBoard: {
                 "HAS_DRIVETRAIN": False,
@@ -196,7 +197,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "GYRO": "NoGyro",
                 "CAMS": [],
                 "USE_PHOTON_NAV": False,
-                "SPEED_MULTIPLIER": 2,
+                "SPEED_MULTIPLIER": 1,
             },
             RobotTypes.SpiresRoboRioV1: {
                 "HAS_DRIVETRAIN": False,
@@ -228,7 +229,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "GYRO": "NoGyro",
                 "CAMS": [],
                 "USE_PHOTON_NAV": False,
-                "SPEED_MULTIPLIER": 2,
+                "SPEED_MULTIPLIER": 1,
             },
         }
         return drivetrainConstants
