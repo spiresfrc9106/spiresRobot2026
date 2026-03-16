@@ -65,6 +65,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "USE_IN_TC_BACK": True,
             },
         ]
+        COMMON_CAMS = []
         return COMMON_CAMS
 
     def getDivetrainConstants(self, robotType: RobotTypes):
@@ -104,20 +105,21 @@ class DrivetrainDependentConstants(metaclass=Singleton):
             RobotTypes.Spires2026: {
                 "HAS_DRIVETRAIN": True,
                 "WHEEL_MOTOR_WRAPPER": WrapperedSparkFlex,
-                # "SWERVE_WHEEL_GEAR_RATIO": 5.50, # Base Low
+                "SWERVE_WHEEL_GEAR_RATIO": 5.50, # Base Low
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.08, # Base Medium
-                "SWERVE_WHEEL_GEAR_RATIO": 4.71, # Base High
-                "SWERVE_WHEEL_DIAMETER_IN": 3.0,
+                #"SWERVE_WHEEL_GEAR_RATIO": 4.71, # Base High
+                "SWERVE_WHEEL_DIAMETER_IN": 2.65,
                 "SWERVE_WHEEL_MAX_SPEED_RADPS": WrapperedSparkMotor.VORTEX_CONFIGURED_FREESPEED_RADPS,
                 "WIDTH": 24.5,
                 "LENGTH": 22.5,
                 "MASS_LBS": 100.0,
-                "WHEEL_P": 0.000_04,
+                "WHEEL_P": 0.000_2
+                ,
                 "WHEEL_I": 0.0,
                 "WHEEL_D": 0.0,
                 "WHEEL_A": 0.0,
-                "WHEEL_V": 0.0,
-                "WHEEL_S": 0.2,
+                "WHEEL_V": 0.000_8,
+                "WHEEL_S": 0.12,
                 "AZMTH_P": 0.12,
                 "AZMTH_I": 0.0,
                 "AZMTH_D": 0.0,
@@ -130,8 +132,8 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "BR_OFFSET_RAD": deg2Rad(142.5),
                 "GYRO": "ADIS16470_IMU",
                 "CAMS": self.getCommonCams(RobotTypes.Spires2026),
-                "USE_PHOTON_NAV": True,
-                "SPEED_MULTIPLIER": 2,
+                "USE_PHOTON_NAV": False,
+                "SPEED_MULTIPLIER": 1,
             },
             RobotTypes.Spires2026Sim: {
                 "HAS_DRIVETRAIN": True,
@@ -163,7 +165,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "CAMS": self.getCommonCams(RobotTypes.Spires2026Sim),
                 "GYRO": "ADIS16470_IMU",
                 "USE_PHOTON_NAV": True,
-                "SPEED_MULTIPLIER": 2,
+                "SPEED_MULTIPLIER": 1,
             },
             RobotTypes.SpiresTestBoard: {
                 "HAS_DRIVETRAIN": False,
@@ -195,7 +197,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "GYRO": "NoGyro",
                 "CAMS": [],
                 "USE_PHOTON_NAV": False,
-                "SPEED_MULTIPLIER": 2,
+                "SPEED_MULTIPLIER": 1,
             },
             RobotTypes.SpiresRoboRioV1: {
                 "HAS_DRIVETRAIN": False,
@@ -227,7 +229,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "GYRO": "NoGyro",
                 "CAMS": [],
                 "USE_PHOTON_NAV": False,
-                "SPEED_MULTIPLIER": 2,
+                "SPEED_MULTIPLIER": 1,
             },
         }
         return drivetrainConstants

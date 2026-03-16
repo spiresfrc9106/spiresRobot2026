@@ -1089,7 +1089,7 @@ requires-dist = [
     { name = "robotpy-native-apriltag" },
     { name = "robotpy-navx", specifier = ">=2026.0.0" },
     { name = "robotpy-opencv" },
-    { name = "robotpy-pathplannerlib", specifier = ">=2026.1.1" },
+    { name = "robotpy-pathplannerlib", specifier = ">=2026.1.2" },
     { name = "robotpy-playingwithfusion" },
     { name = "robotpy-pykit-watch", specifier = ">=1.0.0" },
     { name = "robotpy-rev", specifier = ">=2026.0.1" },

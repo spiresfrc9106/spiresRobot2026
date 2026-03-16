@@ -1,6 +1,7 @@
 from wpimath.geometry import Pose2d
 from dataclasses import dataclass, field
 
+from wpimath.kinematics import ChassisSpeeds
 
 
 @dataclass
@@ -14,6 +15,10 @@ class DrivetrainCommand:
     velT:float = 0.0  # Rotational speed in rad/sec
     robotRelative:bool = False
     desPose:Pose2d = field(default_factory = lambda: Pose2d())  # Current desired pose of the drivetrain
+
+    # as a hack in the 2026-03-14 competition to add auto's by embedding the desired chassis speeds
+    # in the DriveTrain command. Use if not none. If none, use velX, velY, velT, and robotRelative
+    desChassisSpeeds: ChassisSpeeds = None
 
     def scaleBy(self, scale:float):
         """

@@ -18,6 +18,9 @@ from subsystems.state.configio import RobotTypes
 from subsystems.state.configsubsystem import ConfigSubsystem
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
 
+
+from pathplannerlib.controller import PIDConstants
+
 """
 Defines the physical dimensions and characteristics of the drivetrain
 """
@@ -119,6 +122,25 @@ class DrivetrainPhysical(metaclass=Singleton):
         self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2 = (
                 self.MAX_ROTATE_SPEED_RAD_PER_SEC / 0.25
         )  # 0-full time of 0.25 second - this is a guestaimate
+
+        self.kTrajectoryPositionPGainAuto = 9/10 #9
+        self.kTrajectoryPositionPGainVision = 5/10 #5
+        self.kTrajectoryPositionIGain = 0
+        self.kTrajectoryPositionDGain = 0
+
+        self.kTrajectoryAnglePGain = 7/10 #7
+        self.kTrajectoryAngleIGain = 0
+        self.kTrajectoryAngleDGain = 0
+
+        self.kPathFollowingTranslationConstantsAuto = PIDConstants(
+            self.kTrajectoryPositionPGainAuto, self.kTrajectoryPositionIGain, self.kTrajectoryPositionDGain
+        )
+        self.kPathFollowingTranslationConstantsVision = PIDConstants(
+            self.kTrajectoryPositionPGainVision, self.kTrajectoryPositionIGain, self.kTrajectoryPositionDGain
+        )
+        self.kPathFollowingRotationConstants = PIDConstants(
+            self.kTrajectoryAnglePGain, self.kTrajectoryAngleIGain, self.kTrajectoryAngleDGain
+        )
 
         self.WHEEL_P = self.c.drivetrainDepConstants["WHEEL_P"]
         self.WHEEL_I = self.c.drivetrainDepConstants["WHEEL_I"]

@@ -295,7 +295,6 @@ class InOutSubsystem(Subsystem):
 
     def aDoNothingCommand(self) -> Optional[Command]:
         return cmd.sequence(
-            cmd.runOnce(lambda: self.initialize(), self),
             cmd.run(lambda: self.doNothing(), self),
         )
 
@@ -304,6 +303,17 @@ class InOutSubsystem(Subsystem):
             cmd.runOnce(lambda: self.initialize(), self),
             cmd.run(lambda: self.useOperatorControls(), self),
         )
+
+    def spinUpFlywheelCommand(self) -> Command:
+        return cmd.sequence(
+            cmd.runOnce(lambda: self.setFlywheelState(FlywheelState.kSpinningUp),self),
+        )
+
+    def shootCommand(self) -> Command:
+        return cmd.sequence(cmd.runOnce(lambda: self.setState(InOutState.kShooting), self),
+                        cmd.waitSeconds(10),
+                        cmd.runOnce(lambda: self.setState(InOutState.kOff), self),
+                        self)
 
 
 # See https://github.com/FRCTeam360/RainMaker26/blob/ac5238c1ef05ec7bd4adafc81331d94dc29ffe08/src/main/java/frc/robot/subsystems/Indexer/IndexerIOSim.java#L3

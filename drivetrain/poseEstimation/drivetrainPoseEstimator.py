@@ -4,6 +4,8 @@ from wpilib import ADIS16470_IMU
 import wpilib
 from wpimath.estimator import SwerveDrive4PoseEstimator
 from wpimath.geometry import Pose2d, Rotation2d, Twist2d, Translation2d, Transform2d
+
+from constants import kRobotUpdatePeriodS
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.poseEstimation.drivetrainPoseTelemetry import DrivetrainPoseTelemetry
 # TODO-rms was:from navigation.autoDriveNavConstants import SCORE_DIST_FROM_REEF_CENTER
@@ -118,7 +120,7 @@ class DrivetrainPoseEstimator:
             # Simulate an angle based on (simulated) motor speeds with some noise
             chSpds = self.kinematics.toChassisSpeeds(curModuleSpeeds)
             self._simPose = self._simPose.exp(
-                Twist2d(chSpds.vx * 0.04, chSpds.vy * 0.04, chSpds.omega * 0.04)
+                Twist2d(chSpds.vx * kRobotUpdatePeriodS, chSpds.vy * kRobotUpdatePeriodS, chSpds.omega * kRobotUpdatePeriodS)
             )
             noise = Rotation2d.fromDegrees(random.uniform(-0.0, 0.0))
             self._curRawGyroAngle = self._simPose.rotation() + noise

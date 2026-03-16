@@ -175,7 +175,22 @@ C:\Program Files (x86)\National Instruments\LabVIEW 2023\project\roboRIO Tool\FR
 use roborio team number setter to set the team number
 
 
+## Notes
 
+                "WIDTH": 24.5,
+                "LENGTH": 22.5,
+
+TOTAL_WIDTH = 28" = 0.711m
+TOTAL_LENGTH = 26" = 0.660m
+
+TOTAL_WIDTH_bumpers = 28"+2*4"= 36" = 0.9144m
+TOTAL_LENGTH_bumpers = 26"+2*4"= 34" = 0.8636m
+
+(4.0,4.3)
+(2.3,5.9)
+
+sim was: self.MAX_FWD_REV_SPEED_MPS=11.380736981619897
+sim was: MAX_ROTATE_SPEED_RAD_PER_SEC=12.566370614359172
 
 ## useful commands:
 
