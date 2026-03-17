@@ -126,8 +126,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "WIDTH": 24.5,
                 "LENGTH": 22.5,
                 "MASS_LBS": 100.0,
-                "WHEEL_P": 0.000_03
-                ,
+                "WHEEL_P": 0.000_01, # was 0.000_03 - dialing down to try to get rid of translation jitter
                 "WHEEL_I": 0.0,
                 "WHEEL_D": 0.0,
                 "WHEEL_A": 0.000_1,
