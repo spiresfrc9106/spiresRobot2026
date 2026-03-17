@@ -2,14 +2,13 @@
 from ntcore import NetworkTableInstance
 from wpimath.units import inchesToMeters
 from wpimath.system.plant import DCMotor
-from wpimath.geometry import Pose3d, Transform3d, Translation3d, Rotation3d
+from wpimath.geometry import Pose3d
 
 
 from subsystems.state.configio import RobotTypes
 from utils.singleton import Singleton
 from utils.units import deg2Rad
-from subsystems.vision.vision import kRobotToBackCenterCamTransform
-from wrappers.wrapperedLimelightCamera import wrapperedLimilightCameraFactory
+from subsystems.vision.vision import kRobotToBackCenterCamTransform, kRobotToBackHighCamTransform
 from wrappers.wrapperedPoseEstPhotonCamera import WrapperedPoseEstPhotonCamera
 from wrappers.wrapperedSparkFlex import WrapperedSparkFlex
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
@@ -64,8 +63,22 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "USE_IN_TC_FRONT": True,
                 "USE_IN_TC_BACK": True,
             },
+            {
+                "CAM": WrapperedPoseEstPhotonCamera("back_high_cam", kRobotToBackHighCamTransform),
+                "POSE_EST_LOG_NAME": "photonBH",
+                "PUBLISHER":
+                    (
+                        NetworkTableInstance.getDefault()
+                        .getStructTopic("/BackHighCamPose", Pose3d)
+                        .publish()
+                    ),
+                "ROBOT_TO_CAM": kRobotToBackHighCamTransform,
+                "WEIGH_IN_FILTER": True,
+                "USE_IN_TC_FRONT": True,
+                "USE_IN_TC_BACK": True,
+            },
         ]
-        COMMON_CAMS = []
+        #COMMON_CAMS = []
         return COMMON_CAMS
 
     def getDivetrainConstants(self, robotType: RobotTypes):
@@ -77,7 +90,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 #"SWERVE_WHEEL_GEAR_RATIO": 5.08,  # Base Medium
                 #"SWERVE_WHEEL_GEAR_RATIO": 4.71,  # Base High
                 "SWERVE_WHEEL_DIAMETER_IN": 3.0,
-                "SWERVE_WHEEL_MAX_SPEED_RADPS": WrapperedSparkMotor.NEO_CONFIGURED_FREESPEED_RADPS,
+                "SWERVE_WHEEL_MAX_SPEED_RADPS": (4.0/4.5)*WrapperedSparkMotor.NEO_CONFIGURED_FREESPEED_RADPS,
                 "WIDTH": 24.5,
                 "LENGTH": 22.5,
                 "MASS_LBS": 32, #changed because coach jeremy lifted the robot and felt it was that
@@ -108,17 +121,16 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "SWERVE_WHEEL_GEAR_RATIO": 5.50, # Base Low
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.08, # Base Medium
                 #"SWERVE_WHEEL_GEAR_RATIO": 4.71, # Base High
-                "SWERVE_WHEEL_DIAMETER_IN": 2.65,
-                "SWERVE_WHEEL_MAX_SPEED_RADPS": WrapperedSparkMotor.VORTEX_CONFIGURED_FREESPEED_RADPS,
+                "SWERVE_WHEEL_DIAMETER_IN": 3.0,
+                "SWERVE_WHEEL_MAX_SPEED_RADPS": (4.0/4.5)*WrapperedSparkMotor.VORTEX_CONFIGURED_FREESPEED_RADPS,
                 "WIDTH": 24.5,
                 "LENGTH": 22.5,
                 "MASS_LBS": 100.0,
-                "WHEEL_P": 0.000_2
-                ,
+                "WHEEL_P": 0.000_01, # was 0.000_03 - dialing down to try to get rid of translation jitter
                 "WHEEL_I": 0.0,
                 "WHEEL_D": 0.0,
-                "WHEEL_A": 0.0,
-                "WHEEL_V": 0.000_8,
+                "WHEEL_A": 0.000_1,
+                "WHEEL_V": 0.017,
                 "WHEEL_S": 0.12,
                 "AZMTH_P": 0.12,
                 "AZMTH_I": 0.0,
@@ -142,7 +154,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 # "SWERVE_WHEEL_GEAR_RATIO": 5.08, # Base Medium
                 "SWERVE_WHEEL_GEAR_RATIO": 4.71, # Base High
                 "SWERVE_WHEEL_DIAMETER_IN": 3.0,
-                "SWERVE_WHEEL_MAX_SPEED_RADPS": WrapperedSparkMotor.VORTEX_CONFIGURED_FREESPEED_RADPS,
+                "SWERVE_WHEEL_MAX_SPEED_RADPS": (4.0/4.5)*WrapperedSparkMotor.VORTEX_CONFIGURED_FREESPEED_RADPS,
                 "WIDTH": 24.5,
                 "LENGTH": 22.5,
                 "MASS_LBS": 60,

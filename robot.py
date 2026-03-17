@@ -16,15 +16,11 @@ from pykit.loggedrobot import LoggedRobot
 from pykit.logger import Logger
 
 import constants
-from drivetrain.drivetrainDependentConstants import DrivetrainDependentConstants
 
 from robotcontainer import RobotContainer
 from utils.calibration import CalibrationWrangler
 
-if DrivetrainDependentConstants().useWestwoodSwerve:
-    from westwood.westwoodrobotcontainer import WestwoodRobotContainer
 from util.logtracer import LogTracer
-from westwood.util.phoenixutil import PhoenixUtil
 
 from testingMotors.motorCtrl import motorDepConstants, MotorControl
 
@@ -46,8 +42,6 @@ class MyRobot(LoggedRobot):
     Command v2 robots are encouraged to inherit from TimedCommandRobot, which
     has an implementation of robotPeriodic which runs the scheduler for you
     """
-
-    autonomousCommand: typing.Optional[commands2.Command] = None
 
     def __init__(self):
         super().__init__()
@@ -91,9 +85,6 @@ class MyRobot(LoggedRobot):
         Logger.start()
 
         self.container = RobotContainer()
-        self.westwoodContainer = None
-        if ConfigSubsystem().useWestwoodSwerve():
-            self.westwoodContainer = WestwoodRobotContainer()
 
     #########################################################
     ## Common init/update for all modes
@@ -172,8 +163,6 @@ class MyRobot(LoggedRobot):
         self.cw = CalibrationWrangler()
         #self.addPeriodic(FaultWrangler().update, 0.06, 0.0)
 
-        self.autoHasRun = False
-
     def robotPeriodic(self) -> None:
         #print(f"{self.count} robotPeriodic")
 
@@ -181,11 +170,6 @@ class MyRobot(LoggedRobot):
         #    gc.freeze()
 
         LogTracer.resetOuter("RobotPeriodic")
-        if self.westwoodContainer is not None:
-            PhoenixUtil.updateSignals()
-            LogTracer.record("PhoenixUpdate")
-            self.westwoodContainer.robotPeriodic()
-            LogTracer.record("WestwoodContainerPeriodic")
         self.container.robotPeriodic()
         LogTracer.record("ContainerPeriodic")
 
@@ -218,17 +202,7 @@ class MyRobot(LoggedRobot):
         """This autonomous runs the autonomous command selected by your RobotContainer class."""
         #print("autonomousInit has run")
 
-        if self.westwoodContainer is not None:
-            self.autonomousCommand = self.westwoodContainer.getAutonomousCommand()
-
-        if self.autonomousCommand:
-            self.autonomousCommand.schedule()
-
-
         self.container.autonomousInit()
-
-        # Mark we at least started autonomous
-        self.autoHasRun = True # pylint: disable=attribute-defined-outside-init
 
     def autonomousPeriodic(self) -> None:
         """This function is called periodically during autonomous"""
@@ -242,32 +216,11 @@ class MyRobot(LoggedRobot):
     def teleopInit(self) -> None:
         self.container.teleopInit()
         #print(f"{self.count} teleopInit")
-        # This makes sure that the autonomous stops running when
-        # teleop starts running. If you want the autonomous to
-        # continue until interrupted by another command, remove
-        # this line or comment it out.
-        if self.autonomousCommand:
-            self.autonomousCommand.cancel()
-
-
-        # Ensure auto-steer starts disabled, no motion without driver command
-        #self.autosteer.setInhibited()
-
 
     def teleopPeriodic(self) -> None:
         """This function is called periodically when in teleop"""
         #print(f"{self.count} teleopPeriodic")
 
-        # TODO - this is technically one loop delayed, which could induce lag
-        if self.container.drivetrainSubsystem is not None:
-            # We're enabled as long as the driver is commanding it, and we're _not_ trying to control robot relative.
-            #enableAutoSteer = not self.dInt.getRobotRelative() and self.dInt.getAutoSteerEnable()
-            #self.autosteer.setAutoSteerActiveCmd(enableAutoSteer)
-            #self.autosteer.setAlignToProcessor(self.dInt.getAutoSteerToAlgaeProcessor())
-            #self.autosteer.setAlignDownfield(self.dInt.getAutoSteerDownfield())
-        
-            #self.autodrive.setRequest(self.dInt.getAutoDrive())
-            pass
 
         if self.dInt.getGyroResetCmd():
             if self.container.drivetrainSubsystem is not None:

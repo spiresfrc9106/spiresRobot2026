@@ -54,7 +54,7 @@ class RobotContainer:
             p = DrivetrainPhysical()
             AutoBuilder.configure(
                 self.drivetrainSubsystem.casseroleDrivetrain.getCurEstPose,
-                self.drivetrainSubsystem.casseroleDrivetrain.poseEst.setKnownPose,
+                self.resetPose,
                 self.drivetrainSubsystem.casseroleDrivetrain.getRobotRelativeChassisSpeeds,
                 self.drivetrainSubsystem.drivePathPlanned,
                 PPHolonomicDriveController(
@@ -156,6 +156,7 @@ class RobotContainer:
 
     def teleopInit(self) -> None:
         CommandScheduler.getInstance().cancelAll()
+        DriverInterface().initiatialize()
         if self.inout is not None:
            CommandScheduler.getInstance().schedule(self.inout.aOperatorRunsInoutCommand())
         # clear existing telemetry trajectory
@@ -182,15 +183,20 @@ class RobotContainer:
                 else:
                     startPose = Pose2d(in2m(robotStartXIn), in2m(robotStartYIn), Rotation2d(deg2Rad(180)))
                     print(f"onBlue startPose: {startPose}")
-                self.drivetrainSubsystem.casseroleDrivetrain.poseEst.setKnownPose(startPose)
-                if self.visionSubsystem is not None:
-                    RobotState.resetPose(startPose)
+                self.resetPose(startPose)
+
+    def resetPose(self, pose: Pose2d) -> None:
+            self.drivetrainSubsystem.casseroleDrivetrain.poseEst.setKnownPose(pose)
+            print(f"resetPose: {pose}")
+            if self.visionSubsystem is not None:
+                RobotState.resetPose(pose)
 
     def testInit(self) -> None:
         self.autoOrTestCommand = self.testChooser.getSelected()
         self.autonomousOrTestCommonInit()
 
     def autonomousOrTestCommonInit(self) -> None:
+        DriverInterface().initiatialize()
         CommandScheduler.getInstance().cancelAll()
         if self.autoOrTestCommand is not None:
             CommandScheduler.getInstance().schedule(self.autoOrTestCommand)

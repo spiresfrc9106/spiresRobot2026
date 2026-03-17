@@ -8,6 +8,7 @@ from wpimath.geometry import Pose2d, Rotation2d, Twist2d, Translation2d, Transfo
 from constants import kRobotUpdatePeriodS
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.poseEstimation.drivetrainPoseTelemetry import DrivetrainPoseTelemetry
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 # TODO-rms was:from navigation.autoDriveNavConstants import SCORE_DIST_FROM_REEF_CENTER
 from utils.faults import Fault
 from wrappers.wrapperedPoseEstPhotonCamera import WrapperedPoseEstPhotonCamera
@@ -89,6 +90,7 @@ class DrivetrainPoseEstimator:
         self._poseEst.resetPosition(
             self._curRawGyroAngle, self._lastModulePositions, knownPose
         )
+        RobotTopSubsystem().setRobotPose(self._poseEst.getEstimatedPosition())
 
     def update(self, curModulePositions:PosTupleType, curModuleSpeeds:StateTupleType):
         """Periodic update, call this every 20ms.
@@ -132,6 +134,7 @@ class DrivetrainPoseEstimator:
         # Update the WPILib Pose Estimate
         self._poseEst.update(self._curRawGyroAngle, curModulePositions)
         self._curEstPose = self._poseEst.getEstimatedPosition()
+        RobotTopSubsystem().setRobotPose(self._curEstPose)
 
         """# make sure we're not inside the hub somewhow #2025 code -- so old code that should be updated
         startPoseEst = self._curEstPose

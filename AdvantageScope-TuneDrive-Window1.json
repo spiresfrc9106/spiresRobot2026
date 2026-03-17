@@ -1,0 +1,349 @@
+{
+  "hubs": [
+    {
+      "x": -1634,
+      "y": 163,
+      "width": 1429,
+      "height": 874,
+      "state": {
+        "sidebar": {
+          "width": 469,
+          "expanded": [
+            "/Vision",
+            "/Vision/Camera0",
+            "/Drive",
+            "/RealOutputs/Robot/Pose",
+            "/SmartDashboard/DT Pose 2D/Robot",
+            "/AdvantageKit/Drive",
+            "/AdvantageKit/Vision",
+            "/AdvantageKit/Vision/Camera1",
+            "/AdvantageKit/Vision/Camera1/poseObservations",
+            "/AdvantageKit/Vision/Camera1/poseObservations/0",
+            "/AdvantageKit/Vision/Camera0/poseObservations/0/pose",
+            "/RealOutputs/LoggedRobot",
+            "/RealOutputs/Logger",
+            "/SmartDashboard/loop",
+            "/AdvantageKit/RealOutputs/xyzzy",
+            "/AdvantageKit/RealOutputs/xyzzy/di",
+            "/AdvantageKit/DriverStation/Joystick3",
+            "/Shuffleboard",
+            "/LiveWindow",
+            "/Calibrations/Count roll-over value",
+            "/Calibrations/Drivetrain Module Wheel kP",
+            "/DriverStation/Joystick0",
+            "/DriverStation/Joystick0/AxisValues",
+            "/Config",
+            "/AdvantageKit/RealOutputs/Turret",
+            "/AdvantageKit/RealOutputs/LogTracer/RobotPeriodic",
+            "/AdvantageKit/NetworkInputs/SmartDashboard",
+            "/AdvantageKit/RealOutputs/LogTracer/MotorModule/flywheelModule",
+            "/AdvantageKit/RealOutputs/LogTracer/MotorModule/groundModule",
+            "/AdvantageKit/RealOutputs/inout",
+            "/RealOutputs/inout",
+            "/RealOutputs/inout flywheel SysId",
+            "/RealOutputs/inout ground SysId",
+            "/RealOutputs/inout hopper SysId",
+            "/Spark-17",
+            "/Log1/REV",
+            "/Log1/REV/Spark-17",
+            "/RealOutputs/InOutSubsystem",
+            "/AdvantageKit/DriverStation/Joystick1",
+            "/AdvantageKit/DriverStation/Joystick1/AxisValues",
+            "/AdvantageKit/RealOutputs/InOutSubsystem",
+            "/AdvantageKit/azmthEncoderBLModule",
+            "/Log1",
+            "/Log1/REV/Spark-16",
+            "/RealOutputs/Robot/dt",
+            "/RealOutputs/Robot/dt/Pose",
+            "/RealOutputs/Robot/dt/Pose/ModulePoses",
+            "/RealOutputs/Robot/dt/Pose/ModulePoses/BL",
+            "/SmartDashboard/VisionSystemSim-main/Sim Field",
+            "/SmartDashboard/VisionSystemSim-main/Sim Field/Robot",
+            "/SmartDashboard/VisionSystemSim-turret",
+            "/SmartDashboard/VisionSystemSim-turret/Sim Field/Robot",
+            "/AdvantageKit/RealOutputs",
+            "/photonvision/back_center/targetPose/rotation",
+            "/photonvision/back_center/targetPose/translation",
+            "/AdvantageKit/RealOutputs/Robot/SimPose",
+            "/AdvantageKit/RealOutputs/Robot/Pose/Estimator",
+            "/AdvantageKit/RealOutputs/Robot/Pose/Estimator/Pose",
+            "/AdvantageKit/RealOutputs/Robot/Pose/Estimator/Pose/rotation",
+            "/AdvantageKit/RealOutputs/Robot/Pose/Estimator/Pose/translation",
+            "/AdvantageKit/RealOutputs/Robot/Pose/HubEstimator",
+            "/AdvantageKit/RealOutputs/Robot/Pose/HubEstimator/Pose",
+            "/AdvantageKit/RealOutputs/Robot/Pose/OdometryPose",
+            "/AdvantageKit/RealOutputs/Robot/Pose/OdometryPose/rotation",
+            "/AdvantageKit/RealOutputs/Robot/Pose/OdometryPose/translation",
+            "/photonvision/limelight-fl",
+            "/photonvision/limelight-fr",
+            "/photonvision/back_center",
+            "/AdvantageKit/RealOutputs/LoggedRobot",
+            "/AdvantageKit/RealOutputs/LogTracer/ConfigSubsystemPeriodic",
+            "/AdvantageKit/RealOutputs/LogTracer/drivetrainSubsystem periodic",
+            "/AdvantageKit/RealOutputs/LogTracer/EncoderModule/azmthEncoderBLModule",
+            "/AdvantageKit/RealOutputs/LogTracer/EncoderModule/azmthEncoderBRModule",
+            "/AdvantageKit/RealOutputs/LogTracer/inoutSubsystem periodic",
+            "/AdvantageKit/RealOutputs/LogTracer/RobotState",
+            "/AdvantageKit/Vision/Camera0/poseObservations",
+            "/AdvantageKit/RealOutputs/Vision/Summary/RobotPoses",
+            "/AdvantageKit/RealOutputs/Vision/Camera0/RobotPoses",
+            "/AdvantageKit/RealOutputs/LogTracer/VisionSubsystem",
+            "/AdvantageKit/RealOutputs/Robot/Pose/HubEstimator/Pose/rotation",
+            "/AdvantageKit/RealOutputs/Robot/Pose/HubEstimator/Pose/translation",
+            "/photonvision/back_center_cam/targetPose/translation",
+            "/photonvision/back_center_cam/targetPose",
+            "/photonvision/casserole_back_center_cam",
+            "/BackCenterCamPose/translation",
+            "/BackCenterCamPose/rotation/q",
+            "/AdvantageKit/RealOutputs/Robot",
+            "/AdvantageKit/wheelMotorBLModule",
+            "/AdvantageKit/azmthEncoderBRModule",
+            "/AdvantageKit/azmthEncoderFLModule",
+            "/AdvantageKit/azmthEncoderFRModule",
+            "/AdvantageKit/RealOutputs/Robot/dt/Pose/estPose",
+            "/AdvantageKit/RealOutputs/Robot/dt/Pose/estPose/translation",
+            "/AdvantageKit/inout",
+            "/SystemStats",
+            "/RealOutputs",
+            "/AdvantageKit",
+            "/AdvantageKit/RealOutputs/Robot/dt/Pose",
+            "/photonvision/back_high_cam",
+            "/SmartDashboard",
+            "/SmartDashboard/Field",
+            "/SmartDashboard/DT Pose 2D/visionObservations",
+            "/AdvantageKit/RealOutputs/Robot/top",
+            "/AdvantageKit/wheelMotorBRModule",
+            "/AdvantageKit/wheelMotorFLModule",
+            "/AdvantageKit/wheelMotorFRModule"
+          ]
+        },
+        "tabs": {
+          "selected": 2,
+          "tabs": [
+            {
+              "type": 0,
+              "title": "",
+              "controller": null,
+              "controllerUUID": "hrwwvcxg3djocha43oe38d08kuim89x7",
+              "renderer": "",
+              "controlsHeight": 0
+            },
+            {
+              "type": 4,
+              "title": "Table",
+              "controller": [
+                "/groundModule/velRadps",
+                "/groundModule/desVoltsOrFfVolts",
+                "/groundModule/posRad",
+                "/RealOutputs/inout/SysID State ground"
+              ],
+              "controllerUUID": "i1hv3yso4sxwdd3popumkjavwmko6j96",
+              "renderer": null,
+              "controlsHeight": 0
+            },
+            {
+              "type": 1,
+              "title": "Line Graph",
+              "controller": {
+                "leftSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/SmartDashboard/DT Pose 2D/Robot/0",
+                    "logType": "Number",
+                    "visible": false,
+                    "options": {
+                      "color": "#2b66a2",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/wheelMotorBLModule/torqueCurrentA",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#c0b487",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/wheelMotorBRModule/torqueCurrentA",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#3b875a",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/wheelMotorFLModule/torqueCurrentA",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#d993aa",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/wheelMotorFRModule/torqueCurrentA",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#5f4528",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "rightSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/wheelMotorBLModule/appliedV",
+                    "logType": "Number",
+                    "visible": false,
+                    "options": {
+                      "color": "#e5b31b",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/wheelMotorBRModule/appliedV",
+                    "logType": "Number",
+                    "visible": false,
+                    "options": {
+                      "color": "#af2437",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/wheelMotorFLModule/appliedV",
+                    "logType": "Number",
+                    "visible": false,
+                    "options": {
+                      "color": "#80588e",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/wheelMotorFRModule/appliedV",
+                    "logType": "Number",
+                    "visible": false,
+                    "options": {
+                      "color": "#e48b32",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "discreteSources": [
+                  {
+                    "type": "stripes",
+                    "logKey": "/RealOutputs/Console",
+                    "logType": "String",
+                    "visible": true,
+                    "options": {
+                      "color": "#858584"
+                    }
+                  }
+                ],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "autoTarget": null,
+                  "preset": null
+                },
+                "rightUnitConversion": {
+                  "autoTarget": null,
+                  "preset": null
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "yi5kep6svf4ia4wl0gy07jw8jiuees9a",
+              "renderer": null,
+              "controlsHeight": 338
+            },
+            {
+              "type": 2,
+              "title": "2D Field",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robot",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Robot/dt/Pose/estPose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "bumpers": ""
+                    }
+                  },
+                  {
+                    "type": "ghostLegacy",
+                    "logKey": "NT:/SmartDashboard/DT Pose 2D/visionObservations",
+                    "logType": "NumberArray",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ff00",
+                      "format": "Pose2d",
+                      "units": "degrees"
+                    }
+                  }
+                ],
+                "field": "FRC:2026 Field",
+                "orientation": 2,
+                "size": "large"
+              },
+              "controllerUUID": "anksmblbfbch04tibyl6xalzg99fhbq1",
+              "renderer": null,
+              "controlsHeight": 370
+            },
+            {
+              "type": 9,
+              "title": "Swerve",
+              "controller": {
+                "sources": [],
+                "maxSpeed": 5,
+                "sizeX": 0.65,
+                "sizeY": 0.65,
+                "orientation": 1
+              },
+              "controllerUUID": "wf3igxtnqa16fm4kmfvi21f3zof5wlvx",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 3,
+              "title": "3D Field",
+              "controller": {
+                "sources": [],
+                "game": "FRC:2026 Field"
+              },
+              "controllerUUID": "6bxraaxbvja52jurf2ozns3urls8gev4",
+              "renderer": {
+                "cameraIndex": 0,
+                "orbitFov": 50,
+                "cameraPosition": [
+                  1.4695761589768238e-15,
+                  5.999999999999999,
+                  -12
+                ],
+                "cameraTarget": [
+                  0,
+                  0.5,
+                  0
+                ]
+              },
+              "controlsHeight": 200
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "satellites": [],
+  "version": "26.0.0"
+}
