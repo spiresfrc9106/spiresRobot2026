@@ -218,10 +218,10 @@ def makeNameAndWrapperedMotorsAndEncoder(
 
     print(f"{moduleName} azmthOffset={rad2Deg(azmthOffset):7.1f} deg")
     wheelMotor = wheelMotorWrapper(
-        wheelMotorCanID, subsystemName + moduleName + "/wheelMotor", brakeMode=False, currentLimitA=60
+        wheelMotorCanID, subsystemName + moduleName + "/wheelMotor", brakeMode=True, currentLimitA=60
     )
     azmthMotor = WrapperedSparkMax(
-        azmthMotorCanID, subsystemName + moduleName + "/azmthMotor", True
+        azmthMotorCanID, subsystemName + moduleName + "/azmthMotor", brakeMode=True, currentLimitA=20
     )
 
     # Note the azimuth encoder inversion should be fixed, based on the physical design of the encoder itself,

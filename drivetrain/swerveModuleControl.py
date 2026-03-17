@@ -140,10 +140,17 @@ class SwerveModuleControl:
                 math.isclose(gains.wheelA.get(), 0):
             self.wheelMotorFF = None
         else:
+            print(f"{self._speedDesTopicName} kS={gains.wheelS.get()} kV={gains.wheelV.get()} kA={gains.wheelA.get()}")
+            self.kS = gains.wheelS.get()
+            self.kV = gains.wheelV.get()
+            self.kA = gains.wheelA.get()
+            self.wheelMotorFF = True
+            """
             self.wheelMotorFF = SimpleMotorFeedforwardRadians(
                 gains.wheelS.get(), gains.wheelV.get(), gains.wheelA.get(),
                 kRobotUpdatePeriodS
             )
+            """
         self.azmthCtrl.setPID(
             gains.azmthP.get(), gains.azmthI.get(), gains.azmthD.get()
         )
@@ -155,6 +162,15 @@ class SwerveModuleControl:
             desState (SwerveModuleState): The commanded state of the module
         """
         self.desiredState = desState
+
+    @classmethod
+    def sign(cls, given):
+        if given < 0:
+            return -1
+        elif given > 0:
+            return 1
+        else:
+            return 0
 
     def update(self):
         """Main update function, call every 40ms"""
@@ -192,11 +208,16 @@ class SwerveModuleControl:
         motorDesSpd = self.dtLinearToMotorRot(self.optimizedDesiredState.speed)
         motorDesAccel = (motorDesSpd - self._prevMotorDesSpeed) / kRobotUpdatePeriodS
         if self.wheelMotorFF is None:
-            motorVoltageFF = 0
+            motorVoltageFF = 0.0
         else:
-            motorVoltageFF = self.wheelMotorFF.calculate(motorDesSpd, motorDesAccel)
+            motorVoltageFF = self.kS*self.sign(motorDesSpd)+self.kV*motorDesSpd+self.kA*motorDesAccel
+            #motorVoltageFF = self.wheelMotorFF.calculate(motorDesSpd, motorDesAccel)
         if self.wheelMotorIsClosedLoop:
             self.wheelMotor.setVelCmd(motorDesSpd, motorVoltageFF)
+
+        Logger.recordOutput(f"{self._speedDesTopicName}_radps", motorDesSpd)
+        Logger.recordOutput(f"{self._speedDesTopicName}_radps2", motorDesAccel)
+        Logger.recordOutput(f"{self._speedDesTopicName}_FFV", motorVoltageFF)
 
         self._prevMotorDesSpeed = motorDesSpd  # save for next loop
 
