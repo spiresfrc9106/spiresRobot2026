@@ -112,16 +112,11 @@ class DrivetrainPhysical(metaclass=Singleton):
         self.MAX_FWD_REV_SPEED_MPS = self.MAX_DT_LINEAR_SPEED_MPS * 0.98 * speed_multiple_at_comp  # fudge factor due to gearBox losses
         self.MAX_STRAFE_SPEED_MPS = self.MAX_DT_LINEAR_SPEED_MPS * 0.98 * speed_multiple_at_comp  # fudge factor due to gearBox losses
         self.MAX_ROTATE_SPEED_RAD_PER_SEC = deg2Rad(
-            360.0
+            540.0
         ) * speed_multiple_at_comp  # Fixed at the maximum rotational speed we'd want.
         # Accelerations - also a total guess
-        self.MAX_TRANSLATE_ACCEL_MPS2 = (
-            # self.MAX_FWD_REV_SPEED_MPS / 0.50
-                self.MAX_FWD_REV_SPEED_MPS / 0.5
-        )  # 0-full time of 0.5 second - this is a guestimate xyzzy - investigate making this smaller
-        self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2 = (
-                self.MAX_ROTATE_SPEED_RAD_PER_SEC / 0.25
-        )  # 0-full time of 0.25 second - this is a guestaimate
+        self.MAX_TRANSLATE_ACCEL_MPS2 = self.MAX_FWD_REV_SPEED_MPS
+        self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2 = self.MAX_ROTATE_SPEED_RAD_PER_SEC
 
         self.kTrajectoryPositionPGainAuto = 9/10 #9
         self.kTrajectoryPositionPGainVision = 5/10 #5

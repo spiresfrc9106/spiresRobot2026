@@ -156,6 +156,7 @@ class RobotContainer:
 
     def teleopInit(self) -> None:
         CommandScheduler.getInstance().cancelAll()
+        DriverInterface().initiatialize()
         if self.inout is not None:
            CommandScheduler.getInstance().schedule(self.inout.aOperatorRunsInoutCommand())
         # clear existing telemetry trajectory
@@ -195,6 +196,7 @@ class RobotContainer:
         self.autonomousOrTestCommonInit()
 
     def autonomousOrTestCommonInit(self) -> None:
+        DriverInterface().initiatialize()
         CommandScheduler.getInstance().cancelAll()
         if self.autoOrTestCommand is not None:
             CommandScheduler.getInstance().schedule(self.autoOrTestCommand)
