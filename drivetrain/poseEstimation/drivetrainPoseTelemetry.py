@@ -119,10 +119,12 @@ class DrivetrainPoseTelemetry:
         asGoal = AutoSteer().getCurGoalPose()
         if(asGoal is not None):
             self.field.getObject("AutoSteerGoal").setPose(asGoal)
+        """
 
         self.field.getObject("visionObservations").setPoses(self.visionPoses)
         self.visionPoses = []
 
+        """
         self.field.getObject("autoDriveGoalPose").setPose(self.autoDriveGoalPose)
         """
         icount = 0

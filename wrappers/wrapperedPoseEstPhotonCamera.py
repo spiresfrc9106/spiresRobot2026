@@ -1,13 +1,11 @@
 from dataclasses import dataclass
-import wpilib
-from photonlibpy.targeting import PhotonPipelineResult
 from robotpy_apriltag import AprilTagFieldLayout, AprilTagField
 from wpimath.units import feetToMeters, degreesToRadians
 from wpimath.geometry import Pose2d
 
+from constants import kRobotUpdatePeriodS
 from constants.vision import kMaxVisionAmbiguity
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
-from wrappers.casserolePhotonCamera import PhotonCamera
 from photonlibpy.targeting.photonTrackedTarget import PhotonTrackedTarget
 from photonlibpy.photonCamera import setVersionCheckEnabled
 from photonlibpy import PhotonPoseEstimator, PhotonCamera, EstimatedRobotPose
@@ -73,8 +71,8 @@ class WrapperedPoseEstPhotonCamera:
             self.disconFault.setFaulted()
             return
 
-        for result in self.cam.getAllUnreadResults():
-            if RobotTopSubsystem().getFPGATimestampS()-result.getTimestampSeconds()<0.1:
+        result = self.cam.getLatestResult()
+        if result.hasTargets() and RobotTopSubsystem().getFPGATimestampS()-result.getTimestampSeconds()<2.0*kRobotUpdatePeriodS:
                 camEstPose: EstimatedRobotPose  = self.camPoseEst.estimateCoprocMultiTagPose(result)
                 if camEstPose is None:
                     camEstPose = self.camPoseEst.estimateLowestAmbiguityPose(result)
@@ -83,7 +81,7 @@ class WrapperedPoseEstPhotonCamera:
                     self.poseEstimates.append(
                         CameraPoseObservation(time=camEstPose.timestampSeconds,
                                               estFieldPose=camEstPose.estimatedPose.toPose2d(),
-                                              xyStdDev=1.0,
+                                              xyStdDev=3.0,
                                               rotStdDev=degreesToRadians(60.0))
                     )
 
