@@ -22,7 +22,7 @@
           },
           {
             "title": "flywheelIPS",
-            "x": 128.0,
+            "x": 832.0,
             "y": 0.0,
             "width": 256.0,
             "height": 256.0,
@@ -39,6 +39,27 @@
               "wrap_value": false,
               "show_pointer": true,
               "show_ticks": true
+            }
+          },
+          {
+            "title": "DT Pose 2D",
+            "x": 128.0,
+            "y": 0.0,
+            "width": 704.0,
+            "height": 320.0,
+            "type": "Field",
+            "properties": {
+              "topic": "/SmartDashboard/DT Pose 2D",
+              "period": 0.06,
+              "field_game": "Rebuilt",
+              "robot_width": 0.85,
+              "robot_length": 0.85,
+              "show_other_objects": true,
+              "show_trajectories": true,
+              "field_rotation": 0.0,
+              "robot_color": 4281791556,
+              "trajectory_color": 4294967295,
+              "show_robot_outside_widget": true
             }
           }
         ]

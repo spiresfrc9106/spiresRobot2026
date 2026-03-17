@@ -16,11 +16,11 @@ from robot import MyRobot
 from robotstate import RobotState
 from subsystems.drivetrain.drivetrainsubsystem import DrivetrainSubsystem
 
-from westwood.constants.sim import (
+from constants.sim import (
     kSimDefaultRobotLocation,
 )
 
-
+# TODO this comes from westwood and drives the westwood camera sim. Unify it with the drivetrain sim in the casserole swerve.
 class SwerveDriveSim:
     def __init__(self, drivetrainSubsystem: DrivetrainSubsystem) -> None:
         self.drivetrainSubsystem = drivetrainSubsystem
