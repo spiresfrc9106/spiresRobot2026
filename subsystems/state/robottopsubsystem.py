@@ -1,11 +1,18 @@
 from typing_extensions import Self
 from commands2 import Subsystem
+from wpimath.geometry import Pose2d, Rotation2d
+from wpimath import angleModulus
+
+from constants.field import kFarHubLocation, kCloseHubLocation
 from pykit.logger import Logger
 from pykit.autolog import autolog_output, autologgable_output
 
 from subsystems.state.robottopio import RobotTopIO
+from utils.allianceTransformUtils import onRed
 from utils.singleton import _instances
 from util.logtracer import LogTracer
+from utils.units import m2in, rad2Deg
+
 
 # pylint: disable-next=too-many-instance-attributes
 @autologgable_output
@@ -34,6 +41,8 @@ class RobotTopSubsystem(Subsystem):
         self.setName(type(self).__name__)
         self.inputs = RobotTopIO.RobotTopIOInputs()
 
+        self.robotPose: Pose2d()|None = None
+
         self._initalized = True
 
     def periodic(self):
@@ -44,12 +53,14 @@ class RobotTopSubsystem(Subsystem):
         LogTracer.resetOuter("RobotTopSubsystemPeriodic")
         self.io.updateInputs(self.inputs)
         LogTracer.record("IOUpdate")
-        """TODO put any configuation IOUpdates here"""
+        """put any RobotTop IOUpdates here"""
         LogTracer.record("StateUpdate")
-        Logger.processInputs("Config", self.inputs)
+        Logger.processInputs("RobotTop", self.inputs)
         LogTracer.record("LoggerProcessInputs")
 
-        """TODO put any configuation periodic here"""
+        """put any RobotTop periodic here"""
+        Logger.recordOutput("Robot/top/distanceToHubIn", m2in(self.getDistanceToHubM()))
+        Logger.recordOutput("Robot/top/angleToHubDeg", rad2Deg(self.getAngleToHubRad()))
         LogTracer.record("ModulesPeriodic")
         LogTracer.recordTotal()
 
@@ -60,4 +71,32 @@ class RobotTopSubsystem(Subsystem):
     def getFPGATimestampS(self) -> float:
         """The time of the current robot periodic loop in seconds."""
         return self.inputs.timeUSec / 1.0e6
+
+    def setRobotPose(self, pose: Pose2d) -> None:
+        self.robotPose = pose
+
+    def hubLocation(self):
+        return kFarHubLocation if onRed() else kCloseHubLocation
+
+    def getDistanceToHubM(self)->float:
+        result = 0.0
+        if self.robotPose is not None:
+            result = self.robotPose.translation().distance(self.hubLocation())
+        return result
+
+    def getRotationToHub(self)->Rotation2d:
+        rotationToTarget = None
+        if self.robotPose is not None:
+            bearingToTarget = (self.hubLocation()-self.robotPose.translation()).angle()
+            rotationToTarget = bearingToTarget - self.robotPose.rotation()+Rotation2d.fromDegrees(180.0)
+        return rotationToTarget
+
+    def getAngleToHubRad(self)->float:
+        rotation = self.getRotationToHub()
+        angleToHubRad = 0.0
+        if rotation is not None:
+            angleToHubRad = angleModulus(rotation.radians())
+        return angleToHubRad
+
+
 
