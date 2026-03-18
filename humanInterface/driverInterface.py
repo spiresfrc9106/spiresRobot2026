@@ -66,12 +66,12 @@ class DriverInterface(metaclass=Singleton):
         self.robotRelative = False
 
     def newTranslateSlewRateLimiter(self) -> None:
-        self.velXSlewRateLimiter = SlewRateLimiter(rateLimit=self.MAX_TRANSLATE_ACCEL_MPS2*self.translateAccelFactor)
-        self.velYSlewRateLimiter = SlewRateLimiter(rateLimit=self.MAX_TRANSLATE_ACCEL_MPS2*self.translateAccelFactor)
+        self.velXSlewRateLimiter = SlewRateLimiter(self.MAX_TRANSLATE_ACCEL_MPS2*self.translateAccelFactor)
+        self.velYSlewRateLimiter = SlewRateLimiter(self.MAX_TRANSLATE_ACCEL_MPS2*self.translateAccelFactor)
         Logger.recordOutput("di/translateAccelFactor", self.translateAccelFactor)
 
     def newRotateSlewRateLimiter(self) -> None:
-        self.velTSlewRateLimiter = SlewRateLimiter(rateLimit=self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2*self.rotateAccelFactor)
+        self.velTSlewRateLimiter = SlewRateLimiter(self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2*self.rotateAccelFactor)
         Logger.recordOutput("di/rotateAccelFactor", self.rotateAccelFactor)
 
     @autolog_output(key="di/velXCmd_mps")
@@ -110,9 +110,9 @@ class DriverInterface(metaclass=Singleton):
             rotateSlowMult = 1.0 if self.ctrl.getRightBumper() else self.rotateSlowMultiplier
 
             # Shape velocity command
-            velCmdXRaw = vXJoyWithDeadband * self.MAX_STRAFE_SPEED_MPS * translateSlowMult
-            velCmdYRaw = vYJoyWithDeadband * self.MAX_FWD_REV_SPEED_MPS * translateSlowMult
-            velCmdRotRaw = vRotJoyWithDeadband * self.MAX_ROTATE_SPEED_RAD_PER_SEC * rotateSlowMult
+            velCmdXRaw = vXJoyWithDeadband * self.MAX_STRAFE_SPEED_MPS * self.translateAccelFactor * translateSlowMult
+            velCmdYRaw = vYJoyWithDeadband * self.MAX_FWD_REV_SPEED_MPS * self.translateAccelFactor * translateSlowMult
+            velCmdRotRaw = vRotJoyWithDeadband * self.MAX_ROTATE_SPEED_RAD_PER_SEC * self.rotateAccelFactor * rotateSlowMult
 
             if self.robotRelative:
                 velCmdXRaw *= self.calRobotRelativeSlowdown.get()
@@ -131,14 +131,14 @@ class DriverInterface(metaclass=Singleton):
                 self.rotateAccelFactor = min(1.0, self.rotateAccelFactor+0.05)
                 self.newRotateSlewRateLimiter()
             elif pov_deg >= 225 and pov_deg <= 315:
-                self.rotateAccelFactor = max(0.05, self.rotateAccelFactor-0.05)
+                self.rotateAccelFactor = max(0.2, self.rotateAccelFactor-0.05)
                 self.newRotateSlewRateLimiter()
 
             if pov_deg >= 0 and pov_deg <= 45:
                 self.translateAccelFactor = min(1.0, self.translateAccelFactor+0.05)
                 self.newTranslateSlewRateLimiter()
             elif pov_deg >= 135 and pov_deg <= 225:
-                self.translateAccelFactor = max(0.05, self.translateAccelFactor-0.05)
+                self.translateAccelFactor = max(0.2, self.translateAccelFactor-0.05)
                 self.newTranslateSlewRateLimiter()
 
             self.connectedFault.setNoFault()
