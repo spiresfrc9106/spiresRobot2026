@@ -40,7 +40,27 @@ kRobotToBackHighCamTransform = Transform3d(
         Rotation3d.fromDegrees(0, -40.0, 180.0),
     ),
 )
-# Joey is designing the second back center camera to tilt up 40 degrees.
+
+kRobotToFrontLeftCamTransform = Transform3d(
+    Pose3d(),
+    Pose3d(
+        inchesToMeters(+9.5),
+        inchesToMeters(+11.5),
+        inchesToMeters(+10.0),
+        Rotation3d.fromDegrees(0, -20.0, -20.0),
+    ),
+)
+
+kRobotToFrontRightCamTransform = Transform3d(
+    Pose3d(),
+    Pose3d(
+        inchesToMeters(+9.5),
+        inchesToMeters(-11.5),
+        inchesToMeters(+10.0),
+        Rotation3d.fromDegrees(0, -20.0, +20.0),
+    ),
+)
+
 
 kBackCenterCamConfiguration = CameraConfiguration(
     cameraName="back_center_cam",
@@ -56,6 +76,20 @@ kBackHighCamConfiguration = CameraConfiguration(
     robotToCameraTransform=kRobotToBackHighCamTransform
 )
 
+kFrontLeftCamConfiguration = CameraConfiguration(
+    cameraName="front_left_cam",
+    realCameraIO=VisionSubsystemIOPhotonVision,
+    simCameraIO=VisionSubsystemIOPhotonSim if kRobotMode == RobotModes.SIMULATION else None,
+    robotToCameraTransform=kRobotToFrontLeftCamTransform
+)
+
+kFrontRightCamConfiguration = CameraConfiguration(
+    cameraName="front_right_cam",
+    realCameraIO=VisionSubsystemIOPhotonVision,
+    simCameraIO=VisionSubsystemIOPhotonSim if kRobotMode == RobotModes.SIMULATION else None,
+    robotToCameraTransform=kRobotToFrontRightCamTransform
+)
+
 class VisionDependentConstants(metaclass=Singleton):
     def __init__(self):
         self.visionDepConstants = {
@@ -66,15 +100,19 @@ class VisionDependentConstants(metaclass=Singleton):
             },
             RobotTypes.Spires2026: {
                 "HAS_VISION": False,
-                "CAMS": ["back_center_cam", "back_high_cam"],
+                "CAMS": ["back_center_cam", "back_high_cam", "front_left_cam", "front_right_cam"],
                 "back_center_cam": kBackCenterCamConfiguration,
                 "back_high_cam": kBackHighCamConfiguration,
+                "front_left_cam": kFrontLeftCamConfiguration,
+                "front_right_cam": kFrontRightCamConfiguration,
             },
             RobotTypes.Spires2026Sim: {
                 "HAS_VISION": True,
-                "CAMS": ["back_center_cam", "back_high_cam"],
+                "CAMS": ["back_center_cam", "back_high_cam", "front_left_cam", "front_right_cam"],
                 "back_center_cam": kBackCenterCamConfiguration,
                 "back_high_cam": kBackHighCamConfiguration,
+                "front_left_cam": kFrontLeftCamConfiguration,
+                "front_right_cam": kFrontRightCamConfiguration,
             },
             RobotTypes.SpiresTestBoard: {
                 "HAS_VISION": False,

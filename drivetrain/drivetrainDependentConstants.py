@@ -8,7 +8,8 @@ from wpimath.geometry import Pose3d
 from subsystems.state.configio import RobotTypes
 from utils.singleton import Singleton
 from utils.units import deg2Rad
-from subsystems.vision.vision import kRobotToBackCenterCamTransform, kRobotToBackHighCamTransform
+from subsystems.vision.vision import kRobotToBackCenterCamTransform, kRobotToBackHighCamTransform, \
+    kRobotToFrontLeftCamTransform, kRobotToFrontRightCamTransform
 from wrappers.wrapperedPoseEstPhotonCamera import WrapperedPoseEstPhotonCamera
 from wrappers.wrapperedSparkFlex import WrapperedSparkFlex
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
@@ -73,6 +74,34 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                         .publish()
                     ),
                 "ROBOT_TO_CAM": kRobotToBackHighCamTransform,
+                "WEIGH_IN_FILTER": True,
+                "USE_IN_TC_FRONT": True,
+                "USE_IN_TC_BACK": True,
+            },
+            {
+                "CAM": WrapperedPoseEstPhotonCamera("front_left_cam", kRobotToFrontLeftCamTransform),
+                "POSE_EST_LOG_NAME": "photonBH",
+                "PUBLISHER":
+                    (
+                        NetworkTableInstance.getDefault()
+                        .getStructTopic("/FrontLeftCamPose", Pose3d)
+                        .publish()
+                    ),
+                "ROBOT_TO_CAM": kRobotToFrontLeftCamTransform,
+                "WEIGH_IN_FILTER": True,
+                "USE_IN_TC_FRONT": True,
+                "USE_IN_TC_BACK": True,
+            },
+            {
+                "CAM": WrapperedPoseEstPhotonCamera("front_right_cam", kRobotToFrontRightCamTransform),
+                "POSE_EST_LOG_NAME": "photonBH",
+                "PUBLISHER":
+                    (
+                        NetworkTableInstance.getDefault()
+                        .getStructTopic("/FrontRightCamPose", Pose3d)
+                        .publish()
+                    ),
+                "ROBOT_TO_CAM": kRobotToFrontRightCamTransform,
                 "WEIGH_IN_FILTER": True,
                 "USE_IN_TC_FRONT": True,
                 "USE_IN_TC_BACK": True,
