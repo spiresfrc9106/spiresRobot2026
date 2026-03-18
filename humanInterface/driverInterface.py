@@ -2,6 +2,7 @@ from pykit.autolog import autologgable_output, autolog_output
 
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
+from pykit.logger import Logger
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from utils.allianceTransformUtils import onRed
 from utils.faults import Fault
@@ -51,9 +52,12 @@ class DriverInterface(metaclass=Singleton):
         self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2 = p.MAX_ROTATE_ACCEL_RAD_PER_SEC_2 * self.calMaxRotateAccelFactor.get()
 
         # Driver motion rate limiters - enforce smoother driving
-        self.velXSlewRateLimiter = SlewRateLimiter(rateLimit=self.MAX_TRANSLATE_ACCEL_MPS2)
-        self.velYSlewRateLimiter = SlewRateLimiter(rateLimit=self.MAX_TRANSLATE_ACCEL_MPS2)
-        self.velTSlewRateLimiter = SlewRateLimiter(rateLimit=self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2)
+        self.translateAccelFactor = 1.0
+        self.rotateAccelFactor = 1.0
+
+        self.newTranslateSlewRateLimiter()
+        self.newRotateSlewRateLimiter()
+
 
         # Utility - reset to zero-angle at the current pose
         self.gyroResetCmd = False
@@ -61,7 +65,14 @@ class DriverInterface(metaclass=Singleton):
         #utility - use robot-relative xyzzy
         self.robotRelative = False
 
+    def newTranslateSlewRateLimiter(self) -> None:
+        self.velXSlewRateLimiter = SlewRateLimiter(rateLimit=self.MAX_TRANSLATE_ACCEL_MPS2*self.translateAccelFactor)
+        self.velYSlewRateLimiter = SlewRateLimiter(rateLimit=self.MAX_TRANSLATE_ACCEL_MPS2*self.translateAccelFactor)
+        Logger.recordOutput("di/translateAccelFactor", self.translateAccelFactor)
 
+    def newRotateSlewRateLimiter(self) -> None:
+        self.velTSlewRateLimiter = SlewRateLimiter(rateLimit=self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2*self.rotateAccelFactor)
+        Logger.recordOutput("di/rotateAccelFactor", self.rotateAccelFactor)
 
     @autolog_output(key="di/velXCmd_mps")
     def getVelXCmd(self) -> float:
@@ -115,6 +126,20 @@ class DriverInterface(metaclass=Singleton):
 
             self.gyroResetCmd = self.ctrl.getAButton()
 
+            pov_deg = self.ctrl.getPOV()
+            if pov_deg >= 45 and pov_deg <= 135:
+                self.rotateAccelFactor = min(1.0, self.rotateAccelFactor+0.05)
+                self.newRotateSlewRateLimiter()
+            elif pov_deg >= 225 and pov_deg <= 315:
+                self.rotateAccelFactor = max(0.05, self.rotateAccelFactor-0.05)
+                self.newRotateSlewRateLimiter()
+
+            if pov_deg >= 0 and pov_deg <= 45:
+                self.translateAccelFactor = min(1.0, self.translateAccelFactor+0.05)
+                self.newTranslateSlewRateLimiter()
+            elif pov_deg >= 135 and pov_deg <= 225:
+                self.translateAccelFactor = max(0.05, self.translateAccelFactor-0.05)
+                self.newTranslateSlewRateLimiter()
 
             self.connectedFault.setNoFault()
 

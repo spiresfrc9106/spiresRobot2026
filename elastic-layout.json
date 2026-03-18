@@ -11,7 +11,7 @@
             "title": "Auto Choices",
             "x": 0.0,
             "y": 0.0,
-            "width": 128.0,
+            "width": 256.0,
             "height": 128.0,
             "type": "ComboBox Chooser",
             "properties": {
@@ -22,7 +22,7 @@
           },
           {
             "title": "flywheelIPS",
-            "x": 832.0,
+            "x": 960.0,
             "y": 0.0,
             "width": 256.0,
             "height": 256.0,
@@ -43,7 +43,7 @@
           },
           {
             "title": "DT Pose 2D",
-            "x": 128.0,
+            "x": 256.0,
             "y": 0.0,
             "width": 704.0,
             "height": 320.0,
@@ -60,6 +60,42 @@
               "robot_color": 4281791556,
               "trajectory_color": 4294967295,
               "show_robot_outside_widget": true
+            }
+          },
+          {
+            "title": "Rotate Accel",
+            "x": 128.0,
+            "y": 128.0,
+            "width": 128.0,
+            "height": 256.0,
+            "type": "Number Bar",
+            "properties": {
+              "topic": "/AdvantageKit/RealOutputs/di/rotateAccelFactor",
+              "period": 0.06,
+              "data_type": "double",
+              "min_value": 0.0,
+              "max_value": 1.0,
+              "divisions": 5,
+              "inverted": false,
+              "orientation": "vertical"
+            }
+          },
+          {
+            "title": "Trans Accel",
+            "x": 0.0,
+            "y": 128.0,
+            "width": 128.0,
+            "height": 256.0,
+            "type": "Number Bar",
+            "properties": {
+              "topic": "/AdvantageKit/RealOutputs/di/translateAccelFactor",
+              "period": 0.06,
+              "data_type": "double",
+              "min_value": 0.0,
+              "max_value": 1.0,
+              "divisions": 5,
+              "inverted": false,
+              "orientation": "vertical"
             }
           }
         ]
