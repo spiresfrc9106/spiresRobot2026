@@ -74,12 +74,13 @@ class RobotContainer:
         self.autoChooser: LoggedDashboardChooser[Command] = LoggedDashboardChooser(
             "Auto Choices"
         )
-        pathsPath = os.path.join(wpilib.getDeployDirectory(), "pathplanner", "autos")
-        for file in os.listdir(pathsPath):
-            relevantName = file.split(".")[0]
-            print(f"Adding auto {relevantName}")
-            auton = PathPlannerAuto(relevantName)
-            self.autoChooser.addOption(relevantName, auton)
+        if self.drivetrainSubsystem is not None:
+            pathsPath = os.path.join(wpilib.getDeployDirectory(), "pathplanner", "autos")
+            for file in os.listdir(pathsPath):
+                relevantName = file.split(".")[0]
+                print(f"Adding auto {relevantName}")
+                auton = PathPlannerAuto(relevantName)
+                self.autoChooser.addOption(relevantName, auton)
 
         self.autoChooser.setDefaultOption("Do Nothing Once", cmd.none())
 
