@@ -13,6 +13,47 @@ from utils.calibration import Calibration
 from utils.singleton import Singleton
 from utils.units import rad2Deg, deg2Rad
 
+class SlewRateLimitAwayFromZero():
+    def __init__(self, awayRate:float, towardsZeroRate:float, initialValue:float, dtSeconds:float) -> None:
+        self.awayRate = awayRate
+        self.towardsZeroRate = towardsZeroRate
+        self.value = initialValue
+        self.dtSeconds = dtSeconds
+
+    def sign(cls, given):
+        if given < 0:
+            return -1
+        elif given > 0:
+            return 1
+        else:
+            return 0
+
+    """
+    def calculate(self, given) -> float:
+        away = False
+        signValue = self.sign(self.value)
+        if signValue == 0:
+            away = True
+        else:
+            if signValue == 1 and given > self.value:
+                away = True
+            elif signValue == 1 and given < self.value:
+                away = False
+            elif signValue == -1 and given < self.value:
+                away = True
+            else:
+                away = False
+
+        if away:
+            limit = self.value + self.sign(given-self.value)*self.awayRate*self.dtSeconds
+        else:
+            limit = self.value + self.sign(given-self.value)*self.towardsZeroRate*self.dtSeconds
+
+        if away:
+            newMag = max(abs(limit), abs(self.value))
+            newValue = self.sign(limit)*newMag
+    """
+
 
 @autologgable_output
 class DriverInterface(metaclass=Singleton):

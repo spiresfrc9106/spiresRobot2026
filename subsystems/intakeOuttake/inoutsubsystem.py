@@ -318,9 +318,9 @@ class InOutSubsystem(Subsystem):
     def spinUpAndShootCommand(self) -> Command:
         return cmd.sequence(
             cmd.runOnce(lambda: self.setFlywheelState(FlywheelState.kSpinningUp),self),
-            cmd.waitSeconds(3),
+            cmd.waitSeconds(1),
             cmd.runOnce(lambda: self.setState(InOutState.kShooting), self),
-            cmd.waitSeconds(10),
+            cmd.waitSeconds(7),
             cmd.runOnce(lambda: self.setState(InOutState.kOff), self),
             cmd.runOnce(lambda: self.setFlywheelState(FlywheelState.kOff),self),
             self
