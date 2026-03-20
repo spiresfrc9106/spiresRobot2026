@@ -90,7 +90,7 @@ class DrivetrainPhysical(metaclass=Singleton):
         # by driving the robot a known distance, seeing the measured distance in software,
         # and adjusting this factor till the measured distance matches known
         # Might have to be different for colson wheels?
-        self.WHEEL_FUDGE_FACTOR = 60.0/62.75
+        self.WHEEL_FUDGE_FACTOR = (2.99)/(2.94) * 60.0/62.75
         
         # Nominal 4-inch diameter swerve drive wheels
         # https:#www.swervedrivespecialties.com/collections/mk4i-parts/products/billet-wheel-4d-x-1-5w-bearing-bore
