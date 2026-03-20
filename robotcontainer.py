@@ -1,6 +1,7 @@
 import os
 from typing import Optional
 
+import commands2
 import wpilib
 from commands2 import Command, cmd, CommandScheduler
 from pathplannerlib.auto import PathPlannerAuto, AutoBuilder, NamedCommands
@@ -10,6 +11,7 @@ from wpimath.geometry import Pose2d, Rotation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 
 from constants import kFieldLengthIn, kFieldWidthIn, kRobotMode, RobotModes
+from constants.field import poseTransformedForAlliance
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from humanInterface.driverInterface import DriverInterface
 from pykit.logger import Logger
@@ -50,6 +52,7 @@ class RobotContainer:
         if self.inout is not None:
             NamedCommands.registerCommand("spinUpFlywheel", self.inout.spinUpFlywheelCommand())
             NamedCommands.registerCommand("shoot", self.inout.shootCommand())
+            NamedCommands.registerCommand("spinUpAndShoot", self.inout.spinUpAndShootCommand())
         if self.drivetrainSubsystem is not None:
             p = DrivetrainPhysical()
             AutoBuilder.configure(
@@ -74,13 +77,57 @@ class RobotContainer:
         self.autoChooser: LoggedDashboardChooser[Command] = LoggedDashboardChooser(
             "Auto Choices"
         )
+        #self.autoTrajsDict = {}
         if self.drivetrainSubsystem is not None:
             pathsPath = os.path.join(wpilib.getDeployDirectory(), "pathplanner", "autos")
             for file in os.listdir(pathsPath):
                 relevantName = file.split(".")[0]
                 print(f"Adding auto {relevantName}")
-                auton = PathPlannerAuto(relevantName)
-                self.autoChooser.addOption(relevantName, auton)
+                if relevantName.startswith("side_"):
+                    autonLeft = PathPlannerAuto(relevantName)
+                    leftPose =autonLeft._startingPose
+                    autonRight = PathPlannerAuto(relevantName, mirror=True)
+                    rightPose = autonRight._startingPose
+                    name = f"L-{relevantName}"
+                    self.autoChooser.addOption(name, autonLeft)
+                    name = f"R-{relevantName}"
+                    self.autoChooser.addOption(name, autonRight)
+
+                    autonLeft = PathPlannerAuto(relevantName)
+                    autonRight = PathPlannerAuto(relevantName, mirror=True)
+
+                    name = f"sh-L-{relevantName}"
+                    self.autoChooser.addOption(
+                            name,
+                            commands2.SequentialCommandGroup(
+                                cmd.runOnce(lambda p=leftPose: self.resetPose(poseTransformedForAlliance(p)),self.drivetrainSubsystem),
+                                self.inout.spinUpAndShootCommand(),
+                                autonLeft),
+                    )
+                    name = f"sh-R-{relevantName}"
+                    self.autoChooser.addOption(
+                            name,
+                            commands2.SequentialCommandGroup(
+                                cmd.runOnce(lambda p=rightPose: self.resetPose(poseTransformedForAlliance(p)),self.drivetrainSubsystem),
+                                self.inout.spinUpAndShootCommand(),
+                                autonRight),
+                    )
+                else:
+                    auton = PathPlannerAuto(relevantName)
+                    cPose = auton._startingPose
+                    name = f"C-{relevantName}"
+                    self.autoChooser.addOption(name, auton)
+                    auton = PathPlannerAuto(relevantName)
+                    name = f"sh-C-{relevantName}"
+                    self.autoChooser.addOption(
+                        name,
+                        commands2.SequentialCommandGroup(
+                            cmd.runOnce(lambda p=cPose: self.resetPose(poseTransformedForAlliance(p)),
+                                        self.drivetrainSubsystem),
+                            self.inout.spinUpAndShootCommand(),
+                            auton),
+                    )
+
 
         self.autoChooser.setDefaultOption("Do Nothing Once", cmd.none())
 

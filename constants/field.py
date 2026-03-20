@@ -1,4 +1,6 @@
-from wpimath.geometry import Translation2d
+from wpimath.geometry import Translation2d, Pose2d, Rotation2d
+
+from utils.allianceTransformUtils import onRed
 from .math import kMetersPerInch, kMetersPerFoot
 
 # Field physical parameters
@@ -7,6 +9,21 @@ kFieldLength = 54 * kMetersPerFoot + 3.2 * kMetersPerInch
 
 kFieldWidth = 26 * kMetersPerFoot + 5.7 * kMetersPerInch
 """meters"""
+
+def mirrorPoseForRed(pose: Pose2d) -> Pose2d:
+    """Mirrors a blue-origin pose to red-alliance origin."""
+
+    return Pose2d(
+        kFieldLength - pose.x,  # Reflect X
+        kFieldWidth - pose.y,  # Reflect Y
+        pose.rotation()+Rotation2d.fromDegrees(180)  # Reflect Angle
+    )
+
+def poseTransformedForAlliance(pose: Pose2d) -> Pose2d:
+    if onRed():
+        return mirrorPoseForRed(pose)
+    else:
+        return pose
 
 kHubHeight = 1.8288
 """meters"""

@@ -7,19 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "lc_shoot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "lc_move"
+            "pathName": "side_safer_n_push"
           }
         }
       ]
