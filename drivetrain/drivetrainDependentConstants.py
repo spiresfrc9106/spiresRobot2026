@@ -167,7 +167,7 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "AZMTH_A": 0.0,
                 "AZMTH_V": 0.0,
                 "AZMTH_S": 0.0,
-                "FL_OFFSET_RAD": 3.160, #deg2Rad( 173.4),
+                "FL_OFFSET_RAD": 3.155, #deg2Rad( 173.4),
                 "FR_OFFSET_RAD": deg2Rad(-122.3),
                 "BL_OFFSET_RAD": deg2Rad( 33.4),
                 "BR_OFFSET_RAD": 2.596, #deg2Rad(142.5),
