@@ -16,16 +16,16 @@
     },
     {
       "anchor": {
-        "x": 3.1346777777777777,
-        "y": 7.109372222222222
+        "x": 3.14705704815777,
+        "y": 7.26738008386827
       },
       "prevControl": {
-        "x": 2.5578784384272732,
-        "y": 6.704977777777779
+        "x": 1.0898511693834165,
+        "y": 6.217328136073706
       },
       "nextControl": {
-        "x": 3.604315649165442,
-        "y": 7.4386356820308634
+        "x": 3.6579188587717186,
+        "y": 7.5281373784219054
       },
       "isLocked": false,
       "linkedName": "lc_shoot_point"
@@ -108,7 +108,30 @@
   ],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "spinUpFlywheel",
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "spinUpFlywheel"
+        }
+      }
+    },
+    {
+      "name": "shoot",
+      "waypointRelativePos": 1.0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "shoot"
+        }
+      }
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 2.0,
     "maxAcceleration": 2.0,
