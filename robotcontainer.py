@@ -10,7 +10,7 @@ from pathplannerlib.controller import PPHolonomicDriveController
 from wpimath.geometry import Pose2d, Rotation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 
-from constants import kFieldLengthIn, kFieldWidthIn, kRobotMode, RobotModes
+from constants import kFieldLengthIn, kFieldWidthIn
 from constants.field import poseTransformedForAlliance
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from humanInterface.driverInterface import DriverInterface
@@ -155,15 +155,15 @@ class RobotContainer:
                 self.inout.makeCommandFeedForwardCharacterizationFlywheelMotor()
             )
             self.testChooser.addOption(
-                f"inout SysId ground",
+                "inout SysId ground",
                 self.inout.makeSysIdCommandGroundMotor()
             )
             self.testChooser.addOption(
-                f"inout SysId hopper",
+                "inout SysId hopper",
                 self.inout.makeSysIdCommandHopperMotor()
             )
             self.testChooser.addOption(
-                f"inout SysId flywheel",
+                "inout SysId flywheel",
                 self.inout.makeSysIdCommandFlywheelMotor()
             )
 

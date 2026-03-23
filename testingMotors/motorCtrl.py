@@ -8,7 +8,6 @@ from utils.singleton import Singleton
 from subsystems.state.configio import RobotTypes
 from subsystems.state.configsubsystem import ConfigSubsystem
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
-from wrappers.wrapperedSparkMotor import  WrapperedSparkMotor
 
 class MotorDependentConstants:
     def __init__(self):

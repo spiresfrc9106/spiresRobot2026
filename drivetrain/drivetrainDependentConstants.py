@@ -1,7 +1,5 @@
 
 from ntcore import NetworkTableInstance
-from wpimath.units import inchesToMeters
-from wpimath.system.plant import DCMotor
 from wpimath.geometry import Pose3d
 
 

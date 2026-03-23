@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from pykit.autolog import autolog
-from wpimath.geometry import Rotation2d
 
 
 @dataclass

@@ -4,13 +4,11 @@ from wpimath.units import feetToMeters, degreesToRadians
 from wpimath.geometry import Pose2d
 
 from constants import kRobotUpdatePeriodS
-from constants.vision import kMaxVisionAmbiguity
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from photonlibpy.targeting.photonTrackedTarget import PhotonTrackedTarget
 from photonlibpy.photonCamera import setVersionCheckEnabled
 from photonlibpy import PhotonPoseEstimator, PhotonCamera, EstimatedRobotPose
 
-from utils.fieldTagLayout import FieldTagLayout
 from utils.faults import Fault
 
 # Describes one on-field pose estimate from the acamera at a specific time.

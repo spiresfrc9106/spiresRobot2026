@@ -52,9 +52,9 @@ class ConfigSubsystem(Subsystem):
         self.cameraDepConstants = CameraDependentConstants().get(self._robotType)
         self.inoutDepConstants = InOutDependentConstants().get(self._robotType)
         self.visionDepConstants = VisionDependentConstants().get(self._robotType)
-        print(f":::::::::::")
+        print(":::::::::::")
         print(f"::::::::::: ConfigSubsystem: {kRobotMode} {self._robotType}")
-        print(f":::::::::::")
+        print(":::::::::::")
         self._initalized = True
 
     @classmethod

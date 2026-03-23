@@ -9,16 +9,11 @@ from drivetrain.swerveModuleControl import SwerveModuleControl
 from drivetrain.swerveModuleGainSet import SwerveModuleGainSet
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.drivetrainCommand import DrivetrainCommand
-from drivetrain.controlStrategies.autoDrive import AutoDrive
-from drivetrain.controlStrategies.trajectory import Trajectory
 from pykit.logger import Logger
 from subsystems.common.encodermodule import EncoderModule
-from subsystems.common.encodermoduleio import EncoderModuleIO
 from subsystems.common.motormodule import MotorModule
-from subsystems.common.motormoduleio import MotorModuleIO
 from utils.allianceTransformUtils import onRed
 from wrappers.wrapperedGyro import wrapperedGyro
-from wrappers.wrapperedRevThroughBoreEncoder import WrapperedRevThroughBoreEncoder
 
 
 class DrivetrainControl():

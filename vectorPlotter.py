@@ -3,14 +3,10 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 from navigation.repulsorFieldPlanner import RepulsorFieldPlanner
-from navigation.navConstants import GOAL_PICKUP, GOAL_SPEAKER
+from navigation.navConstants import GOAL_PICKUP
 from wpimath.geometry import Translation2d
-import matplotlib.pyplot as plt
-import numpy as np
 from navigation.navConstants import *
 
-import matplotlib.pyplot as plt
-import numpy as np
 from matplotlib import cm
 from scipy.interpolate import griddata
 from scipy.ndimage import gaussian_filter

@@ -23,7 +23,7 @@ import ntcore
 # magical import to make serde stuff work
 import photonlibpy.generated  # noqa
 import wpilib
-from wpilib import RobotController, Timer
+from wpilib import Timer
 
 from photonlibpy.packet import Packet
 from photonlibpy.targeting.photonPipelineResult import PhotonPipelineResult

@@ -8,7 +8,7 @@ from wpilib import XboxController
 
 from pykit.autolog import autologgable_output
 from pykit.logger import Logger
-from rev import SparkBase, SparkSim
+from rev import SparkSim
 from wpilib.simulation import LinearSystemSim_1_1_1, FlywheelSim, RoboRioSim, BatterySim
 
 from wpimath.system.plant import DCMotor, LinearSystemId
@@ -22,8 +22,7 @@ from subsystems.intakeOuttake.inoutsubsystemio import InOutSubsystemIO
 from subsystems.intakeOuttake.inoutsubsystemioreal import InOutSubsystemIOReal
 from subsystems.intakeOuttake.inoutsubsystemiosim import InOutSubsystemIORealSim
 from subsystems.common.motormodule import MotorModule
-from subsystems.common.motormodulecontroller import NullController, SparkSlewRateLimitedVelocityController, \
-    WPILibFFController, SparkVelocityController
+from subsystems.common.motormodulecontroller import NullController, SparkSlewRateLimitedVelocityController
 from subsystems.common.motormoduleio import MotorModuleIO
 from subsystems.common.motormoduleiowrappered import MotorModuleIOWrappered
 from subsystems.common.motormoduleiowrapperedsim import MotorModuleIOWrapperedSim
@@ -32,8 +31,6 @@ from subsystems.state.configsubsystem import ConfigSubsystem
 from utils.units import radPerSec2RPM
 from util.logtracer import LogTracer
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
-from wrappers.wrapperedSparkFlex import WrapperedSparkFlex
-from wrappers.wrapperedSparkMax import WrapperedSparkMax
 from wrappers.wrapperedSparkMotor import  WrapperedSparkMotor
 
 class FlywheelState(Enum):
@@ -354,7 +351,7 @@ class OperateFlywheelSimulation():
         self.sparkSim.iterate(
             radPerSec2RPM(self.flywheelSim.getAngularVelocity()) * self.gearRatio, # Motor velocity in RPM
             RoboRioSim.getVInVoltage(),            # Simulated battery voltage
-            kRobotUpdatePeriodS);                  # Time interval
+            kRobotUpdatePeriodS)                  # Time interval
         # Step 2: Set the input voltage to the physics simulation
         appliedVoltage = self.sparkSim.getAppliedOutput() * self.sparkSim.getBusVoltage()
         self.flywheelSim.setInputVoltage(appliedVoltage)

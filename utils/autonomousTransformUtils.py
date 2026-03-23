@@ -2,7 +2,7 @@ from typing import overload
 import wpilib
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Transform2d
 from choreo.trajectory import SwerveSample
-from utils.constants import FIELD_X_M, FIELD_Y_M
+from utils.constants import FIELD_Y_M
 
 """
  Utilities to help flip from blue alliance to red if needed

@@ -1,7 +1,7 @@
 import math
 from enum import Enum
 import ntcore
-from wpimath.geometry import Pose3d, Rotation3d, Translation3d, Rotation2d, Translation3d
+from wpimath.geometry import Pose3d, Rotation3d, Translation3d
 
 class Team(Enum):
     RED = 0

@@ -1,5 +1,4 @@
 
-from wpimath.geometry import Rotation2d
 
 from subsystems.intakeOuttake.inoutsubsystemio import InOutSubsystemIO
 

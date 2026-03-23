@@ -1,5 +1,4 @@
 import math
-import wpilib
 
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from utils.calibration import Calibration

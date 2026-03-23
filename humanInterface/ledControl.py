@@ -3,7 +3,7 @@ from utils.constants import LED_STACK_LIGHT_CTRL_PWM
 from utils.singleton import Singleton
 from wpimath.filter import Debouncer
 from wpilib import Timer
-from wpilib import RobotController, DriverStation
+from wpilib import DriverStation
 
 BLINK = -1.0
 GREEN = 0.35

@@ -5,7 +5,7 @@
 [project]
 name = "spiresRobot2026"
 version = "0.1.0"
-description = "FRC9106 - Spires - REBUILT Competioni Robot"
+description = "FRC9106 - Spires - REBUILT Competition Robot"
 readme = "README.md"
 requires-python = "==3.12.*"
 
@@ -37,6 +37,8 @@ dependencies = [
     "robotpy-halsim-ds-socket",
     "robotpy-native-apriltag",
     "robotpy-playingwithfusion",
+    "pre-commit>=4.5.0",
+    "ruff>=0.15",
 ]
 [tool.robotpy]
 

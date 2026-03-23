@@ -1,6 +1,4 @@
-import os
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
-import wpilib
 from utils.singleton import Singleton
 from wpimath.geometry import Pose3d
 

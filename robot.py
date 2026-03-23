@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-import typing
 import sys
 
 from commands2.commandscheduler import CommandScheduler
@@ -30,7 +29,6 @@ from humanInterface.driverInterface import DriverInterface
 from humanInterface.ledControl import LEDControl
 from humanInterface.operatorInterface import OperatorInterface
 from utils.singleton import destroyAllSingletonInstances
-from subsystems.state.configsubsystem import ConfigSubsystem
 from wpilib import Timer
 import wpilib
 

@@ -1,6 +1,5 @@
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from utils.calibration import Calibration
-from utils.units import RPM2RadPerSec
 
 
 class SwerveModuleGainSet:

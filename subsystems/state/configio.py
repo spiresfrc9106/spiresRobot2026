@@ -43,9 +43,9 @@ class _RobotIdentification(metaclass=Singleton):
         self._configureValue()
 
         simulationStr = "Simulation" if RobotBase.isSimulation() else "Real"
-        print(f":::::::::::")
+        print(":::::::::::")
         print(f"::::::::::: _RobotIdentification: {simulationStr} {self.getRobotType()} serialNumber:{self.serialNumber}")
-        print(f":::::::::::")
+        print(":::::::::::")
 
 
     def _configureValue(self):

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Callable
 
 from wpimath.geometry import Transform3d, Pose3d, Rotation3d
 from wpimath.units import inchesToMeters

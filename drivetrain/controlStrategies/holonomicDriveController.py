@@ -1,6 +1,5 @@
 import math
 
-from pykit.autolog import autologgable_output
 from wpimath.controller import PIDController
 from wpimath.geometry import Pose2d
 from drivetrain.drivetrainCommand import DrivetrainCommand

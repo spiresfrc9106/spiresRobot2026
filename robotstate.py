@@ -18,15 +18,12 @@ from util.robotposeestimator import (
     OdometryObservation,
     TurretObservation,
     TurretedRobotPoseEstimator,
-    TurretedVisionObservation,
     VisionObservation,
 )
 from util.logtracer import LogTracer
 from constants.drive import kDriveKinematics
 from constants.turret import kTurretLocation
 from constants.auto import kAutoDistanceTolerance, kAutoRotationTolerance
-from constants.field import kEndgameDuration, kShiftDuration, kCloseHubLocation
-from constants.vision import kRedHubAprilTags, kBlueHubAprilTags
 from constants.field import kEndgameDuration, kShiftDuration, kCloseHubLocation
 from constants.vision import kRedHubAprilTags, kBlueHubAprilTags
 

@@ -2,7 +2,6 @@ from enum import Enum
 
 from utils.faults import Fault
 from wpilib import DriverStation, XboxController
-from utils.mapLookup2d import MapLookup2D
 from utils.singleton import Singleton
 
 

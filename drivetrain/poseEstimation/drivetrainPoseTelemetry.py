@@ -1,20 +1,10 @@
-import math
 
-import choreo
-import choreo.trajectory
 import wpilib
-from wpimath.trajectory import Trajectory
-from wpimath.geometry import Pose2d, Pose3d, Transform2d, Rotation2d, Translation2d
-from ntcore import NetworkTableInstance
-from choreo.trajectory import SwerveTrajectory
+from wpimath.geometry import Pose2d, Pose3d, Transform2d
 
-from drivetrain.controlStrategies.autoSteer import AutoSteer
 from pykit.logger import Logger
-from utils.allianceTransformUtils import transform
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
-from utils.autonomousTransformUtils import flip
 from wrappers.wrapperedPoseEstPhotonCamera import CameraPoseObservation
-from ntcore import NetworkTableInstance
 
 
 class DrivetrainPoseTelemetry:

@@ -1,12 +1,7 @@
-from dataclasses import dataclass, field
-from enum import Enum
 from typing import Optional, List, Tuple, Callable
 
 from commands2 import Command, Subsystem, cmd
-from pathplannerlib.auto import AutoBuilder
-from pathplannerlib.controller import PPHolonomicDriveController
-from pathplannerlib.path import RobotConfig
-from wpilib import XboxController, RobotBase
+from wpilib import XboxController
 from wpimath.geometry import Rotation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 
@@ -15,40 +10,33 @@ from drivetrain.drivetrainControl import DrivetrainControl
 from drivetrain.drivetrainPhysical import wrapperedSwerveDriveAzmthEncoder, DrivetrainPhysical
 from pykit.autolog import autologgable_output, autolog_output
 from pykit.logger import Logger
-from rev import SparkBase, SparkSim
-from wpilib.simulation import LinearSystemSim_1_1_1, FlywheelSim, RoboRioSim, BatterySim
 
-from wpimath.system.plant import DCMotor, LinearSystemId
 
-from constants import kRobotMode, RobotModes, kRobotUpdatePeriodS
-from humanInterface.operatorInterface import OperatorInterface, FlywheelCommand, InOutCommand
+from constants import kRobotMode, RobotModes
 from subsystems.common.encodermodule import EncoderModule
 from subsystems.common.encodermoduleio import EncoderModuleIO
 from subsystems.common.encodermoduleiowrappered import EncoderModuleIOWrappered
 from subsystems.common.encodermoduleiowrapperedsim import EncoderModuleIOWrapperedSim
-from subsystems.common.sysidmotormodule import SysIdMotorModule
 from subsystems.common.sysidmotormodules import SysIdMotorModules
 from subsystems.drivetrain.drivetrainsubsystemio import DrivetrainSubsystemIO
 
 from subsystems.drivetrain.drivetrainsubsystemioreal import DrivetrainSubsystemIOReal
 from subsystems.drivetrain.drivetrainsubsystemiosim import DrivetrainSubsystemIORealSim
 from subsystems.common.motormodule import MotorModule
-from subsystems.common.motormodulecontroller import NullController, SparkSlewRateLimitedVelocityController
+from subsystems.common.motormodulecontroller import NullController
 from subsystems.common.motormoduleio import MotorModuleIO
 from subsystems.common.motormoduleiowrappered import MotorModuleIOWrappered
 from subsystems.common.motormoduleiowrapperedsim import MotorModuleIOWrapperedSim
 from subsystems.state.configsubsystem import ConfigSubsystem
-from utils.allianceTransformUtils import onRed
 from utils.constants import DT_FL_AZMTH_CANID, DT_FL_AZMTH_ENC_PORT, DT_FL_WHEEL_CANID, DT_FR_WHEEL_CANID, \
     DT_FR_AZMTH_CANID, DT_FR_AZMTH_ENC_PORT, DT_BL_AZMTH_CANID, DT_BL_AZMTH_ENC_PORT, DT_BL_WHEEL_CANID, \
     DT_BR_WHEEL_CANID, DT_BR_AZMTH_CANID, DT_BR_AZMTH_ENC_PORT
 
-from utils.units import radPerSec2RPM, rad2Deg
+from utils.units import rad2Deg
 from util.logtracer import LogTracer
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
 from wrappers.wrapperedRevThroughBoreEncoder import WrapperedRevThroughBoreEncoder
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
-from wrappers.wrapperedSparkMotor import  WrapperedSparkMotor
 
 
 

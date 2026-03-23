@@ -1,4 +1,3 @@
-import wpilib
 from wpimath.geometry import Pose2d, Transform3d, Rotation2d, Translation2d, Transform2d
 from wpimath.units import degreesToRadians
 from photonlibpy.photonCamera import PhotonCamera

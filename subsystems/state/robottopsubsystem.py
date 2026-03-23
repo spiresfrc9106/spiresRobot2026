@@ -5,7 +5,7 @@ from wpimath import angleModulus
 
 from constants.field import kFarHubLocation, kCloseHubLocation
 from pykit.logger import Logger
-from pykit.autolog import autolog_output, autologgable_output
+from pykit.autolog import autologgable_output
 
 from subsystems.state.robottopio import RobotTopIO
 from utils.allianceTransformUtils import onRed

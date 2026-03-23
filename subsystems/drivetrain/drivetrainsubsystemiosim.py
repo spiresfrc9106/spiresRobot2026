@@ -1,6 +1,3 @@
-from wpilib import RobotController
-from wpilib.simulation import DCMotorSim
-from wpimath.system.plant import LinearSystemId
 from subsystems.drivetrain.drivetrainsubsystemio import DrivetrainSubsystemIO
 from subsystems.drivetrain.drivetrainsubsystemioreal import DrivetrainSubsystemIOReal
 

@@ -4,7 +4,7 @@ from wpilib.sysid import State
 
 from commands2 import Command, Subsystem, cmd
 from commands2.sysid import SysIdRoutine
-from wpilib import XboxController, Timer
+from wpilib import XboxController
 
 from pykit.autolog import autologgable_output
 from pykit.logger import Logger

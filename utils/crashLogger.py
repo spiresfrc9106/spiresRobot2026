@@ -43,7 +43,7 @@ class CrashLogger:
             self.fileHandler.setLevel(logging.ERROR)
             rootLogger.addHandler(self.fileHandler)
 
-            self.logPrint(f"\n==============================================")
+            self.logPrint("\n==============================================")
             self.logPrint(f"Beginning of Log {logPath}")
             self.logPrint(f"Started {datetime.now()}")
 
@@ -59,7 +59,7 @@ class CrashLogger:
         ):
             # One-time prefix write, which needs to wait until the FMS is attached.
             # Once it is, dump the match info the log file for later retrieval.
-            self.logPrint(f"==========================================")
+            self.logPrint("==========================================")
             self.logPrint(f"== FMS Data Received {datetime.now()}:")
             self.logPrint(f"Event: {wpilib.DriverStation.getEventName()}")
             self.logPrint(f"Match Type: {wpilib.DriverStation.getMatchType()}")
@@ -69,7 +69,7 @@ class CrashLogger:
                 f"Game Message: {wpilib.DriverStation.getGameSpecificMessage()}"
             )
             self.logPrint(f"Cur FPGA Time: {wpilib.Timer.getFPGATimestamp()}")
-            self.logPrint(f"==========================================")
+            self.logPrint("==========================================")
             self.flushPrint()
             self.prefixWritten = True
 

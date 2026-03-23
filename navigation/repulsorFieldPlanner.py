@@ -1,5 +1,5 @@
 from enum import IntEnum
-from wpilib import TimedRobot, Timer
+from wpilib import TimedRobot
 from wpimath.geometry import Pose2d, Translation2d, Rotation2d
 
 from utils.mapLookup2d import MapLookup2D
