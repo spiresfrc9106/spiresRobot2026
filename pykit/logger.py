@@ -158,7 +158,6 @@ class Logger:
         """
         Starts the logger. This initializes logging or replay and sets up the necessary tables.
         """
-        print("-----------------------------------Starting LOCAL COPY OF LOGGER")
         if not cls.running:
             cls.running = True
             cls.cycleCount = 0
