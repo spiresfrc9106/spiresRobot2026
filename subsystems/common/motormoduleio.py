@@ -27,7 +27,7 @@ class MotorModuleIO:
         connected: bool = False
         desVoltsOrFfVolts: float = 0.0
         posRad: float = 0.0  # rad
-        desVelRadps: float = 0.0 # rad / sec
+        desVelRadps: float = 0.0  # rad / sec
         velRadps: float = 0.0  # rad / sec
         appliedV: float = 0.0  # volts
         torqueCurrentA: float = 0.0  # amps
@@ -45,11 +45,12 @@ class MotorModuleIO:
     def setPID(self, kP: float, kI: float, kD: float) -> None:
         pass
 
-    def setPIDFF(self, kP: float, kI: float, kD: float, kS: float, kV: float, kA: float) -> None:
+    def setPIDFF(
+        self, kP: float, kI: float, kD: float, kS: float, kV: float, kA: float
+    ) -> None:
         pass
 
-
-    def setPosCmd(self, posCmdRad:float, arbFF:float=0.0)->None:
+    def setPosCmd(self, posCmdRad: float, arbFF: float = 0.0) -> None:
         """_summary_
 
         Args:
@@ -57,7 +58,7 @@ class MotorModuleIO:
             arbFF (float, optional): _description_. Defaults to 0.
         """
 
-    def setVelCmd(self, velCmdRadps:float, arbFF:float=0.0)->None:
+    def setVelCmd(self, velCmdRadps: float, arbFF: float = 0.0) -> None:
         """_summary_
 
         Args:
@@ -68,11 +69,8 @@ class MotorModuleIO:
     def setMaxMotionVelCmd(self, velCmdRadps: float):
         pass
 
-    def setVoltage(self, outputVoltageVolts:float)->None:
+    def setVoltage(self, outputVoltageVolts: float) -> None:
         pass
 
     def setFeedForwardKA(self, kA: float) -> None:
         pass
-
-
-

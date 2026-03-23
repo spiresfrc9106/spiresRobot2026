@@ -23,22 +23,31 @@ Defines the physical dimensions and characteristics of the drivetrain
 
 
 # Function make a swerve module azimuth encoder reader object
-def wrapperedSwerveDriveAzmthEncoder(azmthEncoderPortIdx, moduleName, azmthOffsetRad, inverted):
+def wrapperedSwerveDriveAzmthEncoder(
+    azmthEncoderPortIdx, moduleName, azmthOffsetRad, inverted
+):
     return WrapperedRevThroughBoreEncoder(
         port=azmthEncoderPortIdx,
         name=moduleName,
         mountOffsetRad=azmthOffsetRad,
-        dirInverted=inverted
+        dirInverted=inverted,
     )
+
 
 @dataclass
 class DrivetrainPhysical(metaclass=Singleton):
     DRIVETRAIN_NAME = "dt"
     c: ConfigSubsystem = field(default_factory=lambda: ConfigSubsystem())
     WHEEL_BASE_HALF_WIDTH_M: float = field(
-        default_factory=lambda:inchesToMeters(ConfigSubsystem().drivetrainDepConstants["WIDTH"] / 2.0))
+        default_factory=lambda: inchesToMeters(
+            ConfigSubsystem().drivetrainDepConstants["WIDTH"] / 2.0
+        )
+    )
     WHEEL_BASE_HALF_LENGTH_M: float = field(
-        default_factory=lambda: inchesToMeters(ConfigSubsystem().drivetrainDepConstants["LENGTH"] / 2.0))
+        default_factory=lambda: inchesToMeters(
+            ConfigSubsystem().drivetrainDepConstants["LENGTH"] / 2.0
+        )
+    )
 
     def __post_init__(self):
         ###################################################################
@@ -49,34 +58,42 @@ class DrivetrainPhysical(metaclass=Singleton):
 
         # Additional distance from the wheel contact patch out to the edge of the bumper
         self.BUMPER_THICKNESS_M = inchesToMeters(2.5)
-        
+
         # Total mass includes robot, battery, and bumpers
         # more than the "weigh-in" weight
         if self.c.isSpiresRobot():
-            self.ROBOT_MASS_KG = lbsToKg(self.c.drivetrainDepConstants['MASS_LBS'])
+            self.ROBOT_MASS_KG = lbsToKg(self.c.drivetrainDepConstants["MASS_LBS"])
         else:
             self.ROBOT_MASS_KG = lbsToKg(60)
-        
+
         # Model the robot's moment of intertia as a square slab
         # slightly bigger than wheelbase with axis through center
-        self.ROBOT_MOI_KGM2 = 1.0 / 12.0 * self.ROBOT_MASS_KG * self.WHEEL_BASE_HALF_WIDTH_M * self.WHEEL_BASE_HALF_LENGTH_M * math.pow(
-            2.2,
-            2) * 2
-        
+        self.ROBOT_MOI_KGM2 = (
+            1.0
+            / 12.0
+            * self.ROBOT_MASS_KG
+            * self.WHEEL_BASE_HALF_WIDTH_M
+            * self.WHEEL_BASE_HALF_LENGTH_M
+            * math.pow(2.2, 2)
+            * 2
+        )
+
         # SDS MK4i Swerve Module Ratios
         # See https://www.swervedrivespecialties.com/products/mk4i-swerve-module?variant=39598777172081
-        WHEEL_GEAR_RATIO_L1 = 8.41 # noqa: F841
-        WHEEL_GEAR_RATIO_L2 = 6.75 # noqa: F841
-        WHEEL_GEAR_RATIO_L3 = 6.12 # noqa: F841 #TODO what is WHEEL_GEAR_RATIO_L3
-        AZMTH_GEAR_RATIO = 12.8 # noqa: F841 # TODO fix me up
-        
+        WHEEL_GEAR_RATIO_L1 = 8.41  # noqa: F841
+        WHEEL_GEAR_RATIO_L2 = 6.75  # noqa: F841
+        WHEEL_GEAR_RATIO_L3 = 6.12  # noqa: F841 #TODO what is WHEEL_GEAR_RATIO_L3
+        AZMTH_GEAR_RATIO = 12.8  # noqa: F841 # TODO fix me up
+
         ## CHANGE THIS DEPENDING ON WHICH MODULE GEAR RATIO IS INSTALLED
         if self.c.getRobotType() == RobotTypes.Main:
             self.WHEEL_GEAR_RATIO = self.WHEEL_GEAR_RATIO_L3
         elif self.c.getRobotType() == RobotTypes.Practice:
             self.WHEEL_GEAR_RATIO = self.WHEEL_GEAR_RATIO_L2
         elif self.c.isSpiresRobot():
-            self.WHEEL_GEAR_RATIO = self.c.drivetrainDepConstants['SWERVE_WHEEL_GEAR_RATIO']
+            self.WHEEL_GEAR_RATIO = self.c.drivetrainDepConstants[
+                "SWERVE_WHEEL_GEAR_RATIO"
+            ]
         else:
             self.WHEEL_GEAR_RATIO = self.WHEEL_GEAR_RATIO_L3
 
@@ -86,51 +103,70 @@ class DrivetrainPhysical(metaclass=Singleton):
         # by driving the robot a known distance, seeing the measured distance in software,
         # and adjusting this factor till the measured distance matches known
         # Might have to be different for colson wheels?
-        self.WHEEL_FUDGE_FACTOR = (2.99)/(2.94) * 60.0/62.75
-        
+        self.WHEEL_FUDGE_FACTOR = (2.99) / (2.94) * 60.0 / 62.75
+
         # Nominal 4-inch diameter swerve drive wheels
         # https:#www.swervedrivespecialties.com/collections/mk4i-parts/products/billet-wheel-4d-x-1-5w-bearing-bore
-        self.WHEEL_RADIUS_IN = self.c.drivetrainDepConstants[
-                                   "SWERVE_WHEEL_DIAMETER_IN"] / 2.0 * self.WHEEL_FUDGE_FACTOR
+        self.WHEEL_RADIUS_IN = (
+            self.c.drivetrainDepConstants["SWERVE_WHEEL_DIAMETER_IN"]
+            / 2.0
+            * self.WHEEL_FUDGE_FACTOR
+        )
 
         # Drivetrain Performance Mechanical limits
         # Nominal calculations (ideal)
         if self.c.isSpiresRobot():
-            self.MAX_DT_MOTOR_SPEED_RPS = self.c.drivetrainDepConstants['SWERVE_WHEEL_MAX_SPEED_RADPS']
+            self.MAX_DT_MOTOR_SPEED_RPS = self.c.drivetrainDepConstants[
+                "SWERVE_WHEEL_MAX_SPEED_RADPS"
+            ]
         else:
             self.MAX_DT_MOTOR_SPEED_RPS = DCMotor.NEO(1).freeSpeed
             # self.MAX_DT_MOTOR_SPEED_RPS = DCMotor.neoVortex(1).freeSpeed
-        self.MAX_DT_LINEAR_SPEED_MPS = self.MAX_DT_MOTOR_SPEED_RPS / self.WHEEL_GEAR_RATIO * in2m(self.WHEEL_RADIUS_IN)
+        self.MAX_DT_LINEAR_SPEED_MPS = (
+            self.MAX_DT_MOTOR_SPEED_RPS
+            / self.WHEEL_GEAR_RATIO
+            * in2m(self.WHEEL_RADIUS_IN)
+        )
         # Fudged max expected performance
 
-        speed_multiple_at_comp = self.c.drivetrainDepConstants['SPEED_MULTIPLIER']
+        speed_multiple_at_comp = self.c.drivetrainDepConstants["SPEED_MULTIPLIER"]
 
-        self.MAX_FWD_REV_SPEED_MPS = self.MAX_DT_LINEAR_SPEED_MPS * 0.98 * speed_multiple_at_comp  # fudge factor due to gearBox losses
-        self.MAX_STRAFE_SPEED_MPS = self.MAX_DT_LINEAR_SPEED_MPS * 0.98 * speed_multiple_at_comp  # fudge factor due to gearBox losses
-        self.MAX_ROTATE_SPEED_RAD_PER_SEC = deg2Rad(
-            540.0
-        ) * speed_multiple_at_comp  # Fixed at the maximum rotational speed we'd want.
+        self.MAX_FWD_REV_SPEED_MPS = (
+            self.MAX_DT_LINEAR_SPEED_MPS * 0.98 * speed_multiple_at_comp
+        )  # fudge factor due to gearBox losses
+        self.MAX_STRAFE_SPEED_MPS = (
+            self.MAX_DT_LINEAR_SPEED_MPS * 0.98 * speed_multiple_at_comp
+        )  # fudge factor due to gearBox losses
+        self.MAX_ROTATE_SPEED_RAD_PER_SEC = (
+            deg2Rad(540.0) * speed_multiple_at_comp
+        )  # Fixed at the maximum rotational speed we'd want.
         # Accelerations - also a total guess
         self.MAX_TRANSLATE_ACCEL_MPS2 = self.MAX_FWD_REV_SPEED_MPS
         self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2 = self.MAX_ROTATE_SPEED_RAD_PER_SEC
 
-        self.kTrajectoryPositionPGainAuto = 9/10 #9
-        self.kTrajectoryPositionPGainVision = 5/10 #5
+        self.kTrajectoryPositionPGainAuto = 9 / 10  # 9
+        self.kTrajectoryPositionPGainVision = 5 / 10  # 5
         self.kTrajectoryPositionIGain = 0
         self.kTrajectoryPositionDGain = 0
 
-        self.kTrajectoryAnglePGain = 7/10 #7
+        self.kTrajectoryAnglePGain = 7 / 10  # 7
         self.kTrajectoryAngleIGain = 0
         self.kTrajectoryAngleDGain = 0
 
         self.kPathFollowingTranslationConstantsAuto = PIDConstants(
-            self.kTrajectoryPositionPGainAuto, self.kTrajectoryPositionIGain, self.kTrajectoryPositionDGain
+            self.kTrajectoryPositionPGainAuto,
+            self.kTrajectoryPositionIGain,
+            self.kTrajectoryPositionDGain,
         )
         self.kPathFollowingTranslationConstantsVision = PIDConstants(
-            self.kTrajectoryPositionPGainVision, self.kTrajectoryPositionIGain, self.kTrajectoryPositionDGain
+            self.kTrajectoryPositionPGainVision,
+            self.kTrajectoryPositionIGain,
+            self.kTrajectoryPositionDGain,
         )
         self.kPathFollowingRotationConstants = PIDConstants(
-            self.kTrajectoryAnglePGain, self.kTrajectoryAngleIGain, self.kTrajectoryAngleDGain
+            self.kTrajectoryAnglePGain,
+            self.kTrajectoryAngleIGain,
+            self.kTrajectoryAngleDGain,
         )
 
         self.WHEEL_P = self.c.drivetrainDepConstants["WHEEL_P"]
@@ -155,13 +191,12 @@ class DrivetrainPhysical(metaclass=Singleton):
         # 3 - Using a square, twist the modules by hand until they are aligned with the robot's chassis
         # 4 - Read out the encoder readings for each module, put them here
         # 5 - Redeploy code, verify that the  encoder readings are correct as each module is manually rotated
-        
-        
+
         if self.c.isSpiresRobot():
             # Perhaps we invert the swerve module azimuth motor
             self.INVERT_AZMTH_MOTOR = False
             self.INVERT_AZMTH_ENCODER = True
-        
+
             # Perhaps we invert the swerve module wheel motor drive direction
             self.FL_INVERT_WHEEL_MOTOR = False
             self.FR_INVERT_WHEEL_MOTOR = False
@@ -171,25 +206,33 @@ class DrivetrainPhysical(metaclass=Singleton):
             # Perhaps we invert the swerve module azimuth motor
             self.INVERT_AZMTH_MOTOR = True
             self.INVERT_AZMTH_ENCODER = False
-        
+
             # Perhaps we invert the swerve module wheel motor drive direction
             self.FL_INVERT_WHEEL_MOTOR = True
             self.FR_INVERT_WHEEL_MOTOR = True
             self.BL_INVERT_WHEEL_MOTOR = False
             self.BR_INVERT_WHEEL_MOTOR = False
-        
+
         # todo they moved the configuration closer to the code.
-        
+
         if self.c.getRobotType() == RobotTypes.Main:
             self.FR_ENCODER_MOUNT_OFFSET_RAD = 0.8412
             self.FL_ENCODER_MOUNT_OFFSET_RAD = 0.2412
             self.BR_ENCODER_MOUNT_OFFSET_RAD = 1.259
             self.BL_ENCODER_MOUNT_OFFSET_RAD = 1.777
         elif self.c.isSpiresRobot():
-            self.FL_ENCODER_MOUNT_OFFSET_RAD = self.c.drivetrainDepConstants["FL_OFFSET_RAD"]
-            self.FR_ENCODER_MOUNT_OFFSET_RAD = self.c.drivetrainDepConstants["FR_OFFSET_RAD"]
-            self.BL_ENCODER_MOUNT_OFFSET_RAD = self.c.drivetrainDepConstants["BL_OFFSET_RAD"]
-            self.BR_ENCODER_MOUNT_OFFSET_RAD = self.c.drivetrainDepConstants["BR_OFFSET_RAD"]
+            self.FL_ENCODER_MOUNT_OFFSET_RAD = self.c.drivetrainDepConstants[
+                "FL_OFFSET_RAD"
+            ]
+            self.FR_ENCODER_MOUNT_OFFSET_RAD = self.c.drivetrainDepConstants[
+                "FR_OFFSET_RAD"
+            ]
+            self.BL_ENCODER_MOUNT_OFFSET_RAD = self.c.drivetrainDepConstants[
+                "BL_OFFSET_RAD"
+            ]
+            self.BR_ENCODER_MOUNT_OFFSET_RAD = self.c.drivetrainDepConstants[
+                "BR_OFFSET_RAD"
+            ]
         else:
             self.FR_ENCODER_MOUNT_OFFSET_RAD = 0.8412
             self.FL_ENCODER_MOUNT_OFFSET_RAD = 0.2412
@@ -201,9 +244,7 @@ class DrivetrainPhysical(metaclass=Singleton):
         FR = 1
         BL = 2
         BR = 3
-        
 
-        
         self.WHEEL_MOTOR_WRAPPER = self.c.drivetrainDepConstants["WHEEL_MOTOR_WRAPPER"]
 
         self.CAMS = self.c.drivetrainDepConstants["CAMS"]
@@ -222,7 +263,7 @@ class DrivetrainPhysical(metaclass=Singleton):
         self.robotToModuleTranslations.append(
             Translation2d(-self.WHEEL_BASE_HALF_LENGTH_M, -self.WHEEL_BASE_HALF_WIDTH_M)
         )
-        
+
         # WPILib Kinematics object
         self.kinematics = SwerveDrive4Kinematics(
             self.robotToModuleTranslations[FL],
@@ -241,5 +282,3 @@ class DrivetrainPhysical(metaclass=Singleton):
         # rot - radians per second of motor shaft
         # return = meters per second at wheel contact patch
         return rot * (inchesToMeters(self.WHEEL_RADIUS_IN)) / self.WHEEL_GEAR_RATIO
-
-

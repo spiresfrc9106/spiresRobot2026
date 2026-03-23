@@ -7,7 +7,6 @@ from utils.extDriveManager import ExtDriveManager
 
 
 class CrashLogger:
-
     """
     Python code has many more issues which are caught at runtime. In case one of these happens while on the field,
     it's important that we record what happened. This class adds an extra logging handle to record these to uniquely
@@ -47,7 +46,6 @@ class CrashLogger:
             self.logPrint(f"Beginning of Log {logPath}")
             self.logPrint(f"Started {datetime.now()}")
 
-
     def update(self):
         """
         Periodic log update function
@@ -73,8 +71,7 @@ class CrashLogger:
             self.flushPrint()
             self.prefixWritten = True
 
-
-    def logPrint(self, msg:str):
+    def logPrint(self, msg: str):
         """
         Print a message into the log, with a newline
         """

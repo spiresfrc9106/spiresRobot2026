@@ -1,8 +1,18 @@
 import time
 from typing import Optional
 
-from rev import SparkBase, SparkMax, SparkMaxConfig, REVLibError, ClosedLoopSlot, SparkBaseConfig, SparkClosedLoopController, \
-    ResetMode, PersistMode, SparkMaxSim
+from rev import (
+    SparkBase,
+    SparkMax,
+    SparkMaxConfig,
+    REVLibError,
+    ClosedLoopSlot,
+    SparkBaseConfig,
+    SparkClosedLoopController,
+    ResetMode,
+    PersistMode,
+    SparkMaxSim,
+)
 from wpilib import TimedRobot
 from wpimath.system.plant import DCMotor
 
@@ -12,6 +22,7 @@ from utils.faults import Fault
 from wrappers.wrapperedMotorCommon import MotorControlStates
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
 
+
 ## Wrappered Spark Max
 # Wrappers REV's libraries to add the following functionality for spark max controllers:
 # Grouped PID controller, Encoder, and motor controller objects
@@ -20,7 +31,14 @@ from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
 # Fault handling for not crashing code if the motor controller is disconnected
 # Fault annunication logic to triglger warnings if a motor couldn't be configured
 class WrapperedSparkMax(WrapperedMotorSuper):
-    def __init__(self, canID:int, name:str, brakeMode:bool=False, currentLimitA:int=40, gearBox:Optional[DCMotor]=None):
+    def __init__(
+        self,
+        canID: int,
+        name: str,
+        brakeMode: bool = False,
+        currentLimitA: int = 40,
+        gearBox: Optional[DCMotor] = None,
+    ):
         self.ctrl = SparkMax(canID, SparkBase.MotorType.kBrushless)
         self.sparkSim: Optional[SparkMaxSim] = None
         self.gearBox: Optional[DCMotor] = gearBox
@@ -49,18 +67,29 @@ class WrapperedSparkMax(WrapperedMotorSuper):
         self.cfg.signals.busVoltagePeriodMs(200)
         self.cfg.signals.primaryEncoderPositionPeriodMs(kRobotUpdatePeriodMs)
         self.cfg.signals.primaryEncoderVelocityPeriodMs(kRobotUpdatePeriodMs)
-        self.cfg.setIdleMode(SparkBaseConfig.IdleMode.kBrake if brakeMode else SparkBaseConfig.IdleMode.kCoast)
+        self.cfg.setIdleMode(
+            SparkBaseConfig.IdleMode.kBrake
+            if brakeMode
+            else SparkBaseConfig.IdleMode.kCoast
+        )
         self.cfg.smartCurrentLimit(self.currentLimitA)
 
-        self._spark_config(retries=10, resetMode=ResetMode.kResetSafeParameters, persistMode=PersistMode.kPersistParameters, step="Initial Config")
+        self._spark_config(
+            retries=10,
+            resetMode=ResetMode.kResetSafeParameters,
+            persistMode=PersistMode.kPersistParameters,
+            step="Initial Config",
+        )
 
         print(f"Init of Spark Controller {self.name} CANID={self.canID} is finished")
 
-    def _spark_config(self, retries, resetMode, persistMode, printResults=True, step=""):
+    def _spark_config(
+        self, retries, resetMode, persistMode, printResults=True, step=""
+    ):
         # Perform motor configuration, tracking errors and retrying until we have success
         # Clear previous configuration, and persist anything set in this state.
         retryCounter = 0
-        success=False
+        success = False
         while not success and retryCounter < retries:
             retryCounter += 1
             err = self.ctrl.configure(self.cfg, resetMode, persistMode)
@@ -83,20 +112,22 @@ class WrapperedSparkMax(WrapperedMotorSuper):
 
         self.disconFault.set(not self.configSuccess)
 
-    def setFollow(self, leaderCanID:int, invert:bool=False)->None:
+    def setFollow(self, leaderCanID: int, invert: bool = False) -> None:
         self.cfg.follow(leaderCanID, invert)
-        self.ctrl.configure(self.cfg,
-                                ResetMode.kNoResetSafeParameters,
-                                PersistMode.kPersistParameters)
+        self.ctrl.configure(
+            self.cfg, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters
+        )
 
-    def setInverted(self, isInverted:bool)->None:
+    def setInverted(self, isInverted: bool) -> None:
         if self.configSuccess:
             self.cfg.inverted(isInverted)
-            self.ctrl.configure(self.cfg,
-                                ResetMode.kNoResetSafeParameters,
-                                PersistMode.kPersistParameters)
+            self.ctrl.configure(
+                self.cfg,
+                ResetMode.kNoResetSafeParameters,
+                PersistMode.kPersistParameters,
+            )
 
-    def setPID(self, kP:float, kI:float, kD:float)->None:
+    def setPID(self, kP: float, kI: float, kD: float) -> None:
         if self.configSuccess:
             self.cfg.closedLoop.pid(kP, kI, kD, ClosedLoopSlot.kSlot0)
             # Apply new configuration
@@ -106,23 +137,22 @@ class WrapperedSparkMax(WrapperedMotorSuper):
             # However, if setPID is getting called in a periodic loop, don't bother persisting the parameters
             # because the persist operation takes a long time on the spark max.
             persist = PersistMode.kPersistParameters
-            self.ctrl.configure(self.cfg,
-                                ResetMode.kNoResetSafeParameters,
-                                persist)
+            self.ctrl.configure(self.cfg, ResetMode.kNoResetSafeParameters, persist)
 
-    def setPIDFF(self, kP: float, kI: float, kD: float, kS: float, kV: float, kA: float) -> None:
+    def setPIDFF(
+        self, kP: float, kI: float, kD: float, kS: float, kV: float, kA: float
+    ) -> None:
         if self.configSuccess:
-            (self.cfg
-                 .closedLoop
-                 .pid(
-                    kP, # DutyCycle/Rev
-                    kI, # DutyCycle/(rev*ms)
-                    kD, # (DutyCycle*ms)/rev
-                    ClosedLoopSlot.kSlot0)
-                 .feedForward
-                 .kS(kS,ClosedLoopSlot.kSlot0) # Volts
-                 .kV(kV,ClosedLoopSlot.kSlot0) # Volts/RPM
-                 .kA(kA,ClosedLoopSlot.kSlot0) # Volts/(RPM/s)
+            (
+                self.cfg.closedLoop.pid(
+                    kP,  # DutyCycle/Rev
+                    kI,  # DutyCycle/(rev*ms)
+                    kD,  # (DutyCycle*ms)/rev
+                    ClosedLoopSlot.kSlot0,
+                )
+                .feedForward.kS(kS, ClosedLoopSlot.kSlot0)  # Volts
+                .kV(kV, ClosedLoopSlot.kSlot0)  # Volts/RPM
+                .kA(kA, ClosedLoopSlot.kSlot0)  # Volts/(RPM/s)
             )
             # Apply new configuration
             # but don't reset other parameters
@@ -131,11 +161,9 @@ class WrapperedSparkMax(WrapperedMotorSuper):
             # However, if setPID is getting called in a periodic loop, don't bother persisting the parameters
             # because the persist operation takes a long time on the spark max.
             persist = PersistMode.kPersistParameters
-            self.ctrl.configure(self.cfg,
-                                ResetMode.kNoResetSafeParameters,
-                                persist)
+            self.ctrl.configure(self.cfg, ResetMode.kNoResetSafeParameters, persist)
 
-    def setPosCmd(self, posCmdRad:float, arbFF:float=0.0)->None:
+    def setPosCmd(self, posCmdRad: float, arbFF: float = 0.0) -> None:
         """_summary_
 
         Args:
@@ -161,7 +189,7 @@ class WrapperedSparkMax(WrapperedMotorSuper):
             self.controlState = MotorControlStates.POSITION
             self.disconFault.set(err != REVLibError.kOk)
 
-    def setVelCmd(self, velCmdRadps:float, arbFF:float=0.0)->None:
+    def setVelCmd(self, velCmdRadps: float, arbFF: float = 0.0) -> None:
         """_summary_
 
         Args:
@@ -185,15 +213,15 @@ class WrapperedSparkMax(WrapperedMotorSuper):
             self.controlState = MotorControlStates.VELOCITY
             self.disconFault.set(err != REVLibError.kOk)
 
-    def setVoltage(self, outputVoltageVolts:float)->None:
+    def setVoltage(self, outputVoltageVolts: float) -> None:
         outputVoltageVolts = float(outputVoltageVolts)
         self.desVolt = outputVoltageVolts
         if self.configSuccess:
             self.ctrl.setVoltage(outputVoltageVolts)
             self.controlState = MotorControlStates.VOLTAGE
 
-    def getMotorPositionRad(self)->float:
-        if(TimedRobot.isSimulation() and self.gearBox is None):
+    def getMotorPositionRad(self) -> float:
+        if TimedRobot.isSimulation() and self.gearBox is None:
             pos = self.simActPos
         else:
             if self.configSuccess:
@@ -203,7 +231,7 @@ class WrapperedSparkMax(WrapperedMotorSuper):
         self.actPosRad = pos
         return pos
 
-    def getMotorVelocityRadPerSec(self)->float:
+    def getMotorVelocityRadPerSec(self) -> float:
         if self.configSuccess:
             vel = self.encoder.getVelocity()
         else:
@@ -211,25 +239,31 @@ class WrapperedSparkMax(WrapperedMotorSuper):
         self.actVelRadps = RPM2RadPerSec(vel)
         return self.actVelRadps
 
-    def getAppliedOutput(self)->float:
+    def getAppliedOutput(self) -> float:
         self.actVolt = self.ctrl.getAppliedOutput() * 12
         return self.actVolt
 
-    def getDesiredVoltageOrFF(self)->float:
+    def getDesiredVoltageOrFF(self) -> float:
         return self.desVolt
 
-    def getCurrentLimitA(self)->int:
+    def getCurrentLimitA(self) -> int:
         return self.currentLimitA
 
-    def getControlState(self)->MotorControlStates:
+    def getControlState(self) -> MotorControlStates:
         return self.controlState
 
-    def setSmartCurrentLimit(self, currentLimitA: int)->None:
+    def setSmartCurrentLimit(self, currentLimitA: int) -> None:
         self.currentLimitA = round(currentLimitA)
-        self.cfg.smartCurrentLimit(self.currentLimitA,0,5700)
-        self._spark_config(retries=4, resetMode=ResetMode.kNoResetSafeParameters, persistMode=PersistMode.kNoPersistParameters, printResults=True, step="Current Limit")
+        self.cfg.smartCurrentLimit(self.currentLimitA, 0, 5700)
+        self._spark_config(
+            retries=4,
+            resetMode=ResetMode.kNoResetSafeParameters,
+            persistMode=PersistMode.kNoPersistParameters,
+            printResults=True,
+            step="Current Limit",
+        )
 
-    def getOutputTorqueCurrentA(self)->float:
+    def getOutputTorqueCurrentA(self) -> float:
         return self.ctrl.getOutputCurrent()
 
     def getGearBox(self):

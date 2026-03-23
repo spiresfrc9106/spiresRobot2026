@@ -16,7 +16,6 @@ kShootingMap = partial(interp, xp=[0, 5, 10, 15], fp=[0, 1000, 2000, 3000])
 # where xp is the distance in meters and fp is the
 # corresponding flywheel speed in rad/s
 
+
 def kHoodAngleMap(x):
-    return Rotation2d.fromDegrees(
-        interp(x, xp=[0, 5, 10, 15], fp=[0, 15, 30, 45])
-    )
+    return Rotation2d.fromDegrees(interp(x, xp=[0, 5, 10, 15], fp=[0, 15, 30, 45]))

@@ -11,19 +11,24 @@ from photonlibpy import PhotonPoseEstimator, PhotonCamera, EstimatedRobotPose
 
 from utils.faults import Fault
 
+
 # Describes one on-field pose estimate from the acamera at a specific time.
 @dataclass
 class CameraPoseObservation:
-    time:float
-    estFieldPose:Pose2d
-    xyStdDev:float=1.0 # std dev of error in measurment, units of meters.
-    rotStdDev:float=degreesToRadians(99999.0) # std dev of measurement, in units of radians
+    time: float
+    estFieldPose: Pose2d
+    xyStdDev: float = 1.0  # std dev of error in measurment, units of meters.
+    rotStdDev: float = degreesToRadians(
+        99999.0
+    )  # std dev of measurement, in units of radians
+
 
 # Sort Tags by location
-REEF_TAG_IDS = [6,7,8,9,10,11,17,18,19,20,21,22]
-BARGE_TAG_IDS = [4,5,14,15]
-PROCESSOR_TAG_IDS = [3,16]
-HUMAN_STATION_TAG_IDS = [1,2,12,13]
+REEF_TAG_IDS = [6, 7, 8, 9, 10, 11, 17, 18, 19, 20, 21, 22]
+BARGE_TAG_IDS = [4, 5, 14, 15]
+PROCESSOR_TAG_IDS = [3, 16]
+HUMAN_STATION_TAG_IDS = [1, 2, 12, 13]
+
 
 # Wrappers photonvision to:
 # 1 - resolve issues with target ambiguity (two possible poses for each observation)
@@ -38,53 +43,60 @@ class WrapperedPoseEstPhotonCamera:
 
         self.disconFault = Fault(f"Camera {camName} not sending data")
         self.timeoutSec = 1.0
-        self.poseEstimates:list[CameraPoseObservation] = []
+        self.poseEstimates: list[CameraPoseObservation] = []
         self.robotToCam = robotToCam
         self.lastLatency = 0.0
         self.updateDuration = 0.0
         self.prevTimestampSec = 0.0
-        self.singleTagModeTagList = None #not currently used
+        self.singleTagModeTagList = None  # not currently used
 
         self.camPoseEst = PhotonPoseEstimator(
             AprilTagFieldLayout.loadField(AprilTagField.kDefaultField),
             self.robotToCam,
         )
 
-
         self.lastCaptureTime = RobotTopSubsystem().getFPGATimestampS()
         self.CAP_PERIOD_SEC = 0.025
 
-    def setSingleTagMode(self, tag:list[int]|None):
+    def setSingleTagMode(self, tag: list[int] | None):
         self.singleTagModeTagList = tag
 
-    def update(self, prevEstPose:Pose2d):
+    def update(self, prevEstPose: Pose2d):
 
         startTime = RobotTopSubsystem().getFPGATimestampS()
 
         self.poseEstimates = []
         self.lastLatency = 0.0
 
-        if(not self.cam.isConnected()):
+        if not self.cam.isConnected():
             # Faulted - no estimates, just return.
             self.disconFault.setFaulted()
             return
 
         result = self.cam.getLatestResult()
-        if result.hasTargets() and RobotTopSubsystem().getFPGATimestampS()-result.getTimestampSeconds()<2.0*kRobotUpdatePeriodS:
-                camEstPose: EstimatedRobotPose  = self.camPoseEst.estimateCoprocMultiTagPose(result)
-                if camEstPose is None:
-                    camEstPose = self.camPoseEst.estimateLowestAmbiguityPose(result)
+        if (
+            result.hasTargets()
+            and RobotTopSubsystem().getFPGATimestampS() - result.getTimestampSeconds()
+            < 2.0 * kRobotUpdatePeriodS
+        ):
+            camEstPose: EstimatedRobotPose = self.camPoseEst.estimateCoprocMultiTagPose(
+                result
+            )
+            if camEstPose is None:
+                camEstPose = self.camPoseEst.estimateLowestAmbiguityPose(result)
 
-                if camEstPose is not None:
-                    self.poseEstimates.append(
-                        CameraPoseObservation(time=camEstPose.timestampSeconds,
-                                              estFieldPose=camEstPose.estimatedPose.toPose2d(),
-                                              xyStdDev=3.0,
-                                              rotStdDev=degreesToRadians(60.0))
+            if camEstPose is not None:
+                self.poseEstimates.append(
+                    CameraPoseObservation(
+                        time=camEstPose.timestampSeconds,
+                        estFieldPose=camEstPose.estimatedPose.toPose2d(),
+                        xyStdDev=3.0,
+                        rotStdDev=degreesToRadians(60.0),
                     )
+                )
 
         endTime = RobotTopSubsystem().getFPGATimestampS()
-        self.updateDuration = (endTime - startTime)*1000.0
+        self.updateDuration = (endTime - startTime) * 1000.0
 
     def getPoseEstimates(self):
         return self.poseEstimates
@@ -101,7 +113,6 @@ class WrapperedPoseEstPhotonCamera:
         inY = 0.0 <= y <= feetToMeters(27.0)
         inX = 0.0 <= x <= feetToMeters(54.0)
         return inX and inY
-    
+
     def _closeEnoughToCamera(self, target: PhotonTrackedTarget):
         return target.getBestCameraToTarget().translation().norm() <= 2.0
-    

@@ -7,7 +7,6 @@ from wpilib import RobotBase
 from utils.faults import Fault
 
 
-
 class RIOMonitor:
     def __init__(self):
         """
@@ -29,10 +28,10 @@ class RIOMonitor:
         self.thread1.start()
 
         # Note - this is currently taking a VERY long time to run.
-        # We need to redesign this to actually be multithreaded, as the 
+        # We need to redesign this to actually be multithreaded, as the
         # GIL is killing us. For now, commented out.
-        #self.thread2 = Thread(target=self._updateSlow, daemon=True)
-        #self.thread2.start()
+        # self.thread2 = Thread(target=self._updateSlow, daemon=True)
+        # self.thread2.start()
 
         self.CANBusUsage = 0
         self.CANErrCount = 0
@@ -45,7 +44,7 @@ class RIOMonitor:
     def stopThreads(self):
         self.runCmd = False
         self.thread1.join()
-        #self.thread2.join()
+        # self.thread2.join()
 
     # Things that should be recorded fairly quickly
     def _updateFast(self):
@@ -91,9 +90,9 @@ class RIOMonitor:
     def _updateCANStats(self):
         status = RobotController.getCANStatus()
         self.CANBusUsage = status.percentBusUtilization
-        self.CANErrCount = status.txFullCount + status.receiveErrorCount + status.transmitErrorCount
-
-
+        self.CANErrCount = (
+            status.txFullCount + status.receiveErrorCount + status.transmitErrorCount
+        )
 
     def _updateVoltages(self):
         if not RobotController.isBrownedOut():
@@ -175,7 +174,5 @@ class RIOMonitor:
                     curFreeMem = float(memFreeParts[1])
                 except ValueError:
                     return  # Skip this time if we couldn't parse out values
-                
+
                 self.memUsagePct = (1.0 - curFreeMem / curTotalMem) * 100.0
-
-

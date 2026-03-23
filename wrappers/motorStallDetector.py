@@ -5,21 +5,23 @@ from wrappers.wrapperedMotorCommon import MotorControlStates
 
 
 class MotorPosStallDetector:
-    def __init__(self, name:str,
-                 motor: WrapperedSparkMotor,
-                 stallCurrentLimitA: int,
-                 stallTimeLimitS: float):
+    def __init__(
+        self,
+        name: str,
+        motor: WrapperedSparkMotor,
+        stallCurrentLimitA: int,
+        stallTimeLimitS: float,
+    ):
         self.name = name
         self.motor = motor
         self.stallCurrentLimitA = stallCurrentLimitA
         self.stallTimeLimitS = stallTimeLimitS
         self._stalled = False
 
-    def initialize(self)->None:
+    def initialize(self) -> None:
         self._clearMonitorState()
 
-
-    def _clearMonitorState(self)->None:
+    def _clearMonitorState(self) -> None:
         self.lastMoveTimeS = None
         self.currentUpdateTimeS = None
         self.lastPositionRad = None
@@ -30,7 +32,7 @@ class MotorPosStallDetector:
         self.lastPositionErrorRad = None
         self.minPositionErr = None
 
-    def _calcDirectionSign(self)->int:
+    def _calcDirectionSign(self) -> int:
         self.currentMotorPosRad = self.motor.getMotorPositionRad()
         if self.motor.desPosRad > self.currentMotorPosRad:
             return 1
@@ -51,33 +53,34 @@ class MotorPosStallDetector:
                     result = True
             else:
                 pass
-        #print(f"_hasMotorMovedTowardsDesPos = {Timer.getFPGATimestamp():.3f} lastMotorRadPos={self.lastMotorPosRad:.1f} dir={self.currentMotorDirectionSign} cur={self.currentMotorPosRad:.1f} res={result})")
+        # print(f"_hasMotorMovedTowardsDesPos = {Timer.getFPGATimestamp():.3f} lastMotorRadPos={self.lastMotorPosRad:.1f} dir={self.currentMotorDirectionSign} cur={self.currentMotorPosRad:.1f} res={result})")
         return result
 
     def _isMotorStalled(self):
         result = False
         self.currentMotorDirectionSign = self._calcDirectionSign()
 
-        #print(f"_isMotorStalled = {Timer.getFPGATimestamp():.3f} lastMoveTimeS={self.lastMoveTimeS} lastMotorPosRad={self.lastMotorPosRad} lastDir={self.lastDirectionSign} curDir={self.currentMotorDirectionSign})")
+        # print(f"_isMotorStalled = {Timer.getFPGATimestamp():.3f} lastMoveTimeS={self.lastMoveTimeS} lastMotorPosRad={self.lastMotorPosRad} lastDir={self.lastDirectionSign} curDir={self.currentMotorDirectionSign})")
 
-        if self.lastMoveTimeS is not None \
-            and self.lastMotorPosRad is not None \
-            and self.lastDirectionSign is not None \
-            and self.currentMotorDirectionSign == self.lastDirectionSign:
-                if self._hasMotorMovedTowardsDesPos():
-                    self.lastMoveTimeS = self.currentUpdateTimeS
-                elif self.motor.getOutputTorqueCurrentA() > self.stallCurrentLimitA \
-                        and self.currentUpdateTimeS - self.lastMoveTimeS > self.stallTimeLimitS:
-                    result = True
+        if (
+            self.lastMoveTimeS is not None
+            and self.lastMotorPosRad is not None
+            and self.lastDirectionSign is not None
+            and self.currentMotorDirectionSign == self.lastDirectionSign
+        ):
+            if self._hasMotorMovedTowardsDesPos():
+                self.lastMoveTimeS = self.currentUpdateTimeS
+            elif (
+                self.motor.getOutputTorqueCurrentA() > self.stallCurrentLimitA
+                and self.currentUpdateTimeS - self.lastMoveTimeS > self.stallTimeLimitS
+            ):
+                result = True
         else:
             self.lastMoveTimeS = self.currentUpdateTimeS
-
 
         self.lastDirectionSign = self.currentMotorDirectionSign
         self.lastMotorPosRad = self.currentMotorPosRad
         return result
-
-
 
     def update(self):
         if self.motor.getControlState() != MotorControlStates.POSITION:
@@ -88,9 +91,3 @@ class MotorPosStallDetector:
                 self.lastMoveTimeS = self.currentUpdateTimeS
 
             self._stalled = self._isMotorStalled()
-
-
-
-
-
-

@@ -14,7 +14,11 @@ from wpilib.simulation import LinearSystemSim_1_1_1, FlywheelSim, RoboRioSim, Ba
 from wpimath.system.plant import DCMotor, LinearSystemId
 
 from constants import kRobotMode, RobotModes, kRobotUpdatePeriodS
-from humanInterface.operatorInterface import OperatorInterface, FlywheelCommand, InOutCommand
+from humanInterface.operatorInterface import (
+    OperatorInterface,
+    FlywheelCommand,
+    InOutCommand,
+)
 from subsystems.common.sysidmotormodule import SysIdMotorModule
 from subsystems.intakeOuttake.inoutcalset import InOutCalSet
 from subsystems.intakeOuttake.inoutsubsystemio import InOutSubsystemIO
@@ -22,7 +26,10 @@ from subsystems.intakeOuttake.inoutsubsystemio import InOutSubsystemIO
 from subsystems.intakeOuttake.inoutsubsystemioreal import InOutSubsystemIOReal
 from subsystems.intakeOuttake.inoutsubsystemiosim import InOutSubsystemIORealSim
 from subsystems.common.motormodule import MotorModule
-from subsystems.common.motormodulecontroller import NullController, SparkSlewRateLimitedVelocityController
+from subsystems.common.motormodulecontroller import (
+    NullController,
+    SparkSlewRateLimitedVelocityController,
+)
 from subsystems.common.motormoduleio import MotorModuleIO
 from subsystems.common.motormoduleiowrappered import MotorModuleIOWrappered
 from subsystems.common.motormoduleiowrapperedsim import MotorModuleIOWrapperedSim
@@ -31,7 +38,8 @@ from subsystems.state.configsubsystem import ConfigSubsystem
 from utils.units import radPerSec2RPM
 from util.logtracer import LogTracer
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
-from wrappers.wrapperedSparkMotor import  WrapperedSparkMotor
+from wrappers.wrapperedSparkMotor import WrapperedSparkMotor
+
 
 class FlywheelState(Enum):
     kOff = 0
@@ -44,20 +52,34 @@ class InOutState(Enum):
     kOutaking = 2
     kShooting = 3
 
+
 IODC = ConfigSubsystem().inoutDepConstants
 HAS_INOUT = IODC["HAS_INOUT"]
+
 
 @autologgable_output
 class InOutSubsystem(Subsystem):
     GROUND_GEAR_REDUCTION = IODC["GROUND_GEAR_REDUCTION"] if HAS_INOUT else 1.0
-    GROUND_WHEEL_DIAMETER_INCHES = IODC["GROUND_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
-    GROUND_WHEEL_RADIUS_INCHES = GROUND_WHEEL_DIAMETER_INCHES / 2.0 if HAS_INOUT else 1.0
+    GROUND_WHEEL_DIAMETER_INCHES = (
+        IODC["GROUND_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
+    )
+    GROUND_WHEEL_RADIUS_INCHES = (
+        GROUND_WHEEL_DIAMETER_INCHES / 2.0 if HAS_INOUT else 1.0
+    )
     HOPPER_GEAR_REDUCTION = IODC["HOPPER_GEAR_REDUCTION"] if HAS_INOUT else 1.0
-    HOPPER_WHEEL_DIAMETER_INCHES = IODC["HOPPER_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
-    HOPPER_WHEEL_RADIUS_INCHES = HOPPER_WHEEL_DIAMETER_INCHES / 2.0 if HAS_INOUT else 1.0
+    HOPPER_WHEEL_DIAMETER_INCHES = (
+        IODC["HOPPER_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
+    )
+    HOPPER_WHEEL_RADIUS_INCHES = (
+        HOPPER_WHEEL_DIAMETER_INCHES / 2.0 if HAS_INOUT else 1.0
+    )
     FLYWHEEL_GEAR_REDUCTION = IODC["FLYWHEEL_GEAR_REDUCTION"] if HAS_INOUT else 1.0
-    FLYWHEEL_WHEEL_DIAMETER_INCHES = IODC["FLYWHEEL_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
-    FLYWHEEL_WHEEL_RADIUS_INCHES = FLYWHEEL_WHEEL_DIAMETER_INCHES / 2.0 if HAS_INOUT else 1.0
+    FLYWHEEL_WHEEL_DIAMETER_INCHES = (
+        IODC["FLYWHEEL_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
+    )
+    FLYWHEEL_WHEEL_RADIUS_INCHES = (
+        FLYWHEEL_WHEEL_DIAMETER_INCHES / 2.0 if HAS_INOUT else 1.0
+    )
     AGITATOR_GEAR_REDUCTION = IODC["AGITATOR_GEAR_REDUCTION"] if HAS_INOUT else 1.0
 
     def __init__(
@@ -71,18 +93,35 @@ class InOutSubsystem(Subsystem):
         hopperModule_controller,
         flywheelModule_controller,
         agitatorModule_controller,
-        simulation: "InOutSubsystemSimulation|None" = None
+        simulation: "InOutSubsystemSimulation|None" = None,
     ) -> None:
         Subsystem.__init__(self)
         self.name = type(self).__name__
         self.setName(self.name)
         self.io = io
         self.inputs = InOutSubsystemIO.InOutSubsystemIOInputs()
-        self.groundModule = MotorModule(name="groundModule", io=groundModule_io, controller=groundModule_controller)
-        self.hopperModule = MotorModule(name="hopperModule", io=hopperModule_io, controller=hopperModule_controller)
-        self.flywheelModule = MotorModule(name="flywheelModule", io=flywheelModule_io, controller=flywheelModule_controller)
-        self.agitatorModule = MotorModule(name="agitatorModule", io=agitatorModule_io, controller=agitatorModule_controller)
-        self.modules = (self.groundModule, self.hopperModule, self.flywheelModule, self.agitatorModule)
+        self.groundModule = MotorModule(
+            name="groundModule", io=groundModule_io, controller=groundModule_controller
+        )
+        self.hopperModule = MotorModule(
+            name="hopperModule", io=hopperModule_io, controller=hopperModule_controller
+        )
+        self.flywheelModule = MotorModule(
+            name="flywheelModule",
+            io=flywheelModule_io,
+            controller=flywheelModule_controller,
+        )
+        self.agitatorModule = MotorModule(
+            name="agitatorModule",
+            io=agitatorModule_io,
+            controller=agitatorModule_controller,
+        )
+        self.modules = (
+            self.groundModule,
+            self.hopperModule,
+            self.flywheelModule,
+            self.agitatorModule,
+        )
         self.simulation = simulation
 
         self.state: InOutState = InOutState.kOff
@@ -119,7 +158,6 @@ class InOutSubsystem(Subsystem):
     def sysIdMotorModulePostInit(self) -> None:
         self.setClosedLoop(True)
 
-
     def periodic(self) -> None:
         """Run ongoing subsystem periodic process."""
         for module in self.modules:
@@ -127,10 +165,18 @@ class InOutSubsystem(Subsystem):
         # We start LogTracing here because the above modules do their own periodic logging.
         LogTracer.resetOuter("inoutSubsystem periodic")
         LogTracer.record("ModulesPeriodic")
-        self.inputs.groundIPS = self.groundRadPerSToInPerS(self.groundModule.inputs.velRadps)
-        self.inputs.hopperIPS = self.hopperRadPerSToInPerS(self.hopperModule.inputs.velRadps)
-        self.inputs.flywheelIPS = self.flywheelRadPerSToInPerS(self.flywheelModule.inputs.velRadps)
-        self.inputs.agitatorHz = self.agitatorRadPerSToHz(self.agitatorModule.inputs.velRadps)
+        self.inputs.groundIPS = self.groundRadPerSToInPerS(
+            self.groundModule.inputs.velRadps
+        )
+        self.inputs.hopperIPS = self.hopperRadPerSToInPerS(
+            self.hopperModule.inputs.velRadps
+        )
+        self.inputs.flywheelIPS = self.flywheelRadPerSToInPerS(
+            self.flywheelModule.inputs.velRadps
+        )
+        self.inputs.agitatorHz = self.agitatorRadPerSToHz(
+            self.agitatorModule.inputs.velRadps
+        )
         self.io.updateInputs(self.inputs)  # update state of the ionout subsystem
         Logger.processInputs("inout", self.inputs)
         LogTracer.record("UpdateInputs")
@@ -165,10 +211,8 @@ class InOutSubsystem(Subsystem):
         self.calAgitatorOuttakeTargetSpeedHz = self.cals.agitatorOuttakeSpeedHz.get()
         self.calAgitatorShootTargetSpeedHz = self.cals.agitatorShootSpeedHz.get()
 
-
     def periodicUpdateClosedLoopTargetSpeeds(self) -> None:
         match self.state:
-
             case InOutState.kIntaking:
                 self.inputs.groundTargetIPS = self.calGroundIntakeTargetSpeedIPS
                 self.inputs.hopperTargetIPS = self.calHopperIntakeTargetSpeedIPS
@@ -201,13 +245,17 @@ class InOutSubsystem(Subsystem):
 
     def periodicUpdateClosedLoopOutputs(self) -> None:
         self.groundModule.updateClosedLoopOutput(
-            self.groundInPerSToRadPerS(self.inputs.groundTargetIPS))
+            self.groundInPerSToRadPerS(self.inputs.groundTargetIPS)
+        )
         self.hopperModule.updateClosedLoopOutput(
-            self.hopperInPerSToRadPerS(self.inputs.hopperTargetIPS))
+            self.hopperInPerSToRadPerS(self.inputs.hopperTargetIPS)
+        )
         self.flywheelModule.updateClosedLoopOutput(
-            self.flywheelInPerSToRadPerS(self.inputs.flywheelTargetIPS))
+            self.flywheelInPerSToRadPerS(self.inputs.flywheelTargetIPS)
+        )
         self.agitatorModule.updateClosedLoopOutput(
-            self.agitatorHzToRadPerS(self.inputs.agitatorTargetHz))
+            self.agitatorHzToRadPerS(self.inputs.agitatorTargetHz)
+        )
 
     def setClosedLoop(self, closedLoop: bool) -> None:
         self.isClosedLoop = closedLoop
@@ -228,7 +276,7 @@ class InOutSubsystem(Subsystem):
 
     @classmethod
     def hopperRadPerSToInPerS(cls, radiansPerS: float) -> float:
-        return radiansPerS *  cls.HOPPER_WHEEL_RADIUS_INCHES * cls.HOPPER_GEAR_REDUCTION
+        return radiansPerS * cls.HOPPER_WHEEL_RADIUS_INCHES * cls.HOPPER_GEAR_REDUCTION
 
     @classmethod
     def hopperInPerSToRadPerS(cls, inPerS: float) -> float:
@@ -236,7 +284,9 @@ class InOutSubsystem(Subsystem):
 
     @classmethod
     def flywheelRadPerSToInPerS(cls, radiansPerS: float) -> float:
-        return radiansPerS * cls.FLYWHEEL_WHEEL_RADIUS_INCHES * cls.FLYWHEEL_GEAR_REDUCTION
+        return (
+            radiansPerS * cls.FLYWHEEL_WHEEL_RADIUS_INCHES * cls.FLYWHEEL_GEAR_REDUCTION
+        )
 
     @classmethod
     def flywheelInPerSToRadPerS(cls, inPerS: float) -> float:
@@ -279,7 +329,7 @@ class InOutSubsystem(Subsystem):
                 self.setState(InOutState.kOutaking)
             case InOutCommand.kShooting:
                 self.setState(InOutState.kShooting)
-            case InOutCommand.kOff|_:
+            case InOutCommand.kOff | _:
                 self.setState(InOutState.kOff)
 
         match self.oInt.flywheelCommand:
@@ -287,7 +337,7 @@ class InOutSubsystem(Subsystem):
                 pass
             case FlywheelCommand.kSpinningUp:
                 self.setFlywheelState(FlywheelState.kSpinningUp)
-            case FlywheelCommand.kSpinningDown|_:
+            case FlywheelCommand.kSpinningDown | _:
                 self.setFlywheelState(FlywheelState.kOff)
 
     def aDoNothingCommand(self) -> Optional[Command]:
@@ -303,110 +353,130 @@ class InOutSubsystem(Subsystem):
 
     def spinUpFlywheelCommand(self) -> Command:
         return cmd.sequence(
-            cmd.runOnce(lambda: self.setFlywheelState(FlywheelState.kSpinningUp),self),
+            cmd.runOnce(lambda: self.setFlywheelState(FlywheelState.kSpinningUp), self),
         )
 
     def shootCommand(self) -> Command:
-        return cmd.sequence(cmd.runOnce(lambda: self.setState(InOutState.kShooting), self),
-                        cmd.waitSeconds(10),
-                        cmd.runOnce(lambda: self.setState(InOutState.kOff), self),
-                        self)
+        return cmd.sequence(
+            cmd.runOnce(lambda: self.setState(InOutState.kShooting), self),
+            cmd.waitSeconds(10),
+            cmd.runOnce(lambda: self.setState(InOutState.kOff), self),
+            self,
+        )
 
     def spinUpAndShootCommand(self) -> Command:
         return cmd.sequence(
-            cmd.runOnce(lambda: self.setFlywheelState(FlywheelState.kSpinningUp),self),
+            cmd.runOnce(lambda: self.setFlywheelState(FlywheelState.kSpinningUp), self),
             cmd.waitSeconds(1),
             cmd.runOnce(lambda: self.setState(InOutState.kShooting), self),
             cmd.waitSeconds(7),
             cmd.runOnce(lambda: self.setState(InOutState.kOff), self),
-            cmd.runOnce(lambda: self.setFlywheelState(FlywheelState.kOff),self),
-            self
+            cmd.runOnce(lambda: self.setFlywheelState(FlywheelState.kOff), self),
+            self,
         )
 
 
 # See https://github.com/FRCTeam360/RainMaker26/blob/ac5238c1ef05ec7bd4adafc81331d94dc29ffe08/src/main/java/frc/robot/subsystems/Indexer/IndexerIOSim.java#L3
 # for reference.
 @dataclass
-class OperateFlywheelSimulation():
+class OperateFlywheelSimulation:
     wrapperedMotor: WrapperedMotorSuper
-    gearRatio: float        # Gear Reduction is > 1.0
-    moi: float              # Moment of inertia in kg·m² = = 0.0513951385
-    gearBox: DCMotor = field(init=False)        # e.g: DCMotor.getNEO(1);
-    #motorCtrl: SparkBase = field(init=False)   # was motorControllerSim
+    gearRatio: float  # Gear Reduction is > 1.0
+    moi: float  # Moment of inertia in kg·m² = = 0.0513951385
+    gearBox: DCMotor = field(init=False)  # e.g: DCMotor.getNEO(1);
+    # motorCtrl: SparkBase = field(init=False)   # was motorControllerSim
     sparkSim: SparkSim = field(init=False)  #
     plant: LinearSystemSim_1_1_1 = field(init=False)
     flywheelSim: FlywheelSim = field(init=False)
 
     def __post_init__(self) -> None:
         self.gearBox = self.wrapperedMotor.getGearBox()
-        #self.motorCtrl = self.wrapperedMotor.getCtrl() # TODO Clean this up
+        # self.motorCtrl = self.wrapperedMotor.getCtrl() # TODO Clean this up
         self.sparkSim = self.wrapperedMotor.getSparkSim()
-        self.plant = LinearSystemId.flywheelSystem(self.gearBox, self.moi, self.gearRatio) # TODO Investigate if gearRatio and moi and inertia make sense
-        self.flywheelSim = FlywheelSim(self.plant, self.gearBox, measurementStdDevs=[0.01])
+        self.plant = LinearSystemId.flywheelSystem(
+            self.gearBox, self.moi, self.gearRatio
+        )  # TODO Investigate if gearRatio and moi and inertia make sense
+        self.flywheelSim = FlywheelSim(
+            self.plant, self.gearBox, measurementStdDevs=[0.01]
+        )
         # TODO Mike Stitt doesn't think we need this step
         # self.motorCtrl.set(0.0)
 
     def periodic(self):
         # Step 4: Use SparkMaxSim.iterate() to update the Spark MAX/Flex with simulated values
         self.sparkSim.iterate(
-            radPerSec2RPM(self.flywheelSim.getAngularVelocity()) * self.gearRatio, # Motor velocity in RPM
-            RoboRioSim.getVInVoltage(),            # Simulated battery voltage
-            kRobotUpdatePeriodS)                  # Time interval
+            radPerSec2RPM(self.flywheelSim.getAngularVelocity())
+            * self.gearRatio,  # Motor velocity in RPM
+            RoboRioSim.getVInVoltage(),  # Simulated battery voltage
+            kRobotUpdatePeriodS,
+        )  # Time interval
         # Step 2: Set the input voltage to the physics simulation
-        appliedVoltage = self.sparkSim.getAppliedOutput() * self.sparkSim.getBusVoltage()
+        appliedVoltage = (
+            self.sparkSim.getAppliedOutput() * self.sparkSim.getBusVoltage()
+        )
         self.flywheelSim.setInputVoltage(appliedVoltage)
         # Step 3: Update the physics simulation
         self.flywheelSim.update(kRobotUpdatePeriodS)
-        #self.sparkSim.setVelocity(self.flywheelSim.getAngularVelocity())
+        # self.sparkSim.setVelocity(self.flywheelSim.getAngularVelocity())
         # TODO Mike Stitt - I think we need this across all currend draws
         # Step 5: Update battery voltage based on current draw
         RoboRioSim.setVInVoltage(
             BatterySim.calculate(12.0, 0.020, [self.flywheelSim.getCurrentDraw()])
         )
 
-class InOutSubsystemSimulation():
-    def __init__(self,
-            groundMotor:WrapperedMotorSuper,
-            hopperMotor: WrapperedMotorSuper,
-            flywheelMotor: WrapperedMotorSuper,
-            agitatorMotor: WrapperedMotorSuper) -> None:
+
+class InOutSubsystemSimulation:
+    def __init__(
+        self,
+        groundMotor: WrapperedMotorSuper,
+        hopperMotor: WrapperedMotorSuper,
+        flywheelMotor: WrapperedMotorSuper,
+        agitatorMotor: WrapperedMotorSuper,
+    ) -> None:
         self.groundWheelSim = OperateFlywheelSimulation(
             wrapperedMotor=groundMotor,
-            gearRatio=1/InOutSubsystem.GROUND_GEAR_REDUCTION,
+            gearRatio=1 / InOutSubsystem.GROUND_GEAR_REDUCTION,
             moi=0.005,
         )
         self.hopperWheelSim = OperateFlywheelSimulation(
             wrapperedMotor=hopperMotor,
-            gearRatio=1/InOutSubsystem.HOPPER_GEAR_REDUCTION,
+            gearRatio=1 / InOutSubsystem.HOPPER_GEAR_REDUCTION,
             moi=0.005,
         )
         self.flywheelWheelSim = OperateFlywheelSimulation(
             wrapperedMotor=flywheelMotor,
-            gearRatio=1/InOutSubsystem.FLYWHEEL_GEAR_REDUCTION,
+            gearRatio=1 / InOutSubsystem.FLYWHEEL_GEAR_REDUCTION,
             moi=0.01,
         )
         if IODC["HAS_AGITATOR"]:
             self.agitatorWheelSim = OperateFlywheelSimulation(
                 wrapperedMotor=agitatorMotor,
-                gearRatio=1/InOutSubsystem.AGITATOR_GEAR_REDUCTION,
+                gearRatio=1 / InOutSubsystem.AGITATOR_GEAR_REDUCTION,
                 moi=0.005,
             )
-            self.simulations = (self.groundWheelSim, self.hopperWheelSim, self.flywheelWheelSim, self.agitatorWheelSim)
+            self.simulations = (
+                self.groundWheelSim,
+                self.hopperWheelSim,
+                self.flywheelWheelSim,
+                self.agitatorWheelSim,
+            )
         else:
-            self.simulations = (self.groundWheelSim, self.hopperWheelSim, self.flywheelWheelSim)
-
+            self.simulations = (
+                self.groundWheelSim,
+                self.hopperWheelSim,
+                self.flywheelWheelSim,
+            )
 
     def periodic(self):
         for simulation in self.simulations:
             simulation.periodic()
 
 
-def inoutSubsystemFactory() -> InOutSubsystem|None:
+def inoutSubsystemFactory() -> InOutSubsystem | None:
     inout: Optional[InOutSubsystem] = None
     if HAS_INOUT:
         match kRobotMode:
             case RobotModes.REAL | RobotModes.SIMULATION:
-
                 groundMotorGearBox: Optional[DCMotor] = None
                 hopperMotorGearBox: Optional[DCMotor] = None
                 flywheelMotorGearBox: Optional[DCMotor] = None
@@ -420,47 +490,56 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
 
                 inoutCals = InOutCalSet()
 
-                groundMotor = WrapperedSparkMotor.makeSparkMax(name="groundMotor",
-                                                canID=IODC["GROUND_MOTOR_CANID"],
-                                                gearBox=groundMotorGearBox)
+                groundMotor = WrapperedSparkMotor.makeSparkMax(
+                    name="groundMotor",
+                    canID=IODC["GROUND_MOTOR_CANID"],
+                    gearBox=groundMotorGearBox,
+                )
                 groundMotor.setInverted(IODC["GROUND_MOTOR_INVERTED"])
-                hopperMotor = WrapperedSparkMotor.makeSparkMax(name="hopperMotor",
-                                                canID=IODC["HOPPER_MOTOR_CANID"],
-                                                gearBox=hopperMotorGearBox)
+                hopperMotor = WrapperedSparkMotor.makeSparkMax(
+                    name="hopperMotor",
+                    canID=IODC["HOPPER_MOTOR_CANID"],
+                    gearBox=hopperMotorGearBox,
+                )
                 hopperMotor.setInverted(IODC["HOPPER_MOTOR_INVERTED"])
-                flywheelMotor = WrapperedSparkMotor.makeSparkFlex(name="flywheelMotor",
-                                                   canID=IODC["FLYWHEEL_MOTOR_CANID"],
-                                                   currentLimitA=60,
-                                                   gearBox=flywheelMotorGearBox)
+                flywheelMotor = WrapperedSparkMotor.makeSparkFlex(
+                    name="flywheelMotor",
+                    canID=IODC["FLYWHEEL_MOTOR_CANID"],
+                    currentLimitA=60,
+                    gearBox=flywheelMotorGearBox,
+                )
                 flywheelMotor.setInverted(IODC["FLYWHEEL_MOTOR_INVERTED"])
                 agitatorMotor = None
                 if IODC["HAS_AGITATOR"]:
-                    agitatorMotor = WrapperedSparkMotor.makeSparkMax(name="agitatorMotor",
-                                                    canID=IODC["AGITATOR_MOTOR_CANID"],
-                                                    gearBox=agitatorMotorGearBox)
+                    agitatorMotor = WrapperedSparkMotor.makeSparkMax(
+                        name="agitatorMotor",
+                        canID=IODC["AGITATOR_MOTOR_CANID"],
+                        gearBox=agitatorMotorGearBox,
+                    )
                     agitatorMotor.setInverted(IODC["AGITATOR_MOTOR_INVERTED"])
 
                 groundController = SparkSlewRateLimitedVelocityController(
                     cals=inoutCals.groundCals,
-                    userUnitsToRadPerSec=InOutSubsystem.groundInPerSToRadPerS
+                    userUnitsToRadPerSec=InOutSubsystem.groundInPerSToRadPerS,
                 )
                 hopperController = SparkSlewRateLimitedVelocityController(
                     cals=inoutCals.hopperCals,
-                    userUnitsToRadPerSec=InOutSubsystem.hopperInPerSToRadPerS
+                    userUnitsToRadPerSec=InOutSubsystem.hopperInPerSToRadPerS,
                 )
                 flywheelController = SparkSlewRateLimitedVelocityController(
                     cals=inoutCals.flywheelCals,
-                    userUnitsToRadPerSec=InOutSubsystem.flywheelInPerSToRadPerS
+                    userUnitsToRadPerSec=InOutSubsystem.flywheelInPerSToRadPerS,
                 )
                 agitatorController = SparkSlewRateLimitedVelocityController(
                     cals=inoutCals.agitatorCals,
-                    userUnitsToRadPerSec=InOutSubsystem.agitatorHzToRadPerS
+                    userUnitsToRadPerSec=InOutSubsystem.agitatorHzToRadPerS,
                 )
-
 
                 inoutSim = None
                 if kRobotMode == RobotModes.SIMULATION:
-                    inoutSim = InOutSubsystemSimulation(groundMotor, hopperMotor, flywheelMotor, agitatorMotor)
+                    inoutSim = InOutSubsystemSimulation(
+                        groundMotor, hopperMotor, flywheelMotor, agitatorMotor
+                    )
             case _:
                 pass
 
@@ -468,13 +547,20 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
             case RobotModes.REAL:
                 inout = InOutSubsystem(
                     io=InOutSubsystemIOReal(name="inoutIO"),
-                    groundModule_io=MotorModuleIOWrappered(name="inoutGroundModuleIO", motor=groundMotor),
-                    hopperModule_io=MotorModuleIOWrappered(name="inoutHopperModuleIO", motor=hopperMotor),
-                    flywheelModule_io=MotorModuleIOWrappered(name="inoutFlywheelModuleIO", motor=flywheelMotor),
-                    agitatorModule_io=
-                        MotorModuleIOWrappered(name="inoutAgitatorModuleIO", motor=agitatorMotor)\
-                        if IODC["HAS_AGITATOR"]
-                        else MotorModuleIO(name="inoutAgitatorModuleIO"),
+                    groundModule_io=MotorModuleIOWrappered(
+                        name="inoutGroundModuleIO", motor=groundMotor
+                    ),
+                    hopperModule_io=MotorModuleIOWrappered(
+                        name="inoutHopperModuleIO", motor=hopperMotor
+                    ),
+                    flywheelModule_io=MotorModuleIOWrappered(
+                        name="inoutFlywheelModuleIO", motor=flywheelMotor
+                    ),
+                    agitatorModule_io=MotorModuleIOWrappered(
+                        name="inoutAgitatorModuleIO", motor=agitatorMotor
+                    )
+                    if IODC["HAS_AGITATOR"]
+                    else MotorModuleIO(name="inoutAgitatorModuleIO"),
                     groundModule_controller=groundController,
                     hopperModule_controller=hopperController,
                     flywheelModule_controller=flywheelController,
@@ -483,17 +569,25 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
             case RobotModes.SIMULATION:
                 inout = InOutSubsystem(
                     io=InOutSubsystemIORealSim(name="inoutIO"),
-                    groundModule_io=MotorModuleIOWrapperedSim(name="inoutGroundModuleIO", motor=groundMotor),
-                    hopperModule_io=MotorModuleIOWrapperedSim(name="inoutHopperModuleIO", motor=hopperMotor),
-                    flywheelModule_io=MotorModuleIOWrapperedSim(name="inoutFlywheelModuleIO", motor=flywheelMotor),
-                    agitatorModule_io=MotorModuleIOWrapperedSim(name="inoutAgitatorModuleIO", motor=agitatorMotor)\
-                        if IODC["HAS_AGITATOR"]
-                        else MotorModuleIO(name="inoutAgitatorModuleIO"),
+                    groundModule_io=MotorModuleIOWrapperedSim(
+                        name="inoutGroundModuleIO", motor=groundMotor
+                    ),
+                    hopperModule_io=MotorModuleIOWrapperedSim(
+                        name="inoutHopperModuleIO", motor=hopperMotor
+                    ),
+                    flywheelModule_io=MotorModuleIOWrapperedSim(
+                        name="inoutFlywheelModuleIO", motor=flywheelMotor
+                    ),
+                    agitatorModule_io=MotorModuleIOWrapperedSim(
+                        name="inoutAgitatorModuleIO", motor=agitatorMotor
+                    )
+                    if IODC["HAS_AGITATOR"]
+                    else MotorModuleIO(name="inoutAgitatorModuleIO"),
                     groundModule_controller=groundController,
                     hopperModule_controller=hopperController,
                     flywheelModule_controller=flywheelController,
                     agitatorModule_controller=agitatorController,
-                    simulation=inoutSim
+                    simulation=inoutSim,
                 )
             case RobotModes.REPLAY | _:
                 inout = InOutSubsystem(
@@ -512,23 +606,35 @@ def inoutSubsystemFactory() -> InOutSubsystem|None:
             case RobotModes.SIMULATION:
                 groundMaxFreeSpeedRadps = groundMotorGearBox.freeSpeed
                 groundMaxFreeSpeedRPM = radPerSec2RPM(groundMaxFreeSpeedRadps)
-                groundMaxFreeSpeedIPS =  inout.groundRadPerSToInPerS(groundMaxFreeSpeedRadps)
-                print(f"groundMaxFreeSpeedRPM={groundMaxFreeSpeedRPM:.0f} groundMaxFreeSpeedIPS={groundMaxFreeSpeedIPS:.0f}"
-                      f" calGroundIntakeTargetSpeedIPS={inout.calGroundIntakeTargetSpeedIPS:.0f}"
-                      f" ratioOfMaxSpeed={inout.calGroundIntakeTargetSpeedIPS/groundMaxFreeSpeedIPS:.2f}")
+                groundMaxFreeSpeedIPS = inout.groundRadPerSToInPerS(
+                    groundMaxFreeSpeedRadps
+                )
+                print(
+                    f"groundMaxFreeSpeedRPM={groundMaxFreeSpeedRPM:.0f} groundMaxFreeSpeedIPS={groundMaxFreeSpeedIPS:.0f}"
+                    f" calGroundIntakeTargetSpeedIPS={inout.calGroundIntakeTargetSpeedIPS:.0f}"
+                    f" ratioOfMaxSpeed={inout.calGroundIntakeTargetSpeedIPS / groundMaxFreeSpeedIPS:.2f}"
+                )
                 hopperMaxFreeSpeedRadps = hopperMotorGearBox.freeSpeed
                 hopperMaxFreeSpeedRPM = radPerSec2RPM(hopperMaxFreeSpeedRadps)
-                hopperMaxFreeSpeedIPS =  inout.hopperRadPerSToInPerS(hopperMaxFreeSpeedRadps)
-                print(f"hopperMaxFreeSpeedRPM={hopperMaxFreeSpeedRPM:.0f} hopperMaxFreeSpeedIPS={hopperMaxFreeSpeedIPS:.0f}"
-                      f" calHopperIntakeTargetSpeedIPS={inout.calHopperIntakeTargetSpeedIPS:.0f}"
-                      f" ratioOfMaxSpeed={inout.calHopperIntakeTargetSpeedIPS/hopperMaxFreeSpeedIPS:.2f}")
+                hopperMaxFreeSpeedIPS = inout.hopperRadPerSToInPerS(
+                    hopperMaxFreeSpeedRadps
+                )
+                print(
+                    f"hopperMaxFreeSpeedRPM={hopperMaxFreeSpeedRPM:.0f} hopperMaxFreeSpeedIPS={hopperMaxFreeSpeedIPS:.0f}"
+                    f" calHopperIntakeTargetSpeedIPS={inout.calHopperIntakeTargetSpeedIPS:.0f}"
+                    f" ratioOfMaxSpeed={inout.calHopperIntakeTargetSpeedIPS / hopperMaxFreeSpeedIPS:.2f}"
+                )
                 flywheelMaxFreeSpeedRadps = flywheelMotorGearBox.freeSpeed
                 flywheelMaxFreeSpeedRPM = radPerSec2RPM(flywheelMaxFreeSpeedRadps)
-                flywheelMaxFreeSpeedIPS =  inout.flywheelRadPerSToInPerS(flywheelMaxFreeSpeedRadps)
-                print(f"flywheelMaxFreeSpeedRPM={flywheelMaxFreeSpeedRPM:.0f} flywheelMaxFreeSpeedIPS={flywheelMaxFreeSpeedIPS:.0f}"
-                      f" calFlywheelIntakeTargetSpeedIPS={inout.calFlywheelTargetSpeedIPS:.0f}"
-                      f" ratioOfMaxSpeed={inout.calFlywheelTargetSpeedIPS/flywheelMaxFreeSpeedIPS:.2f}")
-            case RobotModes.REAL|RobotModes.REPLAY | _:
+                flywheelMaxFreeSpeedIPS = inout.flywheelRadPerSToInPerS(
+                    flywheelMaxFreeSpeedRadps
+                )
+                print(
+                    f"flywheelMaxFreeSpeedRPM={flywheelMaxFreeSpeedRPM:.0f} flywheelMaxFreeSpeedIPS={flywheelMaxFreeSpeedIPS:.0f}"
+                    f" calFlywheelIntakeTargetSpeedIPS={inout.calFlywheelTargetSpeedIPS:.0f}"
+                    f" ratioOfMaxSpeed={inout.calFlywheelTargetSpeedIPS / flywheelMaxFreeSpeedIPS:.2f}"
+                )
+            case RobotModes.REAL | RobotModes.REPLAY | _:
                 pass
 
     return inout

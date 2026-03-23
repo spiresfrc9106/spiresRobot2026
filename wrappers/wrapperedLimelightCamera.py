@@ -3,7 +3,7 @@ import math
 
 from ntcore import NetworkTableInstance
 import wpilib
-from wpimath.geometry import Pose2d, Rotation2d,Translation3d
+from wpimath.geometry import Pose2d, Rotation2d, Translation3d
 
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from wrappers.wrapperedPoseEstPhotonCamera import WrapperedPoseEstPhotonCamera
@@ -13,16 +13,17 @@ from sensors.limelight import Limelight
 from photonlibpy.photonCamera import setVersionCheckEnabled
 from utils.faults import Fault
 
+
 @dataclass
 class LimelightCameraPoseObservation:
     time: float
     estFieldPose: Pose2d
     xyStdDev: float  # std dev of error in measurement, units of meters.
-    rotStdDev: float # std dev of measurement, in units of radians
+    rotStdDev: float  # std dev of measurement, in units of radians
 
 
 class WrapperedPoseEstLimelight:
-    def __init__(self, camName:str, robotToCam:Translation3d, pipeline_mode):
+    def __init__(self, camName: str, robotToCam: Translation3d, pipeline_mode):
         setVersionCheckEnabled(False)
 
         print(f"WrapperedPoseEstLimelight camName {type(camName)} = {camName}")
@@ -60,7 +61,7 @@ class WrapperedPoseEstLimelight:
         self.targetLength = 0
         self.latency = 0
 
-    def update(self, prevEstPose:Pose2d):
+    def update(self, prevEstPose: Pose2d):
         self.cam.update()
 
         self.poseEstimates = []
@@ -70,28 +71,37 @@ class WrapperedPoseEstLimelight:
             self.disconFault.setFaulted()
             return
 
-        #res = self.cam.getLatestResult()
+        # res = self.cam.getLatestResult()
         # broken in photonvision 2.4.2. Hack with the non-broken latency calcualtion
         self.latency = self.cam.get_latency_total()
-        latency = self.latency # a total guess
+        latency = self.latency  # a total guess
         obsTime = RobotTopSubsystem().getFPGATimestampS() - latency
 
         # Update our disconnected fault since we have something from the camera
         self.disconFault.setNoFault()
 
         if self.cam.april_tag_exists():
-            #metatag2 is horrible, angles don't seem to work, sometimes jumps across field. using default.
+            # metatag2 is horrible, angles don't seem to work, sometimes jumps across field. using default.
             bestCandidate = self._toPose2d(botpose=self.cam.botpose)
             ta = self.cam.getTargetSize()
             self.xStdDev = self._getCameraStdDev(ta, measure_x=True)
             self.yStdDev = self._getCameraStdDev(ta, measure_y=True)
             self.tStdDev = self._getCameraStdDev(ta, measure_t=True)
-            self.poseEstimates.append(LimelightCameraPoseObservation(obsTime, bestCandidate, max(self.xStdDev, self.yStdDev), self.tStdDev))
+            self.poseEstimates.append(
+                LimelightCameraPoseObservation(
+                    obsTime,
+                    bestCandidate,
+                    max(self.xStdDev, self.yStdDev),
+                    self.tStdDev,
+                )
+            )
             self.CamPublisher.set(bestCandidate)
             secondCandidate = self._toPose2d(botpose=self.cam.botposemeta2)
             self.MetaTag2CamPublisher.set(secondCandidate)
             self.targetTransformation = self.getTargetPoseEstFormatted()
-            self.targetInView = self.getTargetIDInView()  # TODO: PLEASE FIX THIS.  we need to coordinate tag id+pos,
+            self.targetInView = (
+                self.getTargetIDInView()
+            )  # TODO: PLEASE FIX THIS.  we need to coordinate tag id+pos,
             # TODO: so we can give the tag ids and their positions to the pose schemes and schemes decide to use what
         else:
             # Publish a 0 pose in networktables when we don't have an observation to
@@ -104,17 +114,22 @@ class WrapperedPoseEstLimelight:
     def _adjust(self, pos):
         return pos.transformBy(self.robotToCam.inverse()).toPose2d()
 
-    def _toPose2d(self, botpose:list): #init: +9.0, +4.5
-        #CAUSES WILD OSCILATION BETWEEN 180 and -180 or wtv:
+    def _toPose2d(self, botpose: list):  # init: +9.0, +4.5
+        # CAUSES WILD OSCILATION BETWEEN 180 and -180 or wtv:
         # return Pose3d(Translation3d(botpose[0], botpose[1], botpose[2]),Rotation3d(botpose[3], botpose[4], math.radians(botpose[5])),).toPose2d()
-        return Pose2d(botpose[0], botpose[1], Rotation2d(math.radians(botpose[5]))) # initially: self._adjust(Pose3d())
+        return Pose2d(
+            botpose[0], botpose[1], Rotation2d(math.radians(botpose[5]))
+        )  # initially: self._adjust(Pose3d())
 
     def getTargetIDInView(self):
         return self.cam.tid
 
     def getTargetPoseEstFormatted(self):
         if self.cam is not None:
-            tagPosition:tuple = (self.cam.targetPoseByRobot[2], self.cam.targetPoseByRobot[0])
+            tagPosition: tuple = (
+                self.cam.targetPoseByRobot[2],
+                self.cam.targetPoseByRobot[0],
+            )
             return tagPosition
         else:
             return None
@@ -128,7 +143,13 @@ class WrapperedPoseEstLimelight:
     def getPoseEstimates(self):
         return self.poseEstimates
 
-    def _getCameraStdDev(self, ta, measure_x: bool = False, measure_y: bool = False, measure_t: bool = False):
+    def _getCameraStdDev(
+        self,
+        ta,
+        measure_x: bool = False,
+        measure_y: bool = False,
+        measure_t: bool = False,
+    ):
         x = ta
         a = 0
         b = 1
@@ -152,12 +173,14 @@ class WrapperedPoseEstLimelight:
 
         y = a * pow(b, x) + d * x + c
         if measure_x or measure_y:
-            return max(y, 0.1)  # We should put make this a number between .1 and 1 #(CoachMike) Went from 1 to 0.1   #max(y, 0.0127)
+            return max(
+                y, 0.1
+            )  # We should put make this a number between .1 and 1 #(CoachMike) Went from 1 to 0.1   #max(y, 0.0127)
         else:
             return max(y, 1000000000)  # billions of dollars
 
 
-def wrapperedLimilightCameraFactory(camName:str, robotToCam, pipeline_mode):
+def wrapperedLimilightCameraFactory(camName: str, robotToCam, pipeline_mode):
     if wpilib.RobotBase.isSimulation():
         print(f"In simulation substituting PhotonCamera for LimeLight Camera {camName}")
         wrapperedCam = WrapperedPoseEstPhotonCamera(camName, robotToCam)

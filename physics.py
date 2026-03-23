@@ -20,6 +20,7 @@ from constants.sim import (
     kSimDefaultRobotLocation,
 )
 
+
 # TODO this comes from westwood and drives the westwood camera sim. Unify it with the drivetrain sim in the casserole swerve.
 class SwerveDriveSim:
     def __init__(self, drivetrainSubsystem: DrivetrainSubsystem) -> None:
@@ -89,13 +90,13 @@ class PhysicsEngine:
 
         print(f"{self.bot.count} PhysicsEngine.__init__")
 
-        drivetrainSubsystem: DrivetrainSubsystem|None = None
+        drivetrainSubsystem: DrivetrainSubsystem | None = None
         if robot.container.drivetrainSubsystem is not None:
             drivetrainSubsystem = robot.container.drivetrainSubsystem
-        #if robot.westwoodContainer is not None:
+        # if robot.westwoodContainer is not None:
         #    drivetrainSubsystem: DrivetrainSubsystem = robot.westwoodContainer.drive
 
-        #if drivetrainSubsystem is None or not isinstance(drivetrainSubsystem.frontLeftModule.io, SwerveModuleIOCTRE):
+        # if drivetrainSubsystem is None or not isinstance(drivetrainSubsystem.frontLeftModule.io, SwerveModuleIOCTRE):
         #    # do not simulation
         #    self.doSim = False
         #    print("[Physics] WARNING: Westwood Swerve is Not simulating")
@@ -113,7 +114,7 @@ class PhysicsEngine:
 
     # pylint: disable-next=unused-argument
     def update_sim(self, now: float, tm_diff: float) -> None:
-        #print(f"{self.bot.count} PhysicsEngine.update_sim")
+        # print(f"{self.bot.count} PhysicsEngine.update_sim")
         """
         Called when the simulation parameters for the program need to be
         updated.

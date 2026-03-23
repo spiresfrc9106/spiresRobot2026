@@ -28,6 +28,7 @@ class MotorModuleController:
 
 class NullController(MotorModuleController):
     """No-op controller used for replay mode."""
+
     def __init__(self) -> None:
         pass
 
@@ -50,18 +51,31 @@ def _secPerRadToMinPerRev(k):
 class MaxMotionController(MotorModuleController):
     """MaxMotion velocity control with Spark built-in feedforward."""
 
-    def __init__(self, cals: MotorModuleCals, userUnitsToRadPerSec:Callable[[float],float]) -> None:
+    def __init__(
+        self, cals: MotorModuleCals, userUnitsToRadPerSec: Callable[[float], float]
+    ) -> None:
         super().__init__(cals)
         self.oldTargetRadPerS: float = 0.0
         self.userUnitsToRadPerSec = userUnitsToRadPerSec
-        self.kA_voltsPerRPMinSecs: float = field(init=False, default_factory=lambda:_secPerRadToMinPerRev(self.cals.kA.get()))
+        self.kA_voltsPerRPMinSecs: float = field(
+            init=False,
+            default_factory=lambda: _secPerRadToMinPerRev(self.cals.kA.get()),
+        )
 
     def updatePIDandFF(self, io: MotorModuleIO) -> None:
         kV_voltsPerRPM = _secPerRadToMinPerRev(self.cals.kV.get())
         self.kA_voltsPerRPMinSecs = _secPerRadToMinPerRev(self.cals.kA.get())
-        io.setPIDFF(self.cals.kP.get(), 0.0, self.cals.kD.get(),
-                    self.cals.kS.get(), kV_voltsPerRPM, self.kA_voltsPerRPMinSecs)
-        io.setMaxMotionVelParams(maxAccRadps2=self.userUnitsToRadPerSec(self.cals.maxAccUserUnitsPerS2.get()))
+        io.setPIDFF(
+            self.cals.kP.get(),
+            0.0,
+            self.cals.kD.get(),
+            self.cals.kS.get(),
+            kV_voltsPerRPM,
+            self.kA_voltsPerRPMinSecs,
+        )
+        io.setMaxMotionVelParams(
+            maxAccRadps2=self.userUnitsToRadPerSec(self.cals.maxAccUserUnitsPerS2.get())
+        )
 
     def updateClosedLoopOutput(self, io: MotorModuleIO, targetRadPerS: float) -> None:
         if targetRadPerS != self.oldTargetRadPerS:
@@ -81,6 +95,7 @@ class MaxMotionController(MotorModuleController):
         io.setFeedForwardKA(0.0)
         io.setVoltage(0.0)
 
+
 class SparkVelocityController(MotorModuleController):
     """Spark velocity control with Spark built-in feedforward."""
 
@@ -90,14 +105,21 @@ class SparkVelocityController(MotorModuleController):
     def updatePIDandFF(self, io: MotorModuleIO) -> None:
         kV_voltsPerRPM = _secPerRadToMinPerRev(self.cals.kV.get())
         kA_voltsPerRPMinSecs = _secPerRadToMinPerRev(self.cals.kA.get())
-        io.setPIDFF(self.cals.kP.get(), 0.0, self.cals.kD.get(),
-                    self.cals.kS.get(), kV_voltsPerRPM, kA_voltsPerRPMinSecs)
+        io.setPIDFF(
+            self.cals.kP.get(),
+            0.0,
+            self.cals.kD.get(),
+            self.cals.kS.get(),
+            kV_voltsPerRPM,
+            kA_voltsPerRPMinSecs,
+        )
 
     def updateClosedLoopOutput(self, io: MotorModuleIO, targetRadPerS: float) -> None:
         if isclose(targetRadPerS, 0.0):
             io.setVoltage(0.0)
         else:
             io.setVelCmd(targetRadPerS)
+
 
 def clamp(value, minimum, maximum):
     """
@@ -106,25 +128,30 @@ def clamp(value, minimum, maximum):
     """
     return max(minimum, min(value, maximum))
 
-class PyKitSlewRateLimiter():
+
+class PyKitSlewRateLimiter:
     def __init__(self, maxChangePerSec) -> None:
         self.positiveMaxChangePerSec = maxChangePerSec
         self.negativeMaxChangePerSec = -maxChangePerSec
-        self.prevTime_uS:Optional[int] = None
-        self.prevVal:Optional[float] = None
-        
+        self.prevTime_uS: Optional[int] = None
+        self.prevVal: Optional[float] = None
+
     def calculate(self, input: float) -> float:
-        now_uS:int = Logger.getTimestamp()
+        now_uS: int = Logger.getTimestamp()
         if self.prevTime_uS is None:
             self.prevVal = input
         else:
             elapsedTime_uS = now_uS - self.prevTime_uS
             elapsedTime_S = elapsedTime_uS / 1e6
-            self.prevVal += clamp(input - self.prevVal, self.negativeMaxChangePerSec*elapsedTime_S, self.positiveMaxChangePerSec*elapsedTime_S)
+            self.prevVal += clamp(
+                input - self.prevVal,
+                self.negativeMaxChangePerSec * elapsedTime_S,
+                self.positiveMaxChangePerSec * elapsedTime_S,
+            )
         self.prevTime_uS = now_uS
         return self.prevVal
 
-    def reset(self, input:float):
+    def reset(self, input: float):
         self.prevVal = input
         self.prevTime_uS = Logger.getTimestamp()
 
@@ -132,15 +159,23 @@ class PyKitSlewRateLimiter():
 class SparkSlewRateLimitedVelocityController(MotorModuleController):
     """Spark velocity control with Spark built-in feedforward."""
 
-    def __init__(self, cals: MotorModuleCals, userUnitsToRadPerSec:Callable[[float],float]) -> None:
+    def __init__(
+        self, cals: MotorModuleCals, userUnitsToRadPerSec: Callable[[float], float]
+    ) -> None:
         super().__init__(cals)
         self.userUnitsToRadPerSec = userUnitsToRadPerSec
 
     def updatePIDandFF(self, io: MotorModuleIO) -> None:
         kV_voltsPerRPM = _secPerRadToMinPerRev(self.cals.kV.get())
         kA_voltsPerRPMinSecs = _secPerRadToMinPerRev(self.cals.kA.get())
-        io.setPIDFF(self.cals.kP.get(), 0.0, self.cals.kD.get(),
-                    self.cals.kS.get(), kV_voltsPerRPM, kA_voltsPerRPMinSecs)
+        io.setPIDFF(
+            self.cals.kP.get(),
+            0.0,
+            self.cals.kD.get(),
+            self.cals.kS.get(),
+            kV_voltsPerRPM,
+            kA_voltsPerRPMinSecs,
+        )
         maxAccRadps2 = self.userUnitsToRadPerSec(self.cals.maxAccUserUnitsPerS2.get())
         self.limiter = PyKitSlewRateLimiter(maxAccRadps2)
 
@@ -153,7 +188,6 @@ class SparkSlewRateLimitedVelocityController(MotorModuleController):
             io.setVelCmd(limitedRadPerS)
 
 
-
 class WPILibFFController(MotorModuleController):
     """Spark velocity control with WPILib SimpleMotorFeedforward."""
 
@@ -164,8 +198,11 @@ class WPILibFFController(MotorModuleController):
     def updatePIDandFF(self, io: MotorModuleIO) -> None:
         io.setPID(self.cals.kP.get(), 0.0, self.cals.kD.get())
         self.ff = SimpleMotorFeedforwardRadians(
-            self.cals.kS.get(), self.cals.kV.get(), self.cals.kA.get(),
-            kRobotUpdatePeriodS)
+            self.cals.kS.get(),
+            self.cals.kV.get(),
+            self.cals.kA.get(),
+            kRobotUpdatePeriodS,
+        )
 
     def updateClosedLoopOutput(self, io: MotorModuleIO, targetRadPerS: float) -> None:
         if isclose(targetRadPerS, 0.0):

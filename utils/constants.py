@@ -9,8 +9,8 @@ from teamNumber import FRC_TEAM_NUMBER
 ## FIELD DIMENSIONS
 #######################################################################################
 
-FIELD_X_M = 16.541 # "Length"
-FIELD_Y_M = 8.069 # "Width"
+FIELD_X_M = 16.541  # "Length"
+FIELD_Y_M = 8.069  # "Width"
 
 # Blue Hub Location
 _HUB_LOC_X_M = 4.626
@@ -30,7 +30,7 @@ redTowerLocation = Translation2d(FIELD_X_M - _TOW_LOC_X_M, _TOW_LOC_Y_RED_M)
 #######################################################################################
 # Reserved_CANID = 0
 # Reserved_CANID = 1
-if FRC_TEAM_NUMBER==1736:
+if FRC_TEAM_NUMBER == 1736:
     DT_FR_WHEEL_CANID = 2
     DT_FR_AZMTH_CANID = 3
     DT_FL_WHEEL_CANID = 4
@@ -85,7 +85,7 @@ LED_STACK_LIGHT_CTRL_PWM = 9
 ## DIO Bank
 #######################################################################################
 
-if FRC_TEAM_NUMBER==1736:
+if FRC_TEAM_NUMBER == 1736:
     DT_BR_AZMTH_ENC_PORT = 0
     DT_FL_AZMTH_ENC_PORT = 1
     DT_BL_AZMTH_ENC_PORT = 2

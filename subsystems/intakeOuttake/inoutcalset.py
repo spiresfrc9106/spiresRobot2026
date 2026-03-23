@@ -3,74 +3,160 @@ from subsystems.state.configsubsystem import ConfigSubsystem
 from utils.calibration import Calibration
 from utils.singleton import Singleton
 
+
 class InOutCalSet(metaclass=Singleton):
-    """Helper class to house all calibrated gains for inOut subsystem.
-    """
+    """Helper class to house all calibrated gains for inOut subsystem."""
 
     def __init__(self):
         depConsts = ConfigSubsystem().inoutDepConstants
         if depConsts["HAS_INOUT"]:
             self.groundP = Calibration("InOut Ground kP", depConsts["GROUND_KP"])
             self.groundD = Calibration("InOut Ground kD", depConsts["GROUND_KD"])
-            self.groundS = Calibration("InOut Ground kS", depConsts["GROUND_KS"], "volts")
-            self.groundV = Calibration("InOut Ground kV", depConsts["GROUND_KV"], "volts/radPerSec")
-            self.groundA = Calibration("InOut Ground kA", depConsts["GROUND_KA"], "volts/radPerSecPerSec")
-    
+            self.groundS = Calibration(
+                "InOut Ground kS", depConsts["GROUND_KS"], "volts"
+            )
+            self.groundV = Calibration(
+                "InOut Ground kV", depConsts["GROUND_KV"], "volts/radPerSec"
+            )
+            self.groundA = Calibration(
+                "InOut Ground kA", depConsts["GROUND_KA"], "volts/radPerSecPerSec"
+            )
+
             self.hopperP = Calibration("InOut Hopper kP", depConsts["HOPPER_KP"])
             self.hopperD = Calibration("InOut Hopper kD", depConsts["HOPPER_KD"])
-            self.hopperS = Calibration("InOut Hopper kS", depConsts["HOPPER_KS"], "volts")
-            self.hopperV = Calibration("InOut Hopper kV", depConsts["HOPPER_KV"], "volts/radPerSec")
-            self.hopperA = Calibration("InOut Hopper kA", depConsts["HOPPER_KA"], "volts/radPerSecPerSec")
-    
+            self.hopperS = Calibration(
+                "InOut Hopper kS", depConsts["HOPPER_KS"], "volts"
+            )
+            self.hopperV = Calibration(
+                "InOut Hopper kV", depConsts["HOPPER_KV"], "volts/radPerSec"
+            )
+            self.hopperA = Calibration(
+                "InOut Hopper kA", depConsts["HOPPER_KA"], "volts/radPerSecPerSec"
+            )
+
             self.flywheelP = Calibration("InOut Flywheel kP", depConsts["FLYWHEEL_KP"])
             self.flywheelD = Calibration("InOut Flywheel kD", depConsts["FLYWHEEL_KD"])
-            self.flywheelS = Calibration("InOut Flywheel kS", depConsts["FLYWHEEL_KS"], "volts")
-            self.flywheelV = Calibration("InOut Flywheel kV", depConsts["FLYWHEEL_KV"], "volts/radPerSec")
-            self.flywheelA = Calibration("InOut Flywheel kA", depConsts["FLYWHEEL_KA"], "volts/radPerSecPerSec")
+            self.flywheelS = Calibration(
+                "InOut Flywheel kS", depConsts["FLYWHEEL_KS"], "volts"
+            )
+            self.flywheelV = Calibration(
+                "InOut Flywheel kV", depConsts["FLYWHEEL_KV"], "volts/radPerSec"
+            )
+            self.flywheelA = Calibration(
+                "InOut Flywheel kA", depConsts["FLYWHEEL_KA"], "volts/radPerSecPerSec"
+            )
 
-            self.groundMaxAccIPS2 = Calibration( "InOut Ground Max Acc IPS2", depConsts["GROUND_MAX_MOTION_MAX_ACC_IPS2"], "in/sec^2")
-            self.hopperMaxAccIPS2 = Calibration( "InOut Hopper Max Acc IPS2", depConsts["HOPPER_MAX_MOTION_MAX_ACC_IPS2"], "in/sec^2")
-            self.flywheelMaxAccIPS2 = Calibration( "InOut Flywheel Max Acc IPS2", depConsts["FLYWHEEL_MAX_MOTION_MAX_ACC_IPS2"], "in/sec^2")
-            self.agitatorMaxAccHz2 = Calibration("InOut Agitator Max Acc Hz per s", depConsts["AGITATOR_MAX_MOTION_MAX_ACC_HZPS"], "Hz/sec^2")
+            self.groundMaxAccIPS2 = Calibration(
+                "InOut Ground Max Acc IPS2",
+                depConsts["GROUND_MAX_MOTION_MAX_ACC_IPS2"],
+                "in/sec^2",
+            )
+            self.hopperMaxAccIPS2 = Calibration(
+                "InOut Hopper Max Acc IPS2",
+                depConsts["HOPPER_MAX_MOTION_MAX_ACC_IPS2"],
+                "in/sec^2",
+            )
+            self.flywheelMaxAccIPS2 = Calibration(
+                "InOut Flywheel Max Acc IPS2",
+                depConsts["FLYWHEEL_MAX_MOTION_MAX_ACC_IPS2"],
+                "in/sec^2",
+            )
+            self.agitatorMaxAccHz2 = Calibration(
+                "InOut Agitator Max Acc Hz per s",
+                depConsts["AGITATOR_MAX_MOTION_MAX_ACC_HZPS"],
+                "Hz/sec^2",
+            )
 
             self.groundCals = MotorModuleCals(
-                kP=self.groundP, kD=self.groundD,
-                kS=self.groundS, kV=self.groundV, kA=self.groundA,
-                maxAccUserUnitsPerS2=self.groundMaxAccIPS2)
+                kP=self.groundP,
+                kD=self.groundD,
+                kS=self.groundS,
+                kV=self.groundV,
+                kA=self.groundA,
+                maxAccUserUnitsPerS2=self.groundMaxAccIPS2,
+            )
             self.hopperCals = MotorModuleCals(
-                kP=self.hopperP, kD=self.hopperD,
-                kS=self.hopperS, kV=self.hopperV, kA=self.hopperA,
-                maxAccUserUnitsPerS2=self.hopperMaxAccIPS2)
+                kP=self.hopperP,
+                kD=self.hopperD,
+                kS=self.hopperS,
+                kV=self.hopperV,
+                kA=self.hopperA,
+                maxAccUserUnitsPerS2=self.hopperMaxAccIPS2,
+            )
             self.flywheelCals = MotorModuleCals(
-                kP=self.flywheelP, kD=self.flywheelD,
-                kS=self.flywheelS, kV=self.flywheelV, kA=self.flywheelA,
-                maxAccUserUnitsPerS2=self.flywheelMaxAccIPS2)
+                kP=self.flywheelP,
+                kD=self.flywheelD,
+                kS=self.flywheelS,
+                kV=self.flywheelV,
+                kA=self.flywheelA,
+                maxAccUserUnitsPerS2=self.flywheelMaxAccIPS2,
+            )
 
             self.agitatorP = Calibration("InOut Agitator kP", depConsts["AGITATOR_KP"])
             self.agitatorD = Calibration("InOut Agitator kD", depConsts["AGITATOR_KD"])
-            self.agitatorS = Calibration("InOut Agitator kS", depConsts["AGITATOR_KS"], "volts")
-            self.agitatorV = Calibration("InOut Agitator kV", depConsts["AGITATOR_KV"], "volts/radPerSec")
-            self.agitatorA = Calibration("InOut Agitator kA", depConsts["AGITATOR_KA"], "volts/radPerSecPerSec")
+            self.agitatorS = Calibration(
+                "InOut Agitator kS", depConsts["AGITATOR_KS"], "volts"
+            )
+            self.agitatorV = Calibration(
+                "InOut Agitator kV", depConsts["AGITATOR_KV"], "volts/radPerSec"
+            )
+            self.agitatorA = Calibration(
+                "InOut Agitator kA", depConsts["AGITATOR_KA"], "volts/radPerSecPerSec"
+            )
             self.agitatorCals = MotorModuleCals(
-                kP=self.agitatorP, kD=self.agitatorD,
-                kS=self.agitatorS, kV=self.agitatorV, kA=self.agitatorA,
-                maxAccUserUnitsPerS2=self.agitatorMaxAccHz2)
+                kP=self.agitatorP,
+                kD=self.agitatorD,
+                kS=self.agitatorS,
+                kV=self.agitatorV,
+                kA=self.agitatorA,
+                maxAccUserUnitsPerS2=self.agitatorMaxAccHz2,
+            )
 
-            self.groundIntakeSpeedIPS = Calibration("Ground Intake Speed IPS", depConsts["GROUND_INTAKE_SPEED_IPS"], "in/sec")
-            self.groundOuttakeSpeedIPS = Calibration("Ground Outtake Speed IPS", depConsts["GROUND_OUTTAKE_SPEED_IPS"], "in/sec")
-            self.groundShootSpeedIPS = Calibration("Ground Shoot Speed IPS", depConsts["GROUND_SHOOT_SPEED_IPS"], "in/sec")
-    
-            self.hopperIntakeSpeedIPS = Calibration("Hopper Intake Speed IPS", depConsts["HOPPER_INTAKE_SPEED_IPS"], "in/sec")
-            self.hopperOuttakeSpeedIPS = Calibration("Hopper Outtake Speed IPS", depConsts["HOPPER_OUTTAKE_SPEED_IPS"], "in/sec")
-            self.hopperShootSpeedIPS = Calibration("Hopper Shoot Speed IPS", depConsts["HOPPER_SHOOT_SPEED_IPS"], "in/sec")
-    
-            self.flywheelSpeedIPS = Calibration("Flywheel Speed IPS", depConsts["FLYWHEEL_SPEED_IPS"], "in/sec")
+            self.groundIntakeSpeedIPS = Calibration(
+                "Ground Intake Speed IPS",
+                depConsts["GROUND_INTAKE_SPEED_IPS"],
+                "in/sec",
+            )
+            self.groundOuttakeSpeedIPS = Calibration(
+                "Ground Outtake Speed IPS",
+                depConsts["GROUND_OUTTAKE_SPEED_IPS"],
+                "in/sec",
+            )
+            self.groundShootSpeedIPS = Calibration(
+                "Ground Shoot Speed IPS", depConsts["GROUND_SHOOT_SPEED_IPS"], "in/sec"
+            )
 
-            self.agitatorIntakeSpeedHz = Calibration("Agitator Intake Speed Hz", depConsts["AGITATOR_INTAKE_SPEED_HZ"], "Hz")
-            self.agitatorOuttakeSpeedHz = Calibration("Agitator Outtake Speed Hz", depConsts["AGITATOR_OUTTAKE_SPEED_HZ"], "Hz")
-            self.agitatorShootSpeedHz = Calibration("Agitator Shoot Speed Hz", depConsts["AGITATOR_SHOOT_SPEED_HZ"], "Hz")
+            self.hopperIntakeSpeedIPS = Calibration(
+                "Hopper Intake Speed IPS",
+                depConsts["HOPPER_INTAKE_SPEED_IPS"],
+                "in/sec",
+            )
+            self.hopperOuttakeSpeedIPS = Calibration(
+                "Hopper Outtake Speed IPS",
+                depConsts["HOPPER_OUTTAKE_SPEED_IPS"],
+                "in/sec",
+            )
+            self.hopperShootSpeedIPS = Calibration(
+                "Hopper Shoot Speed IPS", depConsts["HOPPER_SHOOT_SPEED_IPS"], "in/sec"
+            )
 
-    def hasChanged(self)->bool:
+            self.flywheelSpeedIPS = Calibration(
+                "Flywheel Speed IPS", depConsts["FLYWHEEL_SPEED_IPS"], "in/sec"
+            )
+
+            self.agitatorIntakeSpeedHz = Calibration(
+                "Agitator Intake Speed Hz", depConsts["AGITATOR_INTAKE_SPEED_HZ"], "Hz"
+            )
+            self.agitatorOuttakeSpeedHz = Calibration(
+                "Agitator Outtake Speed Hz",
+                depConsts["AGITATOR_OUTTAKE_SPEED_HZ"],
+                "Hz",
+            )
+            self.agitatorShootSpeedHz = Calibration(
+                "Agitator Shoot Speed Hz", depConsts["AGITATOR_SHOOT_SPEED_HZ"], "Hz"
+            )
+
+    def hasChanged(self) -> bool:
         """
         Returns:
             bool: True if any gain in the set is modified, false otherwise

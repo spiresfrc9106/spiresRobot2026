@@ -16,22 +16,25 @@ from utils.allianceTransformUtils import onRed
 from wrappers.wrapperedGyro import wrapperedGyro
 
 
-class DrivetrainControl():
+class DrivetrainControl:
     DO_NOTHING_CMD: DrivetrainCommand = DrivetrainCommand()
     """
     Top-level control class for controlling a swerve drivetrain
     """
 
-    def __init__(self, motorAndEncoderModuleSets: List[Tuple[str, MotorModule, MotorModule, EncoderModule]]):
+    def __init__(
+        self,
+        motorAndEncoderModuleSets: List[
+            Tuple[str, MotorModule, MotorModule, EncoderModule]
+        ],
+    ):
         p = DrivetrainPhysical()
         self.name = p.DRIVETRAIN_NAME
         self.gyro = wrapperedGyro()
         self.modules = []
         self.kinematics = p.kinematics
         for motorAndEncoderModules in motorAndEncoderModuleSets:
-            self.modules.append(
-                SwerveModuleControl(motorAndEncoderModules)
-            )
+            self.modules.append(SwerveModuleControl(motorAndEncoderModules))
         self.MAX_FWD_REV_SPEED_MPS = p.MAX_FWD_REV_SPEED_MPS
 
         print(f"self.MAX_FWD_REV_SPEED_MPS={self.MAX_FWD_REV_SPEED_MPS}")
@@ -43,7 +46,7 @@ class DrivetrainControl():
         self.curManCmd = DrivetrainCommand()
         self.curCmd = DrivetrainCommand()
 
-        #self.elevSpeedLimit = 1.0
+        # self.elevSpeedLimit = 1.0
 
         self.useRobotRelative = False
 
@@ -61,12 +64,12 @@ class DrivetrainControl():
         """
         self.curManCmd = cmd
 
-    def setManualCmdViaChassisSpeeds(self, chassisSpeeds:ChassisSpeeds)->None:
+    def setManualCmdViaChassisSpeeds(self, chassisSpeeds: ChassisSpeeds) -> None:
         cmd = DrivetrainCommand()
         cmd.desChassisSpeeds = chassisSpeeds
         self.curManCmd = cmd
 
-    def setCoastCmd(self, coast:bool):
+    def setCoastCmd(self, coast: bool):
         self.coastCmd = coast
 
     def update(self):
@@ -79,43 +82,51 @@ class DrivetrainControl():
         # calculate the current drivetrain xyzzy.
 
         self.curCmd = self.curManCmd
-        #self.curCmd = Trajectory().update(self.curCmd, curEstPose)
+        # self.curCmd = Trajectory().update(self.curCmd, curEstPose)
         # self.curCmd = AutoSteer().update(self.curCmd, curEstPose)
         # self.curCmd = AutoDrive().update(self.curCmd, curEstPose)
 
-        #self.curCmd.scaleBy(self.elevSpeedLimit)
+        # self.curCmd.scaleBy(self.elevSpeedLimit)
 
         if self.curCmd.desChassisSpeeds is not None:
             robotRelativeChassisSpeeds = self.curCmd.desChassisSpeeds
         elif self.curCmd.robotRelative:
-            robotRelativeChassisSpeeds = ChassisSpeeds(self.curCmd.velX, self.curCmd.velY, self.curCmd.velT )
+            robotRelativeChassisSpeeds = ChassisSpeeds(
+                self.curCmd.velX, self.curCmd.velY, self.curCmd.velT
+            )
         else:
             robotRelativeChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-                self.curCmd.velX, self.curCmd.velY, self.curCmd.velT, curEstPose.rotation()
+                self.curCmd.velX,
+                self.curCmd.velY,
+                self.curCmd.velT,
+                curEstPose.rotation(),
             )
 
-        Logger.recordOutput("Robot/dt/auto", 1.0 if self.curCmd.desChassisSpeeds is not None else 0.0)
+        Logger.recordOutput(
+            "Robot/dt/auto", 1.0 if self.curCmd.desChassisSpeeds is not None else 0.0
+        )
         Logger.recordOutput("Robot/dt/vX", robotRelativeChassisSpeeds.vx)
         Logger.recordOutput("Robot/dt/vY", robotRelativeChassisSpeeds.vy)
         Logger.recordOutput("Robot/dt/omega", robotRelativeChassisSpeeds.omega)
 
         self.desChSpd = _discretizeChSpd(robotRelativeChassisSpeeds)
 
-        #Logger.recordOutput("Robot/dt/vX_d", self.desChSpd.vx)
-        #Logger.recordOutput("Robot/dt/vY_d", self.desChSpd.vy)
-        #Logger.recordOutput("Robot/dt/omega_d", self.desChSpd.omega)
+        # Logger.recordOutput("Robot/dt/vX_d", self.desChSpd.vx)
+        # Logger.recordOutput("Robot/dt/vY_d", self.desChSpd.vy)
+        # Logger.recordOutput("Robot/dt/omega_d", self.desChSpd.omega)
 
         # Set the desired pose for telemetry purposes
-        #self.poseEst._telemetry.setDesiredPose(self.curCmd.desPose)
-        #self.poseEst._telemetry.setAutoDriveGoalPose(AutoDrive().getGoal())
+        # self.poseEst._telemetry.setDesiredPose(self.curCmd.desPose)
+        # self.poseEst._telemetry.setAutoDriveGoalPose(AutoDrive().getGoal())
 
         # pylint: disable=condition-evals-to-constant
-        if (False and
-            abs(self.desChSpd.vx) < 0.01 and
-            abs(self.desChSpd.vy) < 0.01 and
-            abs(self.desChSpd.omega) < 0.01 and
-            not self.coastCmd):
-
+        if (
+            False
+            and abs(self.desChSpd.vx) < 0.01
+            and abs(self.desChSpd.vy) < 0.01
+            and abs(self.desChSpd.omega) < 0.01
+            and not self.coastCmd
+        ):
             # When we're not moving, "toe in" the wheels to resist getting pushed around
             flModState = SwerveModuleState(angle=Rotation2d.fromDegrees(45), speed=0)
             frModState = SwerveModuleState(angle=Rotation2d.fromDegrees(-45), speed=0)
@@ -146,13 +157,20 @@ class DrivetrainControl():
         for module in self.modules:
             module.setClosedLoopGains(self.gainsSwerveModule)
 
-    def getModulePositions(self)->Tuple[SwerveModulePosition,SwerveModulePosition,SwerveModulePosition,SwerveModulePosition]:
+    def getModulePositions(
+        self,
+    ) -> Tuple[
+        SwerveModulePosition,
+        SwerveModulePosition,
+        SwerveModulePosition,
+        SwerveModulePosition,
+    ]:
         """
         Returns:
             Tuple of the actual module positions (as read from sensors)
         """
         return tuple(mod.getActualPosition() for mod in self.modules)
-    
+
     def getModuleDesStates(self):
         """
         Returns:
@@ -167,15 +185,16 @@ class DrivetrainControl():
         """
         return tuple(mod.getActualState() for mod in self.modules)
 
-    def getRawRotation(self)->Rotation2d:
+    def getRawRotation(self) -> Rotation2d:
         return self.poseEst.getRealOrSimRawGyroAngle()
 
-    def getRobotRelativeChassisSpeeds(self)->ChassisSpeeds:
-        robotRelativeSpeeds: ChassisSpeeds = self.kinematics.toChassisSpeeds(self.getModuleStates())
+    def getRobotRelativeChassisSpeeds(self) -> ChassisSpeeds:
+        robotRelativeSpeeds: ChassisSpeeds = self.kinematics.toChassisSpeeds(
+            self.getModuleStates()
+        )
         return robotRelativeSpeeds
 
-
-    def getFieldRelativeChassisSpeeds(self)->ChassisSpeeds:
+    def getFieldRelativeChassisSpeeds(self) -> ChassisSpeeds:
         robotRelativeSpeeds: ChassisSpeeds = self.getRobotRelativeChassisSpeeds()
         # getPose() returns a Pose2d, which has a rotation() method to get the Rotation2d
         currentAngle: Rotation2d = self.poseEst.getCurEstPose().rotation()
@@ -185,7 +204,7 @@ class DrivetrainControl():
             robotRelativeSpeeds.vx,
             robotRelativeSpeeds.vy,
             robotRelativeSpeeds.omega,
-            currentAngle
+            currentAngle,
         )
 
         return fieldRelativeSpeeds
@@ -203,8 +222,8 @@ class DrivetrainControl():
     def getCurEstPose(self) -> Pose2d:
         # Return the current best-guess at our pose on the field.
         return self.poseEst.getCurEstPose()
-    
-    #def setElevLimiter(self, elevLimit):
+
+    # def setElevLimiter(self, elevLimit):
     #    self.elevSpeedLimit = elevLimit
 
     def wheelMotorsAreClosedLoop(self):
@@ -214,7 +233,6 @@ class DrivetrainControl():
     def wheelMotorsAreExternallyControlled(self):
         for module in self.modules:
             module.wheelMotorIsClosedLoop = False
-
 
 
 def _discretizeChSpd(chSpd):

@@ -16,16 +16,17 @@ HP_STATION_ANGLE_MAG_DEG = 54.0
 ACTIVE_CMD_THRESH_TRANS_MPS = 0.1
 ACTIVE_CMD_THRESH_ROT_RADPERS = deg2Rad(10)
 
+
 class AutoSteer(metaclass=Singleton):
     def __init__(self):
         self.isActiveCmd = False
         self.alignToProcessor = False
         self.returnDriveTrainCommand = DrivetrainCommand()
-        self.rotKp = Calibration("Auto Align Rotation Kp",5)
+        self.rotKp = Calibration("Auto Align Rotation Kp", 5)
         self.maxRotSpd = Calibration("Auto Align Max Rotate Speed", 6)
         self.hasCoralDbncd = True
         self.hasCoralDebouncer = Debouncer(0.5, Debouncer.DebounceType.kBoth)
-        
+
         self.hasIncomingRotCmdDbncd = False
         self.hasIncomingTransCmdDbncd = False
 
@@ -34,12 +35,11 @@ class AutoSteer(metaclass=Singleton):
 
         self.manualCmdInhibit = False
 
-        self.lenList= []
+        self.lenList = []
 
         self.isActive = False
 
         self.curGoalPose = None
-
 
         self.curTargetRot = Rotation2d()
 
@@ -48,17 +48,23 @@ class AutoSteer(metaclass=Singleton):
         # Should happen at teleop init to prevent motion without driver command
         self.manualCmdInhibit = True
 
-    def _updateManualCmdInhibit(self, curCmd:DrivetrainCommand)->None:
+    def _updateManualCmdInhibit(self, curCmd: DrivetrainCommand) -> None:
         incomingRotCmdRaw = abs(curCmd.velT) > ACTIVE_CMD_THRESH_ROT_RADPERS
-        incomingTransCmdRaw = abs(math.hypot(curCmd.velX, curCmd.velY)) > ACTIVE_CMD_THRESH_TRANS_MPS
-        self.hasIncomingRotCmdDbncd = self.incomingRotDebouncer.calculate(incomingRotCmdRaw)
-        self.hasIncomingTransCmdDbncd = self.incomingTransDebouncer.calculate(incomingTransCmdRaw)
+        incomingTransCmdRaw = (
+            abs(math.hypot(curCmd.velX, curCmd.velY)) > ACTIVE_CMD_THRESH_TRANS_MPS
+        )
+        self.hasIncomingRotCmdDbncd = self.incomingRotDebouncer.calculate(
+            incomingRotCmdRaw
+        )
+        self.hasIncomingTransCmdDbncd = self.incomingTransDebouncer.calculate(
+            incomingTransCmdRaw
+        )
 
-        if(self.hasIncomingRotCmdDbncd):
-            #any rotation command wins
+        if self.hasIncomingRotCmdDbncd:
+            # any rotation command wins
             self.manualCmdInhibit = True
-        elif(self.hasIncomingTransCmdDbncd):
-            #only go back once we're translating
+        elif self.hasIncomingTransCmdDbncd:
+            # only go back once we're translating
             self.manualCmdInhibit = False
         else:
             # Maintain old state
@@ -75,7 +81,7 @@ class AutoSteer(metaclass=Singleton):
 
     def setHasCoral(self, hasCoral: bool):
         self.hasCoralDbncd = self.hasCoralDebouncer.calculate(hasCoral)
-        
+
     def isRunning(self):
         return self.isActive
 
@@ -90,19 +96,19 @@ class AutoSteer(metaclass=Singleton):
             self.isActive = False
             return cmdIn
 
-    def getCurGoalPose(self) -> Pose2d|None:
+    def getCurGoalPose(self) -> Pose2d | None:
         return self.curGoalPose
-    
+
     def updateRotationAngle(self, curPose: Pose2d) -> None:
 
         self.lenList.clear()
         self.curGoalPose = None
 
-        if(self.alignToProcessor):
+        if self.alignToProcessor:
             self.curTargetRot = transform(Rotation2d.fromDegrees(-90.0))
-        elif(self.alignDownfield):
+        elif self.alignDownfield:
             self.curTargetRot = transform(Rotation2d.fromDegrees(0.0))
-        elif(self.hasCoralDbncd):
+        elif self.hasCoralDbncd:
             goalListTot = getTransformedGoalList()
 
             for goalOption in goalListTot:
@@ -112,23 +118,30 @@ class AutoSteer(metaclass=Singleton):
             targetLocation = goalListTot[primeTargetIndex].translation()
 
             robotToTargetTrans = targetLocation - curPose.translation()
-            self.curTargetRot = Rotation2d(robotToTargetTrans.X(), robotToTargetTrans.Y())
+            self.curTargetRot = Rotation2d(
+                robotToTargetTrans.X(), robotToTargetTrans.Y()
+            )
             self.curGoalPose = Pose2d(targetLocation, Rotation2d())
         else:
             # Check if we are closer to the left or right human player station
             curY = transform(curPose.translation()).Y()
-            if(curY > (FIELD_Y_M / 2.0) +  HP_STATION_HYSTERISIS_M/2.0):
+            if curY > (FIELD_Y_M / 2.0) + HP_STATION_HYSTERISIS_M / 2.0:
                 # Closer to left human player station
-                self.curTargetRot  = transform(Rotation2d.fromDegrees(-HP_STATION_ANGLE_MAG_DEG))
-            elif(curY < (FIELD_Y_M / 2.0) - HP_STATION_HYSTERISIS_M/2.0):
+                self.curTargetRot = transform(
+                    Rotation2d.fromDegrees(-HP_STATION_ANGLE_MAG_DEG)
+                )
+            elif curY < (FIELD_Y_M / 2.0) - HP_STATION_HYSTERISIS_M / 2.0:
                 # Closer to right human player station
-                self.curTargetRot  = transform(Rotation2d.fromDegrees(HP_STATION_ANGLE_MAG_DEG))
+                self.curTargetRot = transform(
+                    Rotation2d.fromDegrees(HP_STATION_ANGLE_MAG_DEG)
+                )
             else:
                 # Within hysterisis band, keep command unchanged
                 pass
 
-
-    def _calcAutoSteerDrivetrainCommand(self, curPose: Pose2d, cmdIn: DrivetrainCommand) -> DrivetrainCommand:
+    def _calcAutoSteerDrivetrainCommand(
+        self, curPose: Pose2d, cmdIn: DrivetrainCommand
+    ) -> DrivetrainCommand:
 
         # Update our target location
         self.updateRotationAngle(curPose)
@@ -143,8 +156,13 @@ class AutoSteer(metaclass=Singleton):
         else:
             rotError = rotError.radians()
 
-        self.returnDriveTrainCommand.velT = min(rotError*self.rotKp.get(),self.maxRotSpd.get())
-        self.returnDriveTrainCommand.velX = cmdIn.velX # Set the X vel to the original X vel
-        self.returnDriveTrainCommand.velY = cmdIn.velY # Set the Y vel to the original Y vel
+        self.returnDriveTrainCommand.velT = min(
+            rotError * self.rotKp.get(), self.maxRotSpd.get()
+        )
+        self.returnDriveTrainCommand.velX = (
+            cmdIn.velX
+        )  # Set the X vel to the original X vel
+        self.returnDriveTrainCommand.velY = (
+            cmdIn.velY
+        )  # Set the Y vel to the original Y vel
         return self.returnDriveTrainCommand
-    

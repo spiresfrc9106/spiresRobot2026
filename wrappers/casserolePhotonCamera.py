@@ -62,10 +62,14 @@ class PhotonCamera:
         photonvision_root_table = instance.getTable(self._tableName)
         self._cameraTable = photonvision_root_table.getSubTable(cameraName)
         self._path = self._cameraTable.getPath()
-        self._rawBytesEntry = self._cameraTable.getRawTopic("rawBytes").subscribe(
+        self._rawBytesEntry = self._cameraTable.getRawTopic(
+            "rawBytes"
+        ).subscribe(
             f"photonstruct:PhotonPipelineResult:{PhotonPipelineResult.photonStruct.MESSAGE_VERSION}",
             bytes([]),
-            ntcore.PubSubOptions(periodic=kRobotUpdatePeriodS), #default photonvision settings are too aggressive for us, send less data?
+            ntcore.PubSubOptions(
+                periodic=kRobotUpdatePeriodS
+            ),  # default photonvision settings are too aggressive for us, send less data?
         )
 
         self._driverModePublisher = self._cameraTable.getBooleanTopic(
@@ -276,9 +280,9 @@ class PhotonCamera:
             # Look for only cameras with rawBytes entry that exists
             cameraNames = list(
                 filter(
-                    lambda it: self._cameraTable.getSubTable(it)
-                    .getEntry("rawBytes")
-                    .exists(),
+                    lambda it: (
+                        self._cameraTable.getSubTable(it).getEntry("rawBytes").exists()
+                    ),
                     cameraNames,
                 )
             )
@@ -290,7 +294,7 @@ class PhotonCamera:
                 )
             else:
                 wpilib.reportError(
-                    f"PhotonVision coprocessor at path {self._path} not found in Network Tables. Double check that your camera names match! Only the following camera names were found: { ''.join(cameraNames)}",
+                    f"PhotonVision coprocessor at path {self._path} not found in Network Tables. Double check that your camera names match! Only the following camera names were found: {''.join(cameraNames)}",
                     True,
                 )
 

@@ -83,7 +83,6 @@ class Calibration:
         self._curValue = self._default
         self._changed = False
 
-
     # Periodic update to read from the desired value on NT, and publish the current value
     def update(self):
         val = self.desValueSubscriber.getAtomic()
@@ -106,7 +105,7 @@ class Calibration:
     # Gets the current value of the calibration, resetting state internally with
     # the assumption the user's code is consuming the value and doing something useful with it.
     def get(self):
-        if(self._changed):
+        if self._changed:
             self._curValue = self._desValue
             self._changed = False
             self.curValTopic.setProperty("pending", self._changed)

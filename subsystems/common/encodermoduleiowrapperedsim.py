@@ -9,4 +9,3 @@ class EncoderModuleIOWrapperedSim(EncoderModuleIOWrappered):
 
     def updateInputs(self, inputs: EncoderModuleIO.EncoderModuleIOInputs) -> None:
         return super().updateInputs(inputs)
-

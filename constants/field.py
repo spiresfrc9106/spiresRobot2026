@@ -10,20 +10,23 @@ kFieldLength = 54 * kMetersPerFoot + 3.2 * kMetersPerInch
 kFieldWidth = 26 * kMetersPerFoot + 5.7 * kMetersPerInch
 """meters"""
 
+
 def mirrorPoseForRed(pose: Pose2d) -> Pose2d:
     """Mirrors a blue-origin pose to red-alliance origin."""
 
     return Pose2d(
         kFieldLength - pose.x,  # Reflect X
         kFieldWidth - pose.y,  # Reflect Y
-        pose.rotation()+Rotation2d.fromDegrees(180)  # Reflect Angle
+        pose.rotation() + Rotation2d.fromDegrees(180),  # Reflect Angle
     )
+
 
 def poseTransformedForAlliance(pose: Pose2d) -> Pose2d:
     if onRed():
         return mirrorPoseForRed(pose)
     else:
         return pose
+
 
 kHubHeight = 1.8288
 """meters"""

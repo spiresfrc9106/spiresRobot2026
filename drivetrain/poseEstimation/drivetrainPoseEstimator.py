@@ -8,10 +8,11 @@ from constants import kRobotUpdatePeriodS
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.poseEstimation.drivetrainPoseTelemetry import DrivetrainPoseTelemetry
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
+
 # TODO-rms was:from navigation.autoDriveNavConstants import SCORE_DIST_FROM_REEF_CENTER
 from utils.faults import Fault
 from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
-#from utils.constants import blueReefLocation, redReefLocation #2025 code
+# from utils.constants import blueReefLocation, redReefLocation #2025 code
 
 # Convienent abreviations for the types that we'll be passing around here.
 # This is primarily driven by wpilib's conventions:
@@ -20,14 +21,22 @@ from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
 # 3) "Position" refers to the position of the wheel, plus the position of the azimuth
 # Wheel position is preferred for odometry, since errors in velocity don't accumulate over time
 # This is especially important with Rev motors which filter their velocity by a huge amount
-# but the position is fairly accurate. 
-PosTupleType = Tuple[SwerveModulePosition,SwerveModulePosition,SwerveModulePosition,SwerveModulePosition]
-StateTupleType = Tuple[SwerveModuleState,SwerveModuleState,SwerveModuleState,SwerveModuleState]
+# but the position is fairly accurate.
+PosTupleType = Tuple[
+    SwerveModulePosition,
+    SwerveModulePosition,
+    SwerveModulePosition,
+    SwerveModulePosition,
+]
+StateTupleType = Tuple[
+    SwerveModuleState, SwerveModuleState, SwerveModuleState, SwerveModuleState
+]
+
 
 class DrivetrainPoseEstimator:
     """Wrapper class for all sensors and logic responsible for estimating where the robot is on the field"""
 
-    def __init__(self, initialModulePositions:PosTupleType, gyro):
+    def __init__(self, initialModulePositions: PosTupleType, gyro):
 
         # Represents our current best-guess as to our location on the field.
         self._curEstPose = Pose2d()
@@ -46,9 +55,9 @@ class DrivetrainPoseEstimator:
         self.includeInFilter = []
         CAMS = DrivetrainPhysical().CAMS
         for camConfig in CAMS:
-            self.cams.append(camConfig['CAM'])
-            #self.posEstLogs.append(YTestForPosition(camConfig['POSE_EST_LOG_NAME']))
-            self.includeInFilter.append(camConfig['WEIGH_IN_FILTER'])
+            self.cams.append(camConfig["CAM"])
+            # self.posEstLogs.append(YTestForPosition(camConfig['POSE_EST_LOG_NAME']))
+            self.includeInFilter.append(camConfig["WEIGH_IN_FILTER"])
         self._camTargetsVisible = False
         self._useAprilTags = True
 
@@ -56,7 +65,10 @@ class DrivetrainPoseEstimator:
         # best-estimate of the pose of the field
         self.kinematics = DrivetrainPhysical().kinematics
         self._poseEst = SwerveDrive4PoseEstimator(
-            self.kinematics, self._getGyroAngle(), initialModulePositions, self._curEstPose
+            self.kinematics,
+            self._getGyroAngle(),
+            initialModulePositions,
+            self._curEstPose,
         )
 
         self._lastModulePositions = initialModulePositions
@@ -72,8 +84,7 @@ class DrivetrainPoseEstimator:
         self._knownPose = Pose2d()
         self.lastCamEstRobotPos = Pose2d()
 
-
-    def setKnownPose(self, knownPose:Pose2d):
+    def setKnownPose(self, knownPose: Pose2d):
         """Reset the robot's estimated pose to some specific position. This is useful if we know with certanty
         we are at some specific spot (Ex: start of autonomous)
 
@@ -90,7 +101,7 @@ class DrivetrainPoseEstimator:
         )
         RobotTopSubsystem().setRobotPose(self._poseEst.getEstimatedPosition())
 
-    def update(self, curModulePositions:PosTupleType, curModuleSpeeds:StateTupleType):
+    def update(self, curModulePositions: PosTupleType, curModuleSpeeds: StateTupleType):
         """Periodic update, call this every 20ms.
 
         Args:
@@ -101,17 +112,22 @@ class DrivetrainPoseEstimator:
         # Add any vision observations to the pose estimate
         self._camTargetsVisible = False
 
-        if(self._useAprilTags):
+        if self._useAprilTags:
             for cam in self.cams:
                 cam.update(self._curEstPose)
                 observations = cam.getPoseEstimates()
                 for observation in observations:
                     self._poseEst.addVisionMeasurement(
-                        observation.estFieldPose, observation.time, (observation.xyStdDev, observation.xyStdDev, observation.rotStdDev)
+                        observation.estFieldPose,
+                        observation.time,
+                        (
+                            observation.xyStdDev,
+                            observation.xyStdDev,
+                            observation.rotStdDev,
+                        ),
                     )
                     self._camTargetsVisible = True
                 self._telemetry.addVisionObservations(observations)
-
 
         # Read the gyro angle
         self._gyroDisconFault.set(not self._gyro.isConnected())
@@ -120,7 +136,11 @@ class DrivetrainPoseEstimator:
             # Simulate an angle based on (simulated) motor speeds with some noise
             chSpds = self.kinematics.toChassisSpeeds(curModuleSpeeds)
             self._simPose = self._simPose.exp(
-                Twist2d(chSpds.vx * kRobotUpdatePeriodS, chSpds.vy * kRobotUpdatePeriodS, chSpds.omega * kRobotUpdatePeriodS)
+                Twist2d(
+                    chSpds.vx * kRobotUpdatePeriodS,
+                    chSpds.vy * kRobotUpdatePeriodS,
+                    chSpds.omega * kRobotUpdatePeriodS,
+                )
             )
             noise = Rotation2d.fromDegrees(random.uniform(-0.0, 0.0))
             self._curRawGyroAngle = self._simPose.rotation() + noise
@@ -147,14 +167,14 @@ class DrivetrainPoseEstimator:
         # Remember the module positions for next loop
         self._lastModulePositions = curModulePositions
 
-    def getCurEstPose(self)->Pose2d:
+    def getCurEstPose(self) -> Pose2d:
         """
         Returns:
             Pose2d: The most recent estimate of where the robot is at
         """
         return self._curEstPose
-    
-    def setUseAprilTags(self, use:bool):
+
+    def setUseAprilTags(self, use: bool):
         """
         Enables or disables pose estimate correction based on apriltag readings.
         Useful if the robot is known to be doing something (like tilting) where
@@ -163,28 +183,27 @@ class DrivetrainPoseEstimator:
         self._useAprilTags = use
 
     # Local helper to wrap the real hardware angle into a Rotation2d
-    def _getGyroAngle(self)->Rotation2d:
-         return self._gyro.getGyroAngleRotation2d()
+    def _getGyroAngle(self) -> Rotation2d:
+        return self._gyro.getGyroAngleRotation2d()
 
-    def getRealOrSimRawGyroAngle(self)->Rotation2d:
+    def getRealOrSimRawGyroAngle(self) -> Rotation2d:
         if wpilib.TimedRobot.isSimulation():
             return self._curRawGyroAngle - self._knownPose.rotation()
         else:
-           return self._curRawGyroAngle
-    
+            return self._curRawGyroAngle
+
     def _adjustOutsideReef(self, poseIn: Pose2d, reefTrans: Translation2d) -> Pose2d:
         # TODO-rms was:if (poseIn.translation().distance(reefTrans) < SCORE_DIST_FROM_REEF_CENTER):
         if False:
             # We predicted we're inside the reef. Not ok, so let's project back outside the reef.
 
             # Get a unit vector in the direction of the center of the reef to our pose
-            #reefToPoseUnit = poseIn.translation() - reefTrans
-            #reefToPoseUnit /= reefToPoseUnit.norm()
-            
-            #retPose = Pose2d(reefToPoseUnit * SCORE_DIST_FROM_REEF_CENTER + reefTrans, poseIn.rotation())
-            #return retPose
+            # reefToPoseUnit = poseIn.translation() - reefTrans
+            # reefToPoseUnit /= reefToPoseUnit.norm()
+
+            # retPose = Pose2d(reefToPoseUnit * SCORE_DIST_FROM_REEF_CENTER + reefTrans, poseIn.rotation())
+            # return retPose
             return poseIn
         else:
             # We're outside the reef so that's cool
             return poseIn
-

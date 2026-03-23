@@ -36,8 +36,9 @@ kRobotUpdateFrequency: float = 1 / kRobotUpdatePeriodS
 kFieldWidthWeldedIn = 317.688
 kFieldLengthWeldedIn = 651.22
 
-kFieldWidthIn : float = kFieldWidthWeldedIn
-kFieldLengthIn : float = kFieldLengthWeldedIn
+kFieldWidthIn: float = kFieldWidthWeldedIn
+kFieldLengthIn: float = kFieldLengthWeldedIn
+
 
 class RobotModes(Enum):
     """Enum for robot modes."""

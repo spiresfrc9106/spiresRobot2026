@@ -13,6 +13,7 @@ from utils.singleton import Singleton
 from utils.slewratelimitawayfromzero import SlewRateLimitAwayFromZero
 from utils.units import rad2Deg, deg2Rad
 
+
 @autologgable_output
 class DriverInterface(metaclass=Singleton):
     """Class to gather input from the driver of the robot"""
@@ -29,12 +30,25 @@ class DriverInterface(metaclass=Singleton):
         self.velTCmd = 0.0
 
         p = DrivetrainPhysical()
-        self.calTranslateSlowMultiplier = Calibration(name="Driver Interface Translate Slow Multiplier", default=0.5)
-        self.calRotateSlowMultiplier = Calibration(name="Driver Interface Rotate Slow Multiplier", default=0.25)
-        self.calRobotRelativeSlowdown = Calibration(name="Driver Interface Robot Relative Multiplier", default=1.0)
-        self.calMaxRotSpeedDPS = Calibration("Driver Interface Max Rotate Speed DPS", rad2Deg(p.MAX_ROTATE_SPEED_RAD_PER_SEC))
-        self.calMaxTranslateAccelFactor = Calibration("Driver Interface Max Translate Accel Factor", 1.0)
-        self.calMaxRotateAccelFactor = Calibration("Driver Interface Max Rotate Accel Factor", 1.0)
+        self.calTranslateSlowMultiplier = Calibration(
+            name="Driver Interface Translate Slow Multiplier", default=0.5
+        )
+        self.calRotateSlowMultiplier = Calibration(
+            name="Driver Interface Rotate Slow Multiplier", default=0.25
+        )
+        self.calRobotRelativeSlowdown = Calibration(
+            name="Driver Interface Robot Relative Multiplier", default=1.0
+        )
+        self.calMaxRotSpeedDPS = Calibration(
+            "Driver Interface Max Rotate Speed DPS",
+            rad2Deg(p.MAX_ROTATE_SPEED_RAD_PER_SEC),
+        )
+        self.calMaxTranslateAccelFactor = Calibration(
+            "Driver Interface Max Translate Accel Factor", 1.0
+        )
+        self.calMaxRotateAccelFactor = Calibration(
+            "Driver Interface Max Rotate Accel Factor", 1.0
+        )
         self.calDecelFactor = Calibration("Driver Interface Decel Factor", 1.5)
         self.initiatialize()
 
@@ -48,53 +62,61 @@ class DriverInterface(metaclass=Singleton):
 
         self.MAX_ROTATE_SPEED_RAD_PER_SEC = deg2Rad(self.calMaxRotSpeedDPS.get())
 
-        self.MAX_TRANSLATE_ACCEL_MPS2 = p.MAX_TRANSLATE_ACCEL_MPS2 * self.calMaxTranslateAccelFactor.get()
-        self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2 = p.MAX_ROTATE_ACCEL_RAD_PER_SEC_2 * self.calMaxRotateAccelFactor.get()
+        self.MAX_TRANSLATE_ACCEL_MPS2 = (
+            p.MAX_TRANSLATE_ACCEL_MPS2 * self.calMaxTranslateAccelFactor.get()
+        )
+        self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2 = (
+            p.MAX_ROTATE_ACCEL_RAD_PER_SEC_2 * self.calMaxRotateAccelFactor.get()
+        )
 
         # Driver motion rate limiters - enforce smoother driving
         self.translateAccelFactor = 1.0
         self.rotateAccelFactor = 1.0
 
-        self.newTranslateSlewRateLimiter(0.0,0.0)
+        self.newTranslateSlewRateLimiter(0.0, 0.0)
         self.newRotateSlewRateLimiter(0.0)
-
 
         # Utility - reset to zero-angle at the current pose
         self.gyroResetCmd = False
 
-        #utility - use robot-relative xyzzy
+        # utility - use robot-relative xyzzy
         self.robotRelative = False
 
-    def newTranslateSlewRateLimiter(self, initialValueX:float, initialValueY:float) -> None:
+    def newTranslateSlewRateLimiter(
+        self, initialValueX: float, initialValueY: float
+    ) -> None:
         self.velXSlewRateLimiter = SlewRateLimitAwayFromZero(
-            awayRate=self.MAX_TRANSLATE_ACCEL_MPS2*self.translateAccelFactor,
-            towardsZeroRate=self.MAX_TRANSLATE_ACCEL_MPS2*self.calDecelFactor.get(),
+            awayRate=self.MAX_TRANSLATE_ACCEL_MPS2 * self.translateAccelFactor,
+            towardsZeroRate=self.MAX_TRANSLATE_ACCEL_MPS2 * self.calDecelFactor.get(),
             initialValue=initialValueX,
-            dtSeconds=kRobotUpdatePeriodS
+            dtSeconds=kRobotUpdatePeriodS,
         )
         self.velYSlewRateLimiter = SlewRateLimitAwayFromZero(
-            awayRate=self.MAX_TRANSLATE_ACCEL_MPS2*self.translateAccelFactor,
-            towardsZeroRate=self.MAX_TRANSLATE_ACCEL_MPS2*self.calDecelFactor.get(),
+            awayRate=self.MAX_TRANSLATE_ACCEL_MPS2 * self.translateAccelFactor,
+            towardsZeroRate=self.MAX_TRANSLATE_ACCEL_MPS2 * self.calDecelFactor.get(),
             initialValue=initialValueY,
-            dtSeconds=kRobotUpdatePeriodS
+            dtSeconds=kRobotUpdatePeriodS,
         )
         Logger.recordOutput("di/translateAccelFactor", self.translateAccelFactor)
 
-    def newRotateSlewRateLimiter(self, initialValue:float) -> None:
+    def newRotateSlewRateLimiter(self, initialValue: float) -> None:
         self.velTSlewRateLimiter = SlewRateLimitAwayFromZero(
-            awayRate=self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2*self.rotateAccelFactor,
-            towardsZeroRate=self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2*self.calDecelFactor.get(),
+            awayRate=self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2 * self.rotateAccelFactor,
+            towardsZeroRate=self.MAX_ROTATE_ACCEL_RAD_PER_SEC_2
+            * self.calDecelFactor.get(),
             initialValue=initialValue,
-            dtSeconds=kRobotUpdatePeriodS
+            dtSeconds=kRobotUpdatePeriodS,
         )
         Logger.recordOutput("di/rotateAccelFactor", self.rotateAccelFactor)
 
     @autolog_output(key="di/velXCmd_mps")
     def getVelXCmd(self) -> float:
         return self.velXCmd
+
     @autolog_output(key="di/velYCmd_mps")
     def getVelYCmd(self) -> float:
         return self.velYCmd
+
     @autolog_output(key="di/velTCmd_radps")
     def getVelTCmd(self) -> float:
         return self.velTCmd
@@ -121,13 +143,32 @@ class DriverInterface(metaclass=Singleton):
             vYJoyWithDeadband = applyDeadband(vYJoyRaw, 0.05)
             vRotJoyWithDeadband = applyDeadband(vRotJoyRaw, 0.05)
 
-            translateSlowMult = 1.0 if self.ctrl.getRightBumper() else self.translateSlowMultiplier
-            rotateSlowMult = 1.0 if self.ctrl.getRightBumper() else self.rotateSlowMultiplier
+            translateSlowMult = (
+                1.0 if self.ctrl.getRightBumper() else self.translateSlowMultiplier
+            )
+            rotateSlowMult = (
+                1.0 if self.ctrl.getRightBumper() else self.rotateSlowMultiplier
+            )
 
             # Shape velocity command
-            velCmdXRaw = vXJoyWithDeadband * self.MAX_STRAFE_SPEED_MPS * self.translateAccelFactor * translateSlowMult
-            velCmdYRaw = vYJoyWithDeadband * self.MAX_FWD_REV_SPEED_MPS * self.translateAccelFactor * translateSlowMult
-            velCmdRotRaw = vRotJoyWithDeadband * self.MAX_ROTATE_SPEED_RAD_PER_SEC * self.rotateAccelFactor * rotateSlowMult
+            velCmdXRaw = (
+                vXJoyWithDeadband
+                * self.MAX_STRAFE_SPEED_MPS
+                * self.translateAccelFactor
+                * translateSlowMult
+            )
+            velCmdYRaw = (
+                vYJoyWithDeadband
+                * self.MAX_FWD_REV_SPEED_MPS
+                * self.translateAccelFactor
+                * translateSlowMult
+            )
+            velCmdRotRaw = (
+                vRotJoyWithDeadband
+                * self.MAX_ROTATE_SPEED_RAD_PER_SEC
+                * self.rotateAccelFactor
+                * rotateSlowMult
+            )
 
             if self.robotRelative:
                 velCmdXRaw *= self.calRobotRelativeSlowdown.get()
@@ -143,18 +184,22 @@ class DriverInterface(metaclass=Singleton):
 
             pov_deg = self.ctrl.getPOV()
             if pov_deg >= 45 and pov_deg <= 135:
-                self.rotateAccelFactor = min(1.0, self.rotateAccelFactor+0.05)
+                self.rotateAccelFactor = min(1.0, self.rotateAccelFactor + 0.05)
                 self.newRotateSlewRateLimiter(self.velTSlewRateLimiter.value)
             elif pov_deg >= 225 and pov_deg <= 315:
-                self.rotateAccelFactor = max(0.2, self.rotateAccelFactor-0.05)
+                self.rotateAccelFactor = max(0.2, self.rotateAccelFactor - 0.05)
                 self.newRotateSlewRateLimiter(self.velTSlewRateLimiter.value)
 
             if pov_deg >= 0 and pov_deg <= 45:
-                self.translateAccelFactor = min(1.0, self.translateAccelFactor+0.05)
-                self.newTranslateSlewRateLimiter(self.velXSlewRateLimiter.value, self.velYSlewRateLimiter.value)
+                self.translateAccelFactor = min(1.0, self.translateAccelFactor + 0.05)
+                self.newTranslateSlewRateLimiter(
+                    self.velXSlewRateLimiter.value, self.velYSlewRateLimiter.value
+                )
             elif pov_deg >= 135 and pov_deg <= 225:
-                self.translateAccelFactor = max(0.2, self.translateAccelFactor-0.05)
-                self.newTranslateSlewRateLimiter(self.velXSlewRateLimiter.value, self.velYSlewRateLimiter.value)
+                self.translateAccelFactor = max(0.2, self.translateAccelFactor - 0.05)
+                self.newTranslateSlewRateLimiter(
+                    self.velXSlewRateLimiter.value, self.velYSlewRateLimiter.value
+                )
 
             self.connectedFault.setNoFault()
 
@@ -165,7 +210,7 @@ class DriverInterface(metaclass=Singleton):
             self.velTCmd = 0.0
             self.gyroResetCmd = False
             self.robotRelative = False
-            if(DriverStation.isFMSAttached()):
+            if DriverStation.isFMSAttached():
                 self.connectedFault.setFaulted()
 
     def getCmd(self) -> DrivetrainCommand:
@@ -175,7 +220,6 @@ class DriverInterface(metaclass=Singleton):
         retval.velT = self.velTCmd
         retval.robotRelative = self.robotRelative
         return retval
-
 
     def getGyroResetCmd(self) -> bool:
         return self.gyroResetCmd

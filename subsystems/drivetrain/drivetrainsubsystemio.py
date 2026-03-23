@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from pykit.autolog import autolog
 
 
-
 class DrivetrainSubsystemIO:
     """Serve as a template for specific IO classes (e.g., Talon, Sim, etc.)."""
 
@@ -15,6 +14,3 @@ class DrivetrainSubsystemIO:
 
     def updateInputs(self, inputs: DrivetrainSubsystemIOInputs):
         pass
-
-
-

@@ -15,18 +15,24 @@ from utils.constants import FIELD_Y_M
 
 _flipToRight = False
 
+
 def _shouldFlipToRight() -> bool:
-    return _flipToRight and (wpilib.DriverStation.isAutonomous() or wpilib.DriverStation.isDisabled())
+    return _flipToRight and (
+        wpilib.DriverStation.isAutonomous() or wpilib.DriverStation.isDisabled()
+    )
+
 
 # Sets whether we are flipped to the right or not
 def setFlip(toRight: bool):
     global _flipToRight
     _flipToRight = toRight
 
+
 # Base flip for X axis to flip to the other side of the field.
 def flipX(xIn):
     return xIn
-    
+
+
 # Base flip for X axis to flip to the other side of the field.
 def flipY(yIn):
     if _flipToRight:
@@ -39,23 +45,28 @@ def flipY(yIn):
 
 # Other types are flipped in the flip function
 
+
 # The following typehints remove vscode errors by telling the linter
 # exactly how the flip() function handles different types
 @overload
 def flip(valIn: None) -> None:
     pass
 
+
 @overload
 def flip(valIn: Rotation2d) -> Rotation2d:
     pass
+
 
 @overload
 def flip(valIn: Translation2d) -> Translation2d:
     pass
 
+
 @overload
 def flip(valIn: Pose2d) -> Pose2d:
     pass
+
 
 @overload
 def flip(valIn: SwerveSample) -> SwerveSample:
@@ -64,9 +75,9 @@ def flip(valIn: SwerveSample) -> SwerveSample:
 
 # Actual implementation of the flip function
 def flip(valIn):
-    if(valIn is None):
+    if valIn is None:
         return None
-    
+
     elif isinstance(valIn, Rotation2d):
         if _shouldFlipToRight():
             return Rotation2d.fromDegrees(0) - valIn
@@ -108,7 +119,8 @@ def flip(valIn):
                 valIn.ax,
                 -1.0 * valIn.ay,
                 -1.0 * valIn.alpha,
-                [],[]
+                [],
+                [],
             )
         else:
             return valIn

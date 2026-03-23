@@ -6,10 +6,7 @@ from utils.slewratelimitawayfromzero import SlewRateLimitAwayFromZero
 def test_SlewRateLimitAwayFromZero():
 
     limit = SlewRateLimitAwayFromZero(
-        awayRate=1.0,
-        towardsZeroRate=2.0,
-        initialValue=0.1,
-        dtSeconds=0.1
+        awayRate=1.0, towardsZeroRate=2.0, initialValue=0.1, dtSeconds=0.1
     )
 
     result = limit.calculate(100.0)

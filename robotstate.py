@@ -49,7 +49,6 @@ class RobotState:
         SwerveModulePosition(),
     )
 
-
     fieldEstimator: TurretedRobotPoseEstimator = TurretedRobotPoseEstimator(
         kDriveKinematics, Rotation2d(), modulePositions, Pose2d(), (0.1, 0.1, 0.1)
     )
@@ -333,7 +332,9 @@ class RobotState:
             for consumer in cls.simResetPoseConsumers:
                 consumer(pose)
             return
-        print(f"resetSimPose: len={len(cls.simPoseReceiverConsumers)} This is not supposed to happen")
+        print(
+            f"resetSimPose: len={len(cls.simPoseReceiverConsumers)} This is not supposed to happen"
+        )
 
     @classmethod
     def registerSimPoseResetConsumer(cls, consumer: Callable[[Pose2d], None]) -> None:
@@ -343,7 +344,9 @@ class RobotState:
     def getSimPose(cls) -> Pose2d:
         if len(cls.simPoseReceiverConsumers) == 1:
             return cls.simPoseReceiverConsumers[0]()
-        print(f"getSimPose: len={len(cls.simPoseReceiverConsumers)} This is not supposed to happen")
+        print(
+            f"getSimPose: len={len(cls.simPoseReceiverConsumers)} This is not supposed to happen"
+        )
         return cls.getFieldPose()
 
     @classmethod

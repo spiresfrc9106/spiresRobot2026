@@ -1,4 +1,3 @@
-
 import wpilib
 from wpimath.geometry import Pose2d, Pose3d, Transform2d
 
@@ -16,8 +15,8 @@ class DrivetrainPoseTelemetry:
     def __init__(self):
         self.field = wpilib.Field2d()
         wpilib.SmartDashboard.putData("DT Pose 2D", self.field)
-        #self.curTraj = Trajectory()
-        #self.curTrajWaypoints = []
+        # self.curTraj = Trajectory()
+        # self.curTrajWaypoints = []
         self.fixedObstacles = []
         self.fullObstacles = []
         self.thirdObstacles = []
@@ -29,7 +28,7 @@ class DrivetrainPoseTelemetry:
 
         self.camPublishers = []
         self.robotToCams = []
-        self.variabchnag =0
+        self.variabchnag = 0
         self.theInterestingValue = []
         self.interestingTracker = []
 
@@ -38,9 +37,9 @@ class DrivetrainPoseTelemetry:
         CAMS = p.CAMS
         icount = 0
         for camConfig in CAMS:
-            self.camPublishers.append(camConfig['PUBLISHER'])
-            self.robotToCams.append(camConfig['ROBOT_TO_CAM'])
-            #camName = camConfig['POSE_EST_LOG_NAME']
+            self.camPublishers.append(camConfig["PUBLISHER"])
+            self.robotToCams.append(camConfig["ROBOT_TO_CAM"])
+            # camName = camConfig['POSE_EST_LOG_NAME']
 
             # self.interestingTracker.append(NetworkTableInstance.getDefault()
             # .getStructTopic("/pos-interesting-output-" + camName, Pose3d)
@@ -55,16 +54,21 @@ class DrivetrainPoseTelemetry:
     def setDesiredPose(self, desPose):
         self.desPose = desPose
 
-    #def setCurAutoDriveWaypoints(self, waypoints:list[Pose2d]):
+    # def setCurAutoDriveWaypoints(self, waypoints:list[Pose2d]):
     #    self.curTrajWaypoints = waypoints
 
-    def addVisionObservations(self, observations:list[CameraPoseObservation]):
-        if(len(observations) > 0):
+    def addVisionObservations(self, observations: list[CameraPoseObservation]):
+        if len(observations) > 0:
             for obs in observations:
                 self.visionPoses.append(obs.estFieldPose)
 
     def setCurObstacles(self, obstacles):
-        self.fixedObstacles, self.fullObstacles, self.thirdObstacles, self.almostGoneObstacles = obstacles
+        (
+            self.fixedObstacles,
+            self.fullObstacles,
+            self.thirdObstacles,
+            self.almostGoneObstacles,
+        ) = obstacles
 
     def clearVisionObservations(self):
         self.visionPoses = []
@@ -75,15 +79,34 @@ class DrivetrainPoseTelemetry:
     #     else:
     #         self.autoDriveGoalPose = Pose2d() # default to 0,0
 
-
-    def update(self, estPose:Pose2d, moduleAngles):
+    def update(self, estPose: Pose2d, moduleAngles):
         self.field.getRobotObject().setPose(estPose)
         Logger.recordOutput("Robot/dt/Pose/estPose", estPose)
 
-        Logger.recordOutput("Robot/dt/Pose/ModulePoses/FL", estPose.transformBy(Transform2d(self.robotToModuleTranslations[0], moduleAngles[0])))
-        Logger.recordOutput("Robot/dt/Pose/ModulePoses/FR", estPose.transformBy(Transform2d(self.robotToModuleTranslations[1], moduleAngles[1])))
-        Logger.recordOutput("Robot/dt/Pose/ModulePoses/BL", estPose.transformBy(Transform2d(self.robotToModuleTranslations[2], moduleAngles[2])))
-        Logger.recordOutput("Robot/dt/Pose/ModulePoses/BR", estPose.transformBy(Transform2d(self.robotToModuleTranslations[3], moduleAngles[3])))
+        Logger.recordOutput(
+            "Robot/dt/Pose/ModulePoses/FL",
+            estPose.transformBy(
+                Transform2d(self.robotToModuleTranslations[0], moduleAngles[0])
+            ),
+        )
+        Logger.recordOutput(
+            "Robot/dt/Pose/ModulePoses/FR",
+            estPose.transformBy(
+                Transform2d(self.robotToModuleTranslations[1], moduleAngles[1])
+            ),
+        )
+        Logger.recordOutput(
+            "Robot/dt/Pose/ModulePoses/BL",
+            estPose.transformBy(
+                Transform2d(self.robotToModuleTranslations[2], moduleAngles[2])
+            ),
+        )
+        Logger.recordOutput(
+            "Robot/dt/Pose/ModulePoses/BR",
+            estPose.transformBy(
+                Transform2d(self.robotToModuleTranslations[3], moduleAngles[3])
+            ),
+        )
 
         """
         self.field.getObject("desPose").setPose(self.desPose)
@@ -95,7 +118,7 @@ class DrivetrainPoseTelemetry:
         #self.field.getObject("curObstaclesAlmostGone").setPoses([Pose2d(x, Rotation2d()) for x in self.almostGoneObstacles])
         """
 
-        #Logger.recordOutput("Robot/dt/Pose/desPose", self.desPose)
+        # Logger.recordOutput("Robot/dt/Pose/desPose", self.desPose)
 
         """
         Logger.recordOutput("Robot/dt/Pose/EstimatorPose", estimatedFieldPose)

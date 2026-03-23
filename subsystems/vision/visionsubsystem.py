@@ -215,6 +215,7 @@ class VisionSubsystem(Subsystem):
         )
         LogTracer.recordTotal()
 
+
 def VisionSubsystemFactory() -> VisionSubsystem | None:
     VDC = ConfigSubsystem().visionDepConstants
     vision: Optional[VisionSubsystem] = None
@@ -223,25 +224,30 @@ def VisionSubsystemFactory() -> VisionSubsystem | None:
 
         for cam in VDC["CAMS"]:
             config: CameraConfiguration = VDC[cam]
-            t:Transform3d = config.robotToCameraTransform
-            print(f"{cam} {t.X()} {t.Y()} {t.Z()} {t.rotation().X()} {t.rotation().Y()} {t.rotation().Z()}")
+            t: Transform3d = config.robotToCameraTransform
+            print(
+                f"{cam} {t.X()} {t.Y()} {t.Z()} {t.rotation().X()} {t.rotation().Y()} {t.rotation().Z()}"
+            )
 
             match kRobotMode:
                 case RobotModes.REAL:
-                    io.append(config.realCameraIO(config.cameraName, config.robotToCameraTransform))
+                    io.append(
+                        config.realCameraIO(
+                            config.cameraName, config.robotToCameraTransform
+                        )
+                    )
                 case RobotModes.SIMULATION:
-                    io.append(config.simCameraIO(
-                        config.cameraName,
-                        config.robotToCameraTransform,
-                        # pylint: disable-next=unnecessary-lambda
-                        lambda: RobotState.getSimPose(),))
+                    io.append(
+                        config.simCameraIO(
+                            config.cameraName,
+                            config.robotToCameraTransform,
+                            # pylint: disable-next=unnecessary-lambda
+                            lambda: RobotState.getSimPose(),
+                        )
+                    )
                 case _:
                     io.append(VisionSubsystemIO())
 
-        vision = VisionSubsystem(
-            RobotState.addVisionMeasurement,
-            lambda: None,
-            io=io
-        )
+        vision = VisionSubsystem(RobotState.addVisionMeasurement, lambda: None, io=io)
 
     return vision

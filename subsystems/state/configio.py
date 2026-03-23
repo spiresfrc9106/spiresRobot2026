@@ -10,18 +10,22 @@ from utils.singleton import Singleton
 """
 Specifc robots this codebase might run on.
 """
-RobotTypes = Enum('RobotTypes', [
-    'Main',
-    'Practice',
-    'TestBoard',
-    'Spires2023',
-    'Spires2026',
-    'Spires2026Sim',
-    'SpiresMain',
-    'SpiresPractice',
-    'SpiresTestBoard',
-    'SpiresRoboRioV1',
-])
+RobotTypes = Enum(
+    "RobotTypes",
+    [
+        "Main",
+        "Practice",
+        "TestBoard",
+        "Spires2023",
+        "Spires2026",
+        "Spires2026Sim",
+        "SpiresMain",
+        "SpiresPractice",
+        "SpiresTestBoard",
+        "SpiresRoboRioV1",
+    ],
+)
+
 
 class _RobotIdentification(metaclass=Singleton):
     """
@@ -33,20 +37,21 @@ class _RobotIdentification(metaclass=Singleton):
 
     def __init__(self):
         self.roboControl = RobotController
-        self.robotType: RobotTypes|None = None
+        self.robotType: RobotTypes | None = None
 
         # Deferred import to avoid circular dependency
         from utils.faults import Fault
 
         self.serialFault = Fault("RoboRIO serial number not recognized")
-        self.serialNumber: str|None = None
+        self.serialNumber: str | None = None
         self._configureValue()
 
         simulationStr = "Simulation" if RobotBase.isSimulation() else "Real"
         print(":::::::::::")
-        print(f"::::::::::: _RobotIdentification: {simulationStr} {self.getRobotType()} serialNumber:{self.serialNumber}")
+        print(
+            f"::::::::::: _RobotIdentification: {simulationStr} {self.getRobotType()} serialNumber:{self.serialNumber}"
+        )
         print(":::::::::::")
-
 
     def _configureValue(self):
 
@@ -56,14 +61,17 @@ class _RobotIdentification(metaclass=Singleton):
         if FRC_TEAM_NUMBER == 9106 and RobotBase.isSimulation():
             self.robotType = RobotTypes.Spires2026Sim
         elif self.serialNumber == "030e2cb0":
-            #Test to see if the RoboRio serial number is the main/"Production" bot.
+            # Test to see if the RoboRio serial number is the main/"Production" bot.
             self.robotType = RobotTypes.Main
-        elif self.serialNumber == "03064e3f" \
-                or FRC_TEAM_NUMBER==1736 and RobotBase.isSimulation():
-            #Test to see if the RoboRio serial number is the practice bot.
+        elif (
+            self.serialNumber == "03064e3f"
+            or FRC_TEAM_NUMBER == 1736
+            and RobotBase.isSimulation()
+        ):
+            # Test to see if the RoboRio serial number is the practice bot.
             self.robotType = RobotTypes.Practice
         elif self.serialNumber == "0316b37c":
-            #Test to see if the RoboRio serial number is our testboard's serial number.
+            # Test to see if the RoboRio serial number is our testboard's serial number.
             self.robotType = RobotTypes.TestBoard
         elif self.serialNumber == "032430C5":
             self.robotType = RobotTypes.Spires2023
@@ -81,21 +89,22 @@ class _RobotIdentification(metaclass=Singleton):
             self.serialFault.setFaulted()
             assert False
 
-    def getRobotType(self)->RobotTypes:
+    def getRobotType(self) -> RobotTypes:
         """
         Return which robot we're running on right now
         """
         return self.robotType
 
-    def getRobotTypeStr(self)->RobotTypes:
+    def getRobotTypeStr(self) -> RobotTypes:
         """
         Return which robot we're running on right now
         """
         return self.robotType.name
 
     @classmethod
-    def isSpiresRobot(cls, robotType: RobotTypes)->bool:
-        return str(robotType).startswith('RobotTypes.Spires')
+    def isSpiresRobot(cls, robotType: RobotTypes) -> bool:
+        return str(robotType).startswith("RobotTypes.Spires")
+
 
 class ConfigIO:
     """Process I/O data for the robot high-level state subsystem."""
@@ -104,7 +113,10 @@ class ConfigIO:
     @dataclass
     class ConfigIOInputs:
         """Hold I/O data for the robot high-level state subsystem."""
-        robotTypeStr: str = field(default_factory=lambda: _RobotIdentification().getRobotTypeStr())
+
+        robotTypeStr: str = field(
+            default_factory=lambda: _RobotIdentification().getRobotTypeStr()
+        )
 
     def updateInputs(self, inputs: ConfigIOInputs) -> None:
         """Update the robot high-level state I/O inputs.
@@ -114,11 +126,10 @@ class ConfigIO:
         """
         pass
 
-
     @classmethod
-    def getRobotType(cls, inputs: ConfigIOInputs)->RobotTypes:
+    def getRobotType(cls, inputs: ConfigIOInputs) -> RobotTypes:
         return RobotTypes[inputs.robotTypeStr]
 
     @classmethod
-    def isSpiresRobot(cls, inputs: ConfigIOInputs)->bool:
+    def isSpiresRobot(cls, inputs: ConfigIOInputs) -> bool:
         return _RobotIdentification.isSpiresRobot(cls.getRobotType(inputs))
