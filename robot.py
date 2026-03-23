@@ -70,6 +70,8 @@ class MyRobot(LoggedRobot):
                         "Git Description", deploy_config.get("git-desc", "")
                     )
                 Logger.addDataReciever(NT4Publisher(True))
+                # TODO consider using the WPILOGWriter path parameter in simulation to save
+                # the log file in a directory outside of the project.
                 Logger.addDataReciever(WPILOGWriter())
             case constants.RobotModes.REPLAY:
                 self.useTiming = (
@@ -81,6 +83,8 @@ class MyRobot(LoggedRobot):
                 print(f"Starting log from {log_path}")
                 replaySource = WPILOGReader(log_path)
                 Logger.setReplaySource(replaySource)
+                # TODO consider using the WPILOGWriter path parameter in simulation to save
+                # the log file in a directory outside of the project.
                 Logger.addDataReciever(WPILOGWriter(log_path[:-7] + "_sim.wpilog"))
         Logger.start()
 
