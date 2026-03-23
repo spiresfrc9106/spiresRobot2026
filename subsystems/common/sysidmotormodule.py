@@ -84,9 +84,9 @@ class SysIdMotorModule:
             Logger.recordOutput(f"inout {name} SysId/rad", rad)
 
             #print(f"{Timer.getTimestamp():.6} {name} {self.loggedStateStr} SysID: volts={volts}, radsPerSec={radsPerSec}, rad={rad}")
-            assert type(volts) == float, f"volts is not a float: {volts}"
-            assert type(radsPerSec) == float, f"radsPerSec is not a float: {radsPerSec}"
-            assert type(rad) == float, f"rad is not a float: {rad}"
+            assert type(volts) is float, f"volts is not a float: {volts}"
+            assert type(radsPerSec) is float, f"radsPerSec is not a float: {radsPerSec}"
+            assert type(rad) is float, f"rad is not a float: {rad}"
             assert -1.0e10 <= volts <= 1.0e10, f"volts is out of bounds: {volts}"
             assert -1.0e10 <= radsPerSec <= 1.0e10, f"radsPerSec is out of bounds: {radsPerSec}"
             assert -1.0e10 <= rad <= 1.0e10, f"rad is out of bounds: {rad}"

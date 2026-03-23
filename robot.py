@@ -23,7 +23,7 @@ from util.logtracer import LogTracer
 
 from testingMotors.motorCtrl import motorDepConstants, MotorControl
 
-from drivetrain.controlStrategies.trajectory import Trajectory
+#from drivetrain.controlStrategies.trajectory import Trajectory
 
 from humanInterface.driverInterface import DriverInterface
 from humanInterface.ledControl import LEDControl
@@ -191,12 +191,15 @@ class MyRobot(LoggedRobot):
         # the next line will open new top level tracers.
         commands2.CommandScheduler.getInstance().run()
 
+    #########################################################
+    ## Disabled-Specific init and update
 
     def disabledInit(self) -> None:
         """This function is called once each time the robot enters Disabled mode."""
 
     def disabledPeriodic(self) -> None:
         """This function is called periodically when disabled"""
+        #Trajectory().trajHDC.updateCals()
 
     #########################################################
     ## Autonomous-Specific init and update
@@ -229,20 +232,12 @@ class MyRobot(LoggedRobot):
                 self.container.drivetrainSubsystem.casseroleDrivetrain.resetGyro()
 
         # No trajectory in Teleop
-        Trajectory().setCmd(None)
+        #Trajectory().setCmd(None)
         if motorDepConstants['HAS_MOTOR_TEST']:
             self.motorCtrlFun.update(100.0)
 
     def teleopExit(self):
         self.container.quietRobotOnExitFromActiveMode()
-
-    #########################################################
-    ## Disabled-Specific init and update
-    def disabledPeriodic(self):
-        Trajectory().trajHDC.updateCals()
-
-    def disabledInit(self):
-        pass
 
     #########################################################
     ## Test-Specific init and update

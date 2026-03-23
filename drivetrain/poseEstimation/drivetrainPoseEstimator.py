@@ -178,12 +178,12 @@ class DrivetrainPoseEstimator:
             # We predicted we're inside the reef. Not ok, so let's project back outside the reef.
 
             # Get a unit vector in the direction of the center of the reef to our pose
-            reefToPoseUnit = poseIn.translation() - reefTrans
-            reefToPoseUnit /= reefToPoseUnit.norm()
+            #reefToPoseUnit = poseIn.translation() - reefTrans
+            #reefToPoseUnit /= reefToPoseUnit.norm()
             
-            retPose = Pose2d(reefToPoseUnit * SCORE_DIST_FROM_REEF_CENTER + reefTrans, poseIn.rotation())
-            return retPose
-            
+            #retPose = Pose2d(reefToPoseUnit * SCORE_DIST_FROM_REEF_CENTER + reefTrans, poseIn.rotation())
+            #return retPose
+            return poseIn
         else:
             # We're outside the reef so that's cool
             return poseIn

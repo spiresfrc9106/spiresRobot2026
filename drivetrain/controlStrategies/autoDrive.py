@@ -53,7 +53,7 @@ class AutoDrive(metaclass=Singleton):
         return self.rfp.getObstacleTransList()
     
     def isRunning(self)->bool:
-        return self.rfp.goal != None
+        return self.rfp.goal is not None
     
     def isAtGoal(self)->bool:
         return  self.isRunning() and self.rfp.curState == RepulsorFieldPlannerState.ATGOAL
@@ -105,7 +105,8 @@ class AutoDrive(metaclass=Singleton):
 
         # NOTE - this function internally transforms to correct red/blue side
         # No need to apply additional alliance-utils transform to use it.
-        goalListTot = getTransformedGoalList()
+        #goalListTot = getTransformedGoalList()
+        goalListTot = []
 
         if(not self._autoDrive):
             # Driving not requested, set no goal

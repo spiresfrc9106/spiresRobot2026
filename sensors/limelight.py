@@ -74,6 +74,7 @@ class Limelight:
 
         self.origin_offset = pose
 
+        """
         campose = [
             self.origin_offset.Y(),
             self.origin_offset.X(),
@@ -82,6 +83,7 @@ class Limelight:
             math.degrees(self.origin_offset.rotation().Y()),
             math.degrees(self.origin_offset.rotation().Z()),
         ]
+        """
         #self.table.putNumberArray("camerapose_robotspace_set", campose)
         
     def get_cam_pose(self):
@@ -318,9 +320,9 @@ class Limelight:
         
         # self.table.putNumberArray("robot_orientation_set", array)
         
-        latency = self.table.getEntry('tl').getDouble(0) + self.table.getEntry('cl').getDouble(0)
+        #latency = self.table.getEntry('tl').getDouble(0) + self.table.getEntry('cl').getDouble(0)
         
-        l_t = ntcore._now() + int((latency / 1000))
+        #l_t = ntcore._now() + int((latency / 1000))
         
         self.table.getEntry('robot_orientation_set').setDoubleArray(array)
 
@@ -425,7 +427,7 @@ class Limelight:
         )
         timestamp:float = latency
         tag_count:float = botpose[7]
-        tag_span:float = botpose[8]
+        #tag_span:float = botpose[8]
         ave_tag_dist:float = botpose[9]
         tag_area:float = botpose[10]
         tag_id:float = self.get_target_id()

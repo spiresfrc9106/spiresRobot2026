@@ -65,10 +65,10 @@ class DrivetrainPhysical(metaclass=Singleton):
         
         # SDS MK4i Swerve Module Ratios
         # See https://www.swervedrivespecialties.com/products/mk4i-swerve-module?variant=39598777172081
-        WHEEL_GEAR_RATIO_L1 = 8.41
-        WHEEL_GEAR_RATIO_L2 = 6.75
-        WHEEL_GEAR_RATIO_L3 = 6.12 #TODO what is WHEEL_GEAR_RATIO_L3
-        AZMTH_GEAR_RATIO = 12.8 # TODO fix me up
+        WHEEL_GEAR_RATIO_L1 = 8.41 # noqa: F841
+        WHEEL_GEAR_RATIO_L2 = 6.75 # noqa: F841
+        WHEEL_GEAR_RATIO_L3 = 6.12 # noqa: F841 #TODO what is WHEEL_GEAR_RATIO_L3
+        AZMTH_GEAR_RATIO = 12.8 # noqa: F841 # TODO fix me up
         
         ## CHANGE THIS DEPENDING ON WHICH MODULE GEAR RATIO IS INSTALLED
         if self.c.getRobotType() == RobotTypes.Main:

@@ -315,6 +315,7 @@ class WrapperedSparkMotor(WrapperedMotorSuper):
                 ClosedLoopSlot.kSlot0
             )
             self.controlState = MotorControlStates.VOLTAGE
+            self.disconFault.set(err != REVLibError.kOk)
 
     def getMotorPositionRad(self)->float:
         if(TimedRobot.isSimulation() and self.spark.gearBox is None):

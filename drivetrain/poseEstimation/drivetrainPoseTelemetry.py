@@ -40,7 +40,7 @@ class DrivetrainPoseTelemetry:
         for camConfig in CAMS:
             self.camPublishers.append(camConfig['PUBLISHER'])
             self.robotToCams.append(camConfig['ROBOT_TO_CAM'])
-            camName = camConfig['POSE_EST_LOG_NAME']
+            #camName = camConfig['POSE_EST_LOG_NAME']
 
             # self.interestingTracker.append(NetworkTableInstance.getDefault()
             # .getStructTopic("/pos-interesting-output-" + camName, Pose3d)
