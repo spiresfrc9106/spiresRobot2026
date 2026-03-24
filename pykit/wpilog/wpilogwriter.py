@@ -201,7 +201,9 @@ class WPILOGWriter(LogDataReciever):
                 # Generate new filename with timestamp, event, and match info
                 filename = "pykit_"
                 if self.logDate is not None:
-                    filename += self.logDate.strftime("%Y%m%d_%H%M%S")
+                    filename += self.logDate.strftime("%Y%m%d_%H%M%S.%f")
+                    filename += "_"
+                    filename += f"{random.randint(0, 0xFFFF_FFFF_FFFF_FFFF):016X}"
                 else:
                     filename += self.randomIdentifier
                 eventName = (
