@@ -71,10 +71,12 @@ class DrivetrainSubsystem(Subsystem):
         self.setName(self.name)
         self.io = io
         self.inputs = DrivetrainSubsystemIO.DrivetrainSubsystemIOInputs()
-        self.wheelModules: list[MotorModule] = []
-        self.azmthModules: list[MotorModule] = []
-        self.azmthEncoderModules: list[EncoderModule] = []
-        self.motorAndEncoderModules: list = [MotorModule | EncoderModule]
+        self.wheelModules: List[MotorModule] = []
+        self.azmthModules: List[MotorModule] = []
+        self.azmthEncoderModules: List[EncoderModule] = []
+        self.motorAndEncoderModules: List[
+            Tuple[str, MotorModule, MotorModule, EncoderModule]
+        ] = []
         for (
             moduleName,
             wheelModuleIO,
