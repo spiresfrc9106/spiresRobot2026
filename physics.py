@@ -105,6 +105,7 @@ class PhysicsEngine:
         self.doSim = True
         print("[Physics] beginning simulation")
 
+        assert drivetrainSubsystem is not None
         self.driveSim = SwerveDriveSim(drivetrainSubsystem)
 
         RobotState.registerSimPoseResetConsumer(self.driveSim.resetPose)

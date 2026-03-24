@@ -2,6 +2,9 @@ from wrappers.wrapperedMotorCommon import MotorControlStates
 
 
 class WrapperedMotorSuper:
+    def __init__(self) -> None:
+        self.desVelRadps: float = 0.0
+
     def setFollow(self, leaderCanID: int, invert: bool = False) -> None:
         assert False, "Not implemented"
 
@@ -56,4 +59,10 @@ class WrapperedMotorSuper:
         assert False, "Not implemented"
 
     def getOutputTorqueCurrentA(self) -> float:
+        assert False, "Not implemented"
+
+    def getGearBox(self):
+        assert False, "Not implemented"
+
+    def getSparkSim(self):
         assert False, "Not implemented"

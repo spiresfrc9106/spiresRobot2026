@@ -1,4 +1,6 @@
 from enum import IntEnum
+from typing import List
+
 from wpilib import TimedRobot
 from wpimath.geometry import Pose2d, Translation2d, Rotation2d
 
@@ -102,7 +104,7 @@ class RepulsorFieldPlanner:
     Finally, the planner will recommend a step of fixed size, in the direction the net force pushes on.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Set up the list of obstacles which are present on the field always
         self.fixedObstacles: list[ForceGenerator] = []
         self.fixedObstacles.extend(FIELD_OBSTACLES_2025)
@@ -117,12 +119,12 @@ class RepulsorFieldPlanner:
         self.goal: Pose2d | None = None
 
         # Track the "lookahead" - a series of steps predicting where we will go next
-        self.lookaheadTraj: list[Pose2d] = []
+        self.lookaheadTraj: List[Pose2d] = []
 
         # these actually aren't going to have any forces attached to them, it's just going to be for the graphics
-        self.fullTransientObstacles = []
-        self.thirdTransientObstacles = []
-        self.almostGoneTransientObstacles = []
+        self.fullTransientObstacles: List = []
+        self.thirdTransientObstacles: List = []
+        self.almostGoneTransientObstacles: List = []
 
         # Keep things slow right when the goal changes
         self.startSlowFactor = 0.0

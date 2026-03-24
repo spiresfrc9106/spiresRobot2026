@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, cast
 
 from wpimath.kinematics import ChassisSpeeds, SwerveModuleState, SwerveModulePosition
 from wpimath.geometry import Pose2d, Rotation2d
@@ -169,21 +169,53 @@ class DrivetrainControl:
         Returns:
             Tuple of the actual module positions (as read from sensors)
         """
-        return tuple(mod.getActualPosition() for mod in self.modules)
+        return cast(
+            Tuple[
+                SwerveModulePosition,
+                SwerveModulePosition,
+                SwerveModulePosition,
+                SwerveModulePosition,
+            ],
+            tuple(mod.getActualPosition() for mod in self.modules),
+        )
 
-    def getModuleDesStates(self):
+    def getModuleDesStates(
+        self,
+    ) -> Tuple[
+        SwerveModuleState, SwerveModuleState, SwerveModuleState, SwerveModuleState
+    ]:
         """
         Returns:
             Tuple of the desired module states (as read from sensors)
         """
-        return tuple(mod.getDesiredState() for mod in self.modules)
+        return cast(
+            Tuple[
+                SwerveModuleState,
+                SwerveModuleState,
+                SwerveModuleState,
+                SwerveModuleState,
+            ],
+            tuple(mod.getDesiredState() for mod in self.modules),
+        )
 
-    def getModuleStates(self):
+    def getModuleStates(
+        self,
+    ) -> Tuple[
+        SwerveModuleState, SwerveModuleState, SwerveModuleState, SwerveModuleState
+    ]:
         """
         Returns:
             Tuple of the actual module speeds (as read from sensors)
         """
-        return tuple(mod.getActualState() for mod in self.modules)
+        return cast(
+            Tuple[
+                SwerveModuleState,
+                SwerveModuleState,
+                SwerveModuleState,
+                SwerveModuleState,
+            ],
+            tuple(mod.getActualState() for mod in self.modules),
+        )
 
     def getRawRotation(self) -> Rotation2d:
         return self.poseEst.getRealOrSimRawGyroAngle()

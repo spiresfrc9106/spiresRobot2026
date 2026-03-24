@@ -84,7 +84,7 @@ class VisionSubsystemIOSim(VisionSubsystemIO):
                         botPose,
                         0.1,
                         1,
-                        [tagId],
+                        1 << (tagId - 1),  # bitmask: bit (tagId-1) set
                         avgDist,
                         ObservationType.PHOTONVISION.value,
                     )

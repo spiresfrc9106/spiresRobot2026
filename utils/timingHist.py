@@ -8,15 +8,15 @@ class CollectedTimeRec:
     __slots__ = "startedWallS", "startCpuS", "durationS", "cpuS"
     startedWallS: float
     startCpuS: float
-    durationS: float
-    cpuS: float
+    durationS: float | None
+    cpuS: float | None
 
     def __init__(
         self,
         startedWallS: float,
         startCpuS: float,
-        durationS: float = None,
-        cpuS: float = None,
+        durationS: float | None = None,
+        cpuS: float | None = None,
     ):
         self.startedWallS = startedWallS
         self.startCpuS = startCpuS

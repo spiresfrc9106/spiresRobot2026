@@ -22,15 +22,15 @@ class MotorPosStallDetector:
         self._clearMonitorState()
 
     def _clearMonitorState(self) -> None:
-        self.lastMoveTimeS = None
-        self.currentUpdateTimeS = None
-        self.lastPositionRad = None
-        self.lastMotorPosRad = None
-        self.lastDirectionSign = None
-        self.currentMotorPosRad = None
-        self.currentMotorDirectionSign = None
-        self.lastPositionErrorRad = None
-        self.minPositionErr = None
+        self.lastMoveTimeS: float | None = None
+        self.currentUpdateTimeS: float | None = None
+        self.lastPositionRad: float | None = None
+        self.lastMotorPosRad: float | None = None
+        self.lastDirectionSign: int | None = None
+        self.currentMotorPosRad: float | None = None
+        self.currentMotorDirectionSign: int | None = None
+        self.lastPositionErrorRad: float | None = None
+        self.minPositionErr: float | None = None
 
     def _calcDirectionSign(self) -> int:
         self.currentMotorPosRad = self.motor.getMotorPositionRad()

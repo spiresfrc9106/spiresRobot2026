@@ -51,24 +51,24 @@ class WrapperedKraken(WrapperedMotorSuper):
 
         self._applyCurCfg()
 
-        self.desPos = 0
-        self.desVel = 0
-        self.desVolt = 0
-        self.actPos = 0
-        self.actVel = 0
+        self.desPos: float = 0.0
+        self.desVel: float = 0.0
+        self.desVolt: float = 0.0
+        self.actPos: float = 0.0
+        self.actVel: float = 0.0
         self.controlState = MotorControlStates.UNKNOWN
 
         # Simulation Suport
-        self.simActPos = 0
+        self.simActPos: float = 0.0
 
         # Register with the music player
         # CTREMusicPlayback().registerDevice(self.ctrl)
 
-    def _applyCurCfg(self):
+    def _applyCurCfg(self) -> None:
         # Retry state apply up to 5 times, report if failure
         status: StatusCode = StatusCode.STATUS_CODE_NOT_INITIALIZED
         for _ in range(0, 5):
-            status = self.ctrl.configurator.apply(self.cfg, 0.5)  # type: ignore
+            status = self.ctrl.configurator.apply(self.cfg, 0.5)
             if status.is_ok():
                 self.configSuccess = True
                 break
@@ -143,7 +143,7 @@ class WrapperedKraken(WrapperedMotorSuper):
                 self.motorPosSig.refresh()
                 pos = rev2Rad(self.motorPosSig.value_as_double)
             else:
-                pos = 0
+                pos = 0.0
         return pos
 
     def getMotorVelocityRadPerSec(self) -> float:

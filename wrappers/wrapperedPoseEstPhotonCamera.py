@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from robotpy_apriltag import AprilTagFieldLayout, AprilTagField
 from wpimath.units import feetToMeters, degreesToRadians
-from wpimath.geometry import Pose2d
+from wpimath.geometry import Pose2d, Transform3d
 
 from constants import kRobotUpdatePeriodS
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
@@ -35,7 +35,7 @@ HUMAN_STATION_TAG_IDS = [1, 2, 12, 13]
 # 2 - Convert pose estimates to the field
 # 3 - Handle recording latency of when the image was actually seen
 class WrapperedPoseEstPhotonCamera:
-    def __init__(self, camName, robotToCam):
+    def __init__(self, camName: str, robotToCam: Transform3d):
         setVersionCheckEnabled(False)
 
         self.name = camName
@@ -48,7 +48,7 @@ class WrapperedPoseEstPhotonCamera:
         self.lastLatency = 0.0
         self.updateDuration = 0.0
         self.prevTimestampSec = 0.0
-        self.singleTagModeTagList = None  # not currently used
+        self.singleTagModeTagList: list[int] | None = None  # not currently used
 
         self.camPoseEst = PhotonPoseEstimator(
             AprilTagFieldLayout.loadField(AprilTagField.kDefaultField),
@@ -79,8 +79,8 @@ class WrapperedPoseEstPhotonCamera:
             and RobotTopSubsystem().getFPGATimestampS() - result.getTimestampSeconds()
             < 2.0 * kRobotUpdatePeriodS
         ):
-            camEstPose: EstimatedRobotPose = self.camPoseEst.estimateCoprocMultiTagPose(
-                result
+            camEstPose: EstimatedRobotPose | None = (
+                self.camPoseEst.estimateCoprocMultiTagPose(result)
             )
             if camEstPose is None:
                 camEstPose = self.camPoseEst.estimateLowestAmbiguityPose(result)

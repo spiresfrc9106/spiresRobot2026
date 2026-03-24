@@ -35,8 +35,7 @@ class _RobotIdentification(metaclass=Singleton):
     The constants between practice and main robots may be different.
     """
 
-    def __init__(self):
-        self.roboControl = RobotController
+    def __init__(self) -> None:
         self.robotType: RobotTypes | None = None
 
         # Deferred import to avoid circular dependency
@@ -89,16 +88,18 @@ class _RobotIdentification(metaclass=Singleton):
             self.serialFault.setFaulted()
             assert False
 
-    def getRobotType(self) -> RobotTypes:
+    def getRobotType(self) -> RobotTypes | None:
         """
         Return which robot we're running on right now
         """
         return self.robotType
 
-    def getRobotTypeStr(self) -> RobotTypes:
+    def getRobotTypeStr(self) -> str:
         """
         Return which robot we're running on right now
         """
+        if self.robotType is None:
+            return ""
         return self.robotType.name
 
     @classmethod

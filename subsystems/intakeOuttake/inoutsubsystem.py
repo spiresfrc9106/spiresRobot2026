@@ -9,8 +9,9 @@ from wpilib import XboxController
 from pykit.autolog import autologgable_output
 from pykit.logger import Logger
 from rev import SparkSim
-from wpilib.simulation import LinearSystemSim_1_1_1, FlywheelSim, RoboRioSim, BatterySim
+from wpilib.simulation import FlywheelSim, RoboRioSim, BatterySim
 
+from wpimath.system import LinearSystem_1_1_1
 from wpimath.system.plant import DCMotor, LinearSystemId
 
 from constants import kRobotMode, RobotModes, kRobotUpdatePeriodS
@@ -340,12 +341,12 @@ class InOutSubsystem(Subsystem):
             case FlywheelCommand.kSpinningDown | _:
                 self.setFlywheelState(FlywheelState.kOff)
 
-    def aDoNothingCommand(self) -> Optional[Command]:
+    def aDoNothingCommand(self) -> Command:
         return cmd.sequence(
             cmd.run(lambda: self.doNothing(), self),
         )
 
-    def aOperatorRunsInoutCommand(self) -> Optional[Command]:
+    def aOperatorRunsInoutCommand(self) -> Command:
         return cmd.sequence(
             cmd.runOnce(lambda: self.initialize(), self),
             cmd.run(lambda: self.useOperatorControls(), self),
@@ -361,7 +362,7 @@ class InOutSubsystem(Subsystem):
             cmd.runOnce(lambda: self.setState(InOutState.kShooting), self),
             cmd.waitSeconds(10),
             cmd.runOnce(lambda: self.setState(InOutState.kOff), self),
-            self,
+            self,  # type: ignore[arg-type]
         )
 
     def spinUpAndShootCommand(self) -> Command:
@@ -372,7 +373,7 @@ class InOutSubsystem(Subsystem):
             cmd.waitSeconds(7),
             cmd.runOnce(lambda: self.setState(InOutState.kOff), self),
             cmd.runOnce(lambda: self.setFlywheelState(FlywheelState.kOff), self),
-            self,
+            self,  # type: ignore[arg-type]
         )
 
 
@@ -386,7 +387,7 @@ class OperateFlywheelSimulation:
     gearBox: DCMotor = field(init=False)  # e.g: DCMotor.getNEO(1);
     # motorCtrl: SparkBase = field(init=False)   # was motorControllerSim
     sparkSim: SparkSim = field(init=False)  #
-    plant: LinearSystemSim_1_1_1 = field(init=False)
+    plant: LinearSystem_1_1_1 = field(init=False)
     flywheelSim: FlywheelSim = field(init=False)
 
     def __post_init__(self) -> None:
@@ -448,6 +449,7 @@ class InOutSubsystemSimulation:
             gearRatio=1 / InOutSubsystem.FLYWHEEL_GEAR_REDUCTION,
             moi=0.01,
         )
+        self.simulations: tuple[OperateFlywheelSimulation, ...]
         if IODC["HAS_AGITATOR"]:
             self.agitatorWheelSim = OperateFlywheelSimulation(
                 wrapperedMotor=agitatorMotor,
@@ -509,7 +511,7 @@ def inoutSubsystemFactory() -> InOutSubsystem | None:
                     gearBox=flywheelMotorGearBox,
                 )
                 flywheelMotor.setInverted(IODC["FLYWHEEL_MOTOR_INVERTED"])
-                agitatorMotor = None
+                agitatorMotor: WrapperedMotorSuper | None = None
                 if IODC["HAS_AGITATOR"]:
                     agitatorMotor = WrapperedSparkMotor.makeSparkMax(
                         name="agitatorMotor",
@@ -538,7 +540,10 @@ def inoutSubsystemFactory() -> InOutSubsystem | None:
                 inoutSim = None
                 if kRobotMode == RobotModes.SIMULATION:
                     inoutSim = InOutSubsystemSimulation(
-                        groundMotor, hopperMotor, flywheelMotor, agitatorMotor
+                        groundMotor,
+                        hopperMotor,
+                        flywheelMotor,
+                        agitatorMotor,  # type: ignore[arg-type]
                     )
             case _:
                 pass
@@ -557,7 +562,8 @@ def inoutSubsystemFactory() -> InOutSubsystem | None:
                         name="inoutFlywheelModuleIO", motor=flywheelMotor
                     ),
                     agitatorModule_io=MotorModuleIOWrappered(
-                        name="inoutAgitatorModuleIO", motor=agitatorMotor
+                        name="inoutAgitatorModuleIO",
+                        motor=agitatorMotor,  # type: ignore[arg-type]
                     )
                     if IODC["HAS_AGITATOR"]
                     else MotorModuleIO(name="inoutAgitatorModuleIO"),
@@ -579,7 +585,8 @@ def inoutSubsystemFactory() -> InOutSubsystem | None:
                         name="inoutFlywheelModuleIO", motor=flywheelMotor
                     ),
                     agitatorModule_io=MotorModuleIOWrapperedSim(
-                        name="inoutAgitatorModuleIO", motor=agitatorMotor
+                        name="inoutAgitatorModuleIO",
+                        motor=agitatorMotor,  # type: ignore[arg-type]
                     )
                     if IODC["HAS_AGITATOR"]
                     else MotorModuleIO(name="inoutAgitatorModuleIO"),
@@ -604,6 +611,9 @@ def inoutSubsystemFactory() -> InOutSubsystem | None:
 
         match kRobotMode:
             case RobotModes.SIMULATION:
+                assert groundMotorGearBox is not None
+                assert hopperMotorGearBox is not None
+                assert flywheelMotorGearBox is not None
                 groundMaxFreeSpeedRadps = groundMotorGearBox.freeSpeed
                 groundMaxFreeSpeedRPM = radPerSec2RPM(groundMaxFreeSpeedRadps)
                 groundMaxFreeSpeedIPS = inout.groundRadPerSToInPerS(

@@ -96,7 +96,10 @@ class HolonomicDriveController:
             the robot to follow that will get it to the desired pose
         """
         # Feed-Forward - calculate how fast we should be going at this point in the trajectory
-        xFF, yFF, tFF = trajCmd.get_chassis_speeds()
+        _chassisSpeeds = trajCmd.get_chassis_speeds()
+        xFF = _chassisSpeeds.vx
+        yFF = _chassisSpeeds.vy
+        tFF = _chassisSpeeds.omega
         cmdPose = trajCmd.get_pose()
         return self.update2(xFF, yFF, tFF, cmdPose, curEstPose)
 

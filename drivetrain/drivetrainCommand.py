@@ -1,3 +1,4 @@
+from typing import Optional
 from wpimath.geometry import Pose2d
 from dataclasses import dataclass, field
 
@@ -21,7 +22,7 @@ class DrivetrainCommand:
 
     # as a hack in the 2026-03-14 competition to add auto's by embedding the desired chassis speeds
     # in the DriveTrain command. Use if not none. If none, use velX, velY, velT, and robotRelative
-    desChassisSpeeds: ChassisSpeeds = None
+    desChassisSpeeds: Optional[ChassisSpeeds] = None
 
     def scaleBy(self, scale: float):
         """

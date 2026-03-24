@@ -43,14 +43,14 @@ class WrapperedSparkMax(WrapperedMotorSuper):
         self.sparkSim: Optional[SparkMaxSim] = None
         self.gearBox: Optional[DCMotor] = gearBox
         if gearBox is not None:
-            self.sparkSim = SparkMaxSim(self.ctrl, self.gearBox)
+            self.sparkSim = SparkMaxSim(self.ctrl, gearBox)
         self.closedLoopCtrl = self.ctrl.getClosedLoopController()
         self.encoder = self.ctrl.getEncoder()
         self.name = name
         self.currentLimitA = round(currentLimitA)
         self.configSuccess = False
         self.disconFault = Fault(f"Spark Max {name} ID {canID} disconnected")
-        self.simActPos = 0
+        self.simActPos: float = 0.0
         self.canID = canID
 
         # pylint: disable= R0801

@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, cast
 from commands2 import Subsystem
 from wpimath.geometry import Transform3d
 
@@ -8,7 +8,10 @@ from robotstate import RobotState
 from subsystems.state.configsubsystem import ConfigSubsystem
 from subsystems.vision.vision import CameraConfiguration
 
-from subsystems.vision.visionio import VisionSubsystemIO
+from subsystems.vision.visionio import (
+    VisionSubsystemIO,
+    VisionSubsystemTurretedPoseObservation,
+)
 
 from constants.vision import (
     kApriltagFieldLayout,
@@ -120,27 +123,30 @@ class VisionSubsystem(Subsystem):
                     )
                 )
             LogTracer.record(f"Camera{idx} ProcessObservations")
-            for observation in camera.turretedObservations:
+            for tObs in camera.turretedObservations:
+                tObsTyped: VisionSubsystemTurretedPoseObservation = cast(
+                    VisionSubsystemTurretedPoseObservation, tObs
+                )
                 rejectPose = (
-                    observation.tagCount == 0
+                    tObsTyped.tagCount == 0
                     or (
-                        observation.tagCount == 1
-                        and observation.ambiguity > kMaxVisionAmbiguity
+                        tObsTyped.tagCount == 1
+                        and tObsTyped.ambiguity > kMaxVisionAmbiguity
                     )
                     or abs(
-                        (observation.fieldToTurret + kTurretLocation.inverse())
+                        (tObsTyped.fieldToTurret + kTurretLocation.inverse())
                         .translation()
                         .Z()
                     )
                     > kMaxVisionZError  # work backwards onto what the robot pose would be
-                    or observation.fieldToTurret.X() < 0.0
-                    or observation.fieldToTurret.X()
+                    or tObsTyped.fieldToTurret.X() < 0.0
+                    or tObsTyped.fieldToTurret.X()
                     > kApriltagFieldLayout.getFieldLength()
-                    or observation.fieldToTurret.Y() < 0.0
-                    or observation.fieldToTurret.Y()
+                    or tObsTyped.fieldToTurret.Y() < 0.0
+                    or tObsTyped.fieldToTurret.Y()
                     > kApriltagFieldLayout.getFieldWidth()
                 )
-                turretPose = pose3dFromTransform3d(observation.fieldToTurret)
+                turretPose = pose3dFromTransform3d(tObsTyped.fieldToTurret)
                 turretedTransforms.append(turretPose)
                 if rejectPose:
                     turretedTransformsRejected.append(turretPose)
@@ -151,13 +157,13 @@ class VisionSubsystem(Subsystem):
                     continue
 
                 stdDevFactor = (
-                    pow(observation.averageTagDistance, 2.0) / observation.tagCount
+                    pow(tObsTyped.averageTagDistance, 2.0) / tObsTyped.tagCount
                 )
                 linearStdDev = kXyStdDevCoeff * stdDevFactor
                 angularStdDev = kThetaStdDevCoeff * stdDevFactor
                 # here you can also factor in per-camera weighting
                 observedTags = []
-                tagsList = observation.tagsList
+                tagsList = tObsTyped.tagsList
                 # extract tag list from bit masks
                 for tagId in range(32):
                     if tagsList & (1 << tagId):
@@ -165,8 +171,8 @@ class VisionSubsystem(Subsystem):
 
                 self.turretedConsumer(
                     TurretedVisionObservation(
-                        observation.fieldToTurret,
-                        observation.timestamp,
+                        tObsTyped.fieldToTurret,
+                        tObsTyped.timestamp,
                         [linearStdDev, linearStdDev, angularStdDev],
                         observedTags,
                     )
@@ -238,7 +244,7 @@ def VisionSubsystemFactory() -> VisionSubsystem | None:
                     )
                 case RobotModes.SIMULATION:
                     io.append(
-                        config.simCameraIO(
+                        config.simCameraIO(  # type: ignore[misc]
                             config.cameraName,
                             config.robotToCameraTransform,
                             # pylint: disable-next=unnecessary-lambda
@@ -248,6 +254,6 @@ def VisionSubsystemFactory() -> VisionSubsystem | None:
                 case _:
                     io.append(VisionSubsystemIO())
 
-        vision = VisionSubsystem(RobotState.addVisionMeasurement, lambda: None, io=io)
+        vision = VisionSubsystem(RobotState.addVisionMeasurement, lambda: None, io=io)  # type: ignore[arg-type, misc]
 
     return vision

@@ -1,4 +1,4 @@
-from typing import Optional, List, Tuple, Callable
+from typing import Optional, List, Tuple, Callable, Type
 
 from commands2 import Command, Subsystem, cmd
 from wpilib import XboxController
@@ -71,10 +71,10 @@ class DrivetrainSubsystem(Subsystem):
         self.setName(self.name)
         self.io = io
         self.inputs = DrivetrainSubsystemIO.DrivetrainSubsystemIOInputs()
-        self.wheelModules = []
-        self.azmthModules = []
-        self.azmthEncoderModules = []
-        self.motorAndEncoderModules = []
+        self.wheelModules: list[MotorModule] = []
+        self.azmthModules: list[MotorModule] = []
+        self.azmthEncoderModules: list[EncoderModule] = []
+        self.motorAndEncoderModules: list = [MotorModule | EncoderModule]
         for (
             moduleName,
             wheelModuleIO,
@@ -84,12 +84,12 @@ class DrivetrainSubsystem(Subsystem):
             wheelMotorModule = MotorModule(
                 name=f"wheelMotor{moduleName}Module",
                 io=wheelModuleIO,
-                controller=NullController,
+                controller=NullController(),
             )
             azmuthMotorModule = MotorModule(
                 name=f"azmthMotor{moduleName}Module",
                 io=azmthModuleIO,
-                controller=NullController,
+                controller=NullController(),
             )
             azmuthEncoderModule = EncoderModule(
                 name=f"azmthEncoder{moduleName}Module", io=azmthEncoderIO
@@ -160,8 +160,8 @@ class DrivetrainSubsystem(Subsystem):
             module.periodic()
         for module in self.azmthModules:
             module.periodic()
-        for module in self.azmthEncoderModules:
-            module.periodic()
+        for encModule in self.azmthEncoderModules:
+            encModule.periodic()
         # We start LogTracing here because the above modules do their own periodic logging.
         LogTracer.resetOuter("drivetrainSubsystem periodic")
         self.io.updateInputs(self.inputs)  # update state of the ionout subsystem
@@ -174,7 +174,7 @@ class DrivetrainSubsystem(Subsystem):
         pass
 
     def makeSysIdCommandWheelMotors(self) -> Command:
-        return self.sysIdWheelMotors.sysIdRoutine("wheel", self.wheelModules)
+        return self.sysIdWheelMotors.sysIdRoutine("wheel", tuple(self.wheelModules))
 
     def drivePathPlanned(self, chassisSpeeds: ChassisSpeeds, _feedForward):
         self.casseroleDrivetrain.setManualCmdViaChassisSpeeds(chassisSpeeds)
@@ -182,7 +182,7 @@ class DrivetrainSubsystem(Subsystem):
     def doNothing(self):
         pass
 
-    def aDoNothingCommand(self) -> Optional[Command]:
+    def aDoNothingCommand(self) -> Command:
         return cmd.sequence(
             cmd.runOnce(lambda: self.initialize(), self),
             cmd.run(lambda: self.doNothing(), self),
@@ -199,7 +199,7 @@ class DrivetrainSubsystem(Subsystem):
 def makeNameAndWrapperedMotorsAndEncoder(
     subsystemName: str,
     moduleName: str,
-    wheelMotorWrapper: WrapperedMotorSuper,
+    wheelMotorWrapper: Type[WrapperedMotorSuper],
     wheelMotorCanID: int,
     azmthMotorCanID: int,
     azmthEncoderPortIdx: int,
@@ -207,7 +207,7 @@ def makeNameAndWrapperedMotorsAndEncoder(
     invertWheelMotor: bool,
     invertAzmthMotor: bool,
     invertAzmthEncoder: bool,
-) -> Tuple[str, MotorModuleIO, MotorModuleIO, WrapperedRevThroughBoreEncoder]:
+) -> tuple:
     """
     Make motors for one swerve drive module.
 
@@ -244,7 +244,7 @@ def makeNameAndWrapperedMotorsAndEncoder(
     """
 
     print(f"{moduleName} azmthOffset={rad2Deg(azmthOffset):7.1f} deg")
-    wheelMotor = wheelMotorWrapper(
+    wheelMotor = wheelMotorWrapper(  # type: ignore[call-arg]
         wheelMotorCanID,
         subsystemName + moduleName + "/wheelMotor",
         brakeMode=True,
@@ -337,7 +337,10 @@ def DrivetrainSubsystemFactory() -> DrivetrainSubsystem | None:
                     )
                 )
 
-        motorModuleIOsAndEncoderIOSets = []
+        motorModuleIOsAndEncoderIOSets: List[
+            Tuple[str, MotorModuleIO, MotorModuleIO, EncoderModuleIO]
+        ] = []
+        io: DrivetrainSubsystemIO = DrivetrainSubsystemIO()
         match kRobotMode:
             case RobotModes.REAL:
                 io = DrivetrainSubsystemIOReal(name="drivetrainIO")
@@ -347,15 +350,15 @@ def DrivetrainSubsystemFactory() -> DrivetrainSubsystem | None:
                     azmthMotor,
                     azmthEncoder,
                 ) in wrapperedMotorsAndEncoderSets:
-                    wheelMotor_io = MotorModuleIOWrappered(
+                    wheelMotor_io: MotorModuleIO = MotorModuleIOWrappered(
                         name=f"{p.DRIVETRAIN_NAME}/{moduleName}WheelMotorModuleIO",
                         motor=wheelMotor,
                     )
-                    azmthMotor_io = MotorModuleIOWrappered(
+                    azmthMotor_io: MotorModuleIO = MotorModuleIOWrappered(
                         name=f"{p.DRIVETRAIN_NAME}/{moduleName}AzmthMotorModuleIO",
                         motor=azmthMotor,
                     )
-                    azmthEncoder_io = EncoderModuleIOWrappered(
+                    azmthEncoder_io: EncoderModuleIO = EncoderModuleIOWrappered(
                         name=f"{p.DRIVETRAIN_NAME}/{moduleName}AzmthEncoderModuleIO",
                         encoder=azmthEncoder,
                     )
@@ -393,15 +396,15 @@ def DrivetrainSubsystemFactory() -> DrivetrainSubsystem | None:
                     azmthMotor,
                     azmthEncoder,
                 ) in wrapperedMotorsAndEncoderSets:
-                    wheelMotor_io = MotorModuleIO(
+                    wheelMotor_io = MotorModuleIO(  # type: ignore[call-arg]
                         name=f"{p.DRIVETRAIN_NAME}/{moduleName}WheelMotorModuleIO",
                         motor=wheelMotor,
                     )
-                    azmthMotor_io = MotorModuleIO(
+                    azmthMotor_io = MotorModuleIO(  # type: ignore[call-arg]
                         name=f"{p.DRIVETRAIN_NAME}/{moduleName}AzmthMotorModuleIO",
                         motor=azmthMotor,
                     )
-                    azmthEncoder_io = EncoderModuleIO(
+                    azmthEncoder_io = EncoderModuleIO(  # type: ignore[call-arg]
                         name=f"{p.DRIVETRAIN_NAME}/{moduleName}AzmthEncoderModuleIO",
                         encoder=azmthEncoder,
                     )

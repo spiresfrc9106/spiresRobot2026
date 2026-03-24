@@ -1,11 +1,15 @@
 {
+  "permissions": {
+    "allow": [
+      "mcp__ide__getDiagnostics",
+      "Bash(uv sync)",
+      "Bash(uv run -- ruff: *)",
+      "Bash(uv run -- mypy: *)",
+      "Bash(uv run -- robotpy: *)",
+    ]
+  },
   "sandbox": {
     "enabled": true,
     "autoAllowBashIfSandboxed": false
-  },
-  "permissions": {
-    "allow": [
-      "mcp__ide__getDiagnostics"
-    ]
   }
 }

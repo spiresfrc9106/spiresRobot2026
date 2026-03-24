@@ -35,10 +35,10 @@ class WrapperedSparkImplementation:
         gearBox: Optional[DCMotor] = None,
         sparkSim: Optional[SparkSim] = None,
         limitRPM: int = 0,
-        controlType_kPosition: SparkBase.ControlType = None,
-        controlType_kVelocity: SparkBase.ControlType = None,
-        controlType_kMAXMotionVelocityControl: SparkBase.ControlType = None,
-        controlType_kVoltage: SparkBase.ControlType = None,
+        controlType_kPosition: Optional[SparkBase.ControlType] = None,
+        controlType_kVelocity: Optional[SparkBase.ControlType] = None,
+        controlType_kMAXMotionVelocityControl: Optional[SparkBase.ControlType] = None,
+        controlType_kVoltage: Optional[SparkBase.ControlType] = None,
     ):
         self.ctrl = ctrl
         self.cfg = cfg
@@ -325,7 +325,7 @@ class WrapperedSparkMotor(WrapperedMotorSuper):
         if self.configSuccess:
             err = self.closedLoopCtrl.setReference(
                 posCmdRev,
-                self.spark.controlType_kPosition,
+                self.spark.controlType_kPosition,  # type: ignore[arg-type]
                 ClosedLoopSlot.kSlot0,
                 arbFF,
                 SparkClosedLoopController.ArbFFUnits.kVoltage,
@@ -349,7 +349,7 @@ class WrapperedSparkMotor(WrapperedMotorSuper):
         if self.configSuccess:
             err = self.closedLoopCtrl.setReference(
                 desVelRPM,
-                self.spark.controlType_kVelocity,
+                self.spark.controlType_kVelocity,  # type: ignore[arg-type]
                 ClosedLoopSlot.kSlot0,
                 arbFF,
                 SparkClosedLoopController.ArbFFUnits.kVoltage,
@@ -371,7 +371,7 @@ class WrapperedSparkMotor(WrapperedMotorSuper):
         if self.configSuccess:
             err = self.closedLoopCtrl.setSetpoint(
                 desVelRPM,
-                self.spark.controlType_kMAXMotionVelocityControl,
+                self.spark.controlType_kMAXMotionVelocityControl,  # type: ignore[arg-type]
                 ClosedLoopSlot.kSlot0,
             )
             self.controlState = MotorControlStates.MAXMOTIONVELOCITY
@@ -385,7 +385,7 @@ class WrapperedSparkMotor(WrapperedMotorSuper):
             # self.spark.ctrl.setVoltage(outputVoltageVolts)
             err = self.closedLoopCtrl.setReference(
                 outputVoltageVolts,
-                self.spark.controlType_kVoltage,
+                self.spark.controlType_kVoltage,  # type: ignore[arg-type]
                 ClosedLoopSlot.kSlot0,
             )
             self.controlState = MotorControlStates.VOLTAGE
@@ -454,4 +454,4 @@ def WrapperedSparkBase(
     currentLimitA: int = 40,
     gearBox: Optional[DCMotor] = None,
 ) -> WrapperedSparkMotor:
-    pass
+    raise NotImplementedError

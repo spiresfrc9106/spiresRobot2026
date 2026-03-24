@@ -1,3 +1,5 @@
+from typing import List, Tuple
+
 from wpilib import Timer
 from wpimath.geometry import Pose2d, Translation2d
 from drivetrain.controlStrategies.holonomicDriveController import (
@@ -13,11 +15,11 @@ from drivetrain.drivetrainPhysical import DrivetrainPhysical
 
 
 class AutoDrive(metaclass=Singleton):
-    def __init__(self):
+    def __init__(self) -> None:
         self._autoDrive = False
         self.rfp = RepulsorFieldPlanner()
         self._trajCtrl = HolonomicDriveController("AutoDrive")
-        self._telemTraj = []
+        self._telemTraj: List[Pose2d] = []
         # self._obsDet = ObstacleDetector()
         self._olCmd = DrivetrainCommand()
         self._prevCmd: DrivetrainCommand | None = None
@@ -27,7 +29,7 @@ class AutoDrive(metaclass=Singleton):
         self.stuckTracker = 0
         self.prevCallTime = Timer.getFPGATimestamp()
         self.prevPose = Pose2d()
-        self.LenList = []
+        self.LenList: List[float] = []
         self.dashboardConversionList = [
             9,
             11,
@@ -127,7 +129,7 @@ class AutoDrive(metaclass=Singleton):
         # NOTE - this function internally transforms to correct red/blue side
         # No need to apply additional alliance-utils transform to use it.
         # goalListTot = getTransformedGoalList()
-        goalListTot = []
+        goalListTot: list = []
 
         if not self._autoDrive:
             # Driving not requested, set no goal
@@ -190,7 +192,7 @@ class AutoDrive(metaclass=Singleton):
             # repulsor field path planner
             if self._prevCmd is None:
                 initCmd = DrivetrainCommand(
-                    0, 0, 0, curPose
+                    0, 0, 0, False, curPose
                 )  # TODO - init this from current odometry vel
                 self._olCmd = self.rfp.update(
                     initCmd, self.MAX_PATHPLAN_SPEED_MPS * Ts, Ts

@@ -30,9 +30,7 @@ class Limelight:
     A class for interfacing with the limelight camera.
     """
 
-    def __init__(
-        self, origin_offset: Translation3d, name: str = "limelight", mode_given=1.0
-    ):
+    def __init__(self, origin_offset: Pose3d, name: str = "limelight", mode_given=1.0):
         """
 
         :param origin_offset: The offset of the limelight from the robot's origin in meters
@@ -50,9 +48,9 @@ class Limelight:
         self.tv: float = 0
         self.ta: float = 0
         self.tid: float = -1.0
-        self.origin_offset: Translation3d = origin_offset
+        self.origin_offset: Pose3d = origin_offset
         self.drive_cam = False
-        self.pipeline: LimelightPipeline = LimelightPipeline.feducial
+        self.pipeline: float = LimelightPipeline.feducial
         self.t_class = None
         self.force_update = False
         self.botpose_blue: list[float] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -138,7 +136,7 @@ class Limelight:
 
         self.force_update = False
 
-    def set_pipeline_mode(self, mode: LimelightPipeline) -> None:
+    def set_pipeline_mode(self, mode: float) -> None:
         """
         Sets the pipeline mode of the limelight will be using (Feeducial, Retroreflective, Neural, etc.)
         These modes match the numbers used in the limelight web interface.
@@ -150,11 +148,11 @@ class Limelight:
         self.table.putNumber("pipeline", mode)
         self.pipeline = mode
 
-    def get_pipeline_mode(self) -> LimelightPipeline:
+    def get_pipeline_mode(self) -> float:
         """
         Gets the pipeline mode of the limelight will be using (Feducial, Retroreflective, Neural, etc.) as an integer.
 
-        :return LimelightPipeline: The pipeline mode the limelight is currently using
+        :return float: The pipeline mode the limelight is currently using
         """
 
         pipeline = self.table.getNumber("getpipe", 0.0)
@@ -162,7 +160,7 @@ class Limelight:
             self.pipeline = pipeline
         return self.pipeline
 
-    def set_led_mode(self, mode: limelight_led_mode) -> None:
+    def set_led_mode(self, mode: int) -> None:
         """
         Changes the LED mode of the limelight.
 
@@ -171,7 +169,7 @@ class Limelight:
 
         self.table.putNumber("ledMode", mode)
 
-    def get_led_mode(self) -> limelight_led_mode:
+    def get_led_mode(self) -> int:
         return self.table.getNumber("ledMode", 0)
 
     def get_target_id(self) -> float:
@@ -353,7 +351,7 @@ class Limelight:
 
         # l_t = ntcore._now() + int((latency / 1000))
 
-        self.table.getEntry("robot_orientation_set").setDoubleArray(array)
+        self.table.getEntry("robot_orientation_set").setDoubleArray(array)  # type: ignore[arg-type]
 
     def target_exists(self, force_update: bool = False):
         """
@@ -563,6 +561,6 @@ class LimelightController:
         else:
             return None
 
-    def set_pipeline_mode(self, mode: LimelightPipeline) -> None:
+    def set_pipeline_mode(self, mode: float) -> None:
         for limelight in self.limelights:
             limelight.set_pipeline_mode(mode)

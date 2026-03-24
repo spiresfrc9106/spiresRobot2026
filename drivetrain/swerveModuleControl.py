@@ -74,7 +74,9 @@ class SwerveModuleControl:
             motorModulesAndEncoderSet
         )
 
-        self.wheelMotorFF = SimpleMotorFeedforwardMeters(0, 0, 0)
+        self.wheelMotorFF: SimpleMotorFeedforwardMeters | None | bool = (
+            SimpleMotorFeedforwardMeters(0, 0, 0)
+        )
 
         self.desiredState = SwerveModuleState()
         self.optimizedDesiredState = SwerveModuleState()
@@ -192,7 +194,7 @@ class SwerveModuleControl:
         self.optimizedDesiredState.optimize(self.actualState.angle)
 
         # Use a PID controller to calculate the voltage for the azimuth motor
-        self.azmthCtrl.setSetpoint(self.optimizedDesiredState.angle.degrees())  # type: ignore
+        self.azmthCtrl.setSetpoint(self.optimizedDesiredState.angle.degrees())
         self.azmthVoltage = self.azmthCtrl.calculate(self.actualState.angle.degrees())
         self.azmthMotor.setVoltage(self.azmthVoltage)
 

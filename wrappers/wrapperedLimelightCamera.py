@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import math
+from typing import Tuple
 
 from ntcore import NetworkTableInstance
 import wpilib
@@ -28,12 +29,12 @@ class WrapperedPoseEstLimelight:
 
         print(f"WrapperedPoseEstLimelight camName {type(camName)} = {camName}")
 
+        self.cam: Limelight | None = None
         try:
-            self.cam = Limelight(robotToCam, camName, pipeline_mode)
+            self.cam = Limelight(robotToCam, camName, pipeline_mode)  # type: ignore[arg-type]
         except Exception as e:
             # Handle any exception
             print(f"An error occurred: {e}")
-            self.cam = None
 
         self.disconFault = Fault(f"LL Camera {camName} not sending data")
         self.timeoutSec = 1.0
@@ -52,16 +53,18 @@ class WrapperedPoseEstLimelight:
             .publish()
         )
 
-        self.xStdDev = 0
-        self.yStdDev = 0
-        self.tStdDev = 0
+        self.xStdDev: float = 0.0
+        self.yStdDev: float = 0.0
+        self.tStdDev: float = 0.0
 
-        self.targetTransformation = None
+        self.targetTransformation: Tuple[float, float] | None = None
         self.targetInView = None
         self.targetLength = 0
         self.latency = 0
 
     def update(self, prevEstPose: Pose2d):
+        if self.cam is None:
+            return
         self.cam.update()
 
         self.poseEstimates = []
@@ -124,7 +127,7 @@ class WrapperedPoseEstLimelight:
     def getTargetIDInView(self):
         return self.cam.tid
 
-    def getTargetPoseEstFormatted(self):
+    def getTargetPoseEstFormatted(self) -> Tuple[float, float] | None:
         if self.cam is not None:
             tagPosition: tuple = (
                 self.cam.targetPoseByRobot[2],
@@ -151,10 +154,10 @@ class WrapperedPoseEstLimelight:
         measure_t: bool = False,
     ):
         x = ta
-        a = 0
-        b = 1
-        d = 0
-        c = 1
+        a: float = 0.0
+        b: float = 1.0
+        d: float = 0.0
+        c: float = 1.0
         if measure_x:
             a = 0.370647
             b = 0.00096827
@@ -181,6 +184,7 @@ class WrapperedPoseEstLimelight:
 
 
 def wrapperedLimilightCameraFactory(camName: str, robotToCam, pipeline_mode):
+    wrapperedCam: WrapperedPoseEstPhotonCamera | WrapperedPoseEstLimelight
     if wpilib.RobotBase.isSimulation():
         print(f"In simulation substituting PhotonCamera for LimeLight Camera {camName}")
         wrapperedCam = WrapperedPoseEstPhotonCamera(camName, robotToCam)

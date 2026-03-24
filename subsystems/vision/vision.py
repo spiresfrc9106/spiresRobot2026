@@ -19,7 +19,7 @@ from utils.singleton import Singleton
 class CameraConfiguration:
     cameraName: str
     realCameraIO: Callable[[str, Transform3d], VisionSubsystemIO]
-    simCameraIO: Callable[[str, Transform3d], VisionSubsystemIO]
+    simCameraIO: Callable[..., VisionSubsystemIO] | None
     robotToCameraTransform: Transform3d
 
 

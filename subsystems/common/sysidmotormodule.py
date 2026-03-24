@@ -69,9 +69,9 @@ class SysIdMotorModule:
             )
         )
         ffCmd = (
-            cmd.runOnce(setup, self.requirements)
+            cmd.runOnce(setup, self.requirements)  # type: ignore[arg-type]
             .andThen(
-                cmd.run(run, self.requirements).withName(
+                cmd.run(run, self.requirements).withName(  # type: ignore[arg-type]
                     f"{motorModule.name} FeedForwardCharacterization"
                 )
             )
@@ -97,11 +97,11 @@ class SysIdMotorModule:
 
         def logOutputs(_) -> None:
 
-            volts = motorModule.io.motor.getDesiredVoltageOrFF()
+            volts = motorModule.io.motor.getDesiredVoltageOrFF()  # type: ignore[attr-defined]
             Logger.recordOutput(f"inout {name} SysId/voltage", volts)
-            radsPerSec = motorModule.io.motor.getMotorVelocityRadPerSec()
+            radsPerSec = motorModule.io.motor.getMotorVelocityRadPerSec()  # type: ignore[attr-defined]
             Logger.recordOutput(f"inout {name} SysId/radsPerSec", radsPerSec)
-            rad = motorModule.io.motor.getMotorPositionRad()
+            rad = motorModule.io.motor.getMotorPositionRad()  # type: ignore[attr-defined]
             Logger.recordOutput(f"inout {name} SysId/rad", rad)
 
             # print(f"{Timer.getTimestamp():.6} {name} {self.loggedStateStr} SysID: volts={volts}, radsPerSec={radsPerSec}, rad={rad}")
@@ -192,10 +192,10 @@ class SysIdMotorModule:
             self.preinit()
 
         return cmd.sequence(
-            cmd.runOnce(beforeTests, self),
+            cmd.runOnce(beforeTests, self),  # type: ignore[arg-type]
             sysIdQFWithWaits,
             sysIdQRWithWaits,
             sysIdDFWithWaits,
             sysIdDRWithWaits,
-            cmd.runOnce(lambda: self.postinit(), self),
+            cmd.runOnce(lambda: self.postinit(), self),  # type: ignore[arg-type]
         )

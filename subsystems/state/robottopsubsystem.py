@@ -42,7 +42,7 @@ class RobotTopSubsystem(Subsystem):
         self.setName(type(self).__name__)
         self.inputs = RobotTopIO.RobotTopIOInputs()
 
-        self.robotPose: Pose2d() | None = None
+        self.robotPose: Pose2d | None = None
 
         self._initalized = True
 
@@ -85,7 +85,7 @@ class RobotTopSubsystem(Subsystem):
             result = self.robotPose.translation().distance(self.hubLocation())
         return result
 
-    def getRotationToHub(self) -> Rotation2d:
+    def getRotationToHub(self) -> Rotation2d | None:
         rotationToTarget = None
         if self.robotPose is not None:
             bearingToTarget = (

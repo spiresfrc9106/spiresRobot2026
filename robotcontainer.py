@@ -114,12 +114,12 @@ class RobotContainer:
                         name,
                         commands2.SequentialCommandGroup(
                             cmd.runOnce(
-                                lambda p=leftPose: self.resetPose(
+                                lambda p=leftPose: self.resetPose(  # type: ignore[misc]
                                     poseTransformedForAlliance(p)
                                 ),
                                 self.drivetrainSubsystem,
                             ),
-                            self.inout.spinUpAndShootCommand(),
+                            self.inout.spinUpAndShootCommand(),  # type: ignore[union-attr]
                             autonLeft,
                         ),
                     )
@@ -128,12 +128,12 @@ class RobotContainer:
                         name,
                         commands2.SequentialCommandGroup(
                             cmd.runOnce(
-                                lambda p=rightPose: self.resetPose(
+                                lambda p=rightPose: self.resetPose(  # type: ignore[misc]
                                     poseTransformedForAlliance(p)
                                 ),
                                 self.drivetrainSubsystem,
                             ),
-                            self.inout.spinUpAndShootCommand(),
+                            self.inout.spinUpAndShootCommand(),  # type: ignore[union-attr]
                             autonRight,
                         ),
                     )
@@ -148,12 +148,12 @@ class RobotContainer:
                         name,
                         commands2.SequentialCommandGroup(
                             cmd.runOnce(
-                                lambda p=cPose: self.resetPose(
+                                lambda p=cPose: self.resetPose(  # type: ignore[misc]
                                     poseTransformedForAlliance(p)
                                 ),
                                 self.drivetrainSubsystem,
                             ),
-                            self.inout.spinUpAndShootCommand(),
+                            self.inout.spinUpAndShootCommand(),  # type: ignore[union-attr]
                             auton,
                         ),
                     )
@@ -271,8 +271,9 @@ class RobotContainer:
                 self.resetPose(startPose)
 
     def resetPose(self, pose: Pose2d) -> None:
-        self.drivetrainSubsystem.casseroleDrivetrain.poseEst.setKnownPose(pose)
         print(f"resetPose: {pose}")
+        if self.drivetrainSubsystem is not None:
+            self.drivetrainSubsystem.casseroleDrivetrain.poseEst.setKnownPose(pose)
         if self.visionSubsystem is not None:
             RobotState.resetPose(pose)
 

@@ -36,7 +36,11 @@ StateTupleType = Tuple[
 class DrivetrainPoseEstimator:
     """Wrapper class for all sensors and logic responsible for estimating where the robot is on the field"""
 
-    def __init__(self, initialModulePositions: PosTupleType, gyro):
+    def __init__(
+        self,
+        initialModulePositions: PosTupleType,
+        gyro,
+    ):
 
         # Represents our current best-guess as to our location on the field.
         self._curEstPose = Pose2d()
@@ -50,9 +54,9 @@ class DrivetrainPoseEstimator:
         # Cameras - measure our position on the field from apriltags
         # Generally accurate, but slow and laggy. Might need to be disabled
         # if the robot isn't flat on the ground for some reason.
-        self.cams = []
-        self.posEstLogs = []
-        self.includeInFilter = []
+        self.cams: list = []
+        self.posEstLogs: list = []
+        self.includeInFilter: list = []
         CAMS = DrivetrainPhysical().CAMS
         for camConfig in CAMS:
             self.cams.append(camConfig["CAM"])
@@ -97,7 +101,9 @@ class DrivetrainPoseEstimator:
             self._curRawGyroAngle = knownPose.rotation()
 
         self._poseEst.resetPosition(
-            self._curRawGyroAngle, self._lastModulePositions, knownPose
+            self._curRawGyroAngle,
+            self._lastModulePositions,
+            knownPose,
         )
         RobotTopSubsystem().setRobotPose(self._poseEst.getEstimatedPosition())
 

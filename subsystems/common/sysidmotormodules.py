@@ -29,7 +29,7 @@ class SysIdMotorModules:
     def sysIdRoutine(
         self,
         name: str,
-        motorModules: Tuple[MotorModule],
+        motorModules: Tuple[MotorModule, ...],
         voltsPerSec: float = 0.5,
         stepVolts: float = 6.0,
         timeoutS: float = 10.0,
@@ -41,13 +41,13 @@ class SysIdMotorModules:
         def logOutputs(_) -> None:
 
             for motorModule in motorModules:
-                volts = motorModule.io.motor.getDesiredVoltageOrFF()
+                volts = motorModule.io.motor.getDesiredVoltageOrFF()  # type: ignore[attr-defined]
                 Logger.recordOutput(f"inout {motorModule.name} SysId/voltage", volts)
-                radsPerSec = motorModule.io.motor.getMotorVelocityRadPerSec()
+                radsPerSec = motorModule.io.motor.getMotorVelocityRadPerSec()  # type: ignore[attr-defined]
                 Logger.recordOutput(
                     f"inout {motorModule.name} SysId/radsPerSec", radsPerSec
                 )
-                rad = motorModule.io.motor.getMotorPositionRad()
+                rad = motorModule.io.motor.getMotorPositionRad()  # type: ignore[attr-defined]
                 Logger.recordOutput(f"inout {motorModule.name} SysId/rad", rad)
 
                 # print(f"{Timer.getTimestamp():.6} {name} {self.loggedStateStr} SysID: volts={volts}, radsPerSec={radsPerSec}, rad={rad}")
@@ -137,10 +137,10 @@ class SysIdMotorModules:
             self.preinit()
 
         return cmd.sequence(
-            cmd.runOnce(beforeTests, self),
+            cmd.runOnce(beforeTests, self),  # type: ignore[arg-type]
             sysIdQFWithWaits,
             sysIdQRWithWaits,
             sysIdDFWithWaits,
             sysIdDRWithWaits,
-            cmd.runOnce(lambda: self.postinit(), self),
+            cmd.runOnce(lambda: self.postinit(), self),  # type: ignore[arg-type]
         )

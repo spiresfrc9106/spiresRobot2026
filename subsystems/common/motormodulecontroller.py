@@ -143,12 +143,14 @@ class PyKitSlewRateLimiter:
         else:
             elapsedTime_uS = now_uS - self.prevTime_uS
             elapsedTime_S = elapsedTime_uS / 1e6
+            assert self.prevVal is not None
             self.prevVal += clamp(
                 input - self.prevVal,
                 self.negativeMaxChangePerSec * elapsedTime_S,
                 self.positiveMaxChangePerSec * elapsedTime_S,
             )
         self.prevTime_uS = now_uS
+        assert self.prevVal is not None
         return self.prevVal
 
     def reset(self, input: float):

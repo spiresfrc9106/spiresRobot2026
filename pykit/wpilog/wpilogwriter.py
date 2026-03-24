@@ -36,7 +36,7 @@ class WPILOGWriter(LogDataReciever):
     folder: str
     filename: str
     randomIdentifier: str
-    dsAttachedTime: int = 0
+    dsAttachedTime: float = 0
     autoRename: bool
     logDate: datetime.datetime | None
     logMatchText: str

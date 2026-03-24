@@ -28,7 +28,7 @@ from wpilib import Timer
 from photonlibpy.packet import Packet
 from photonlibpy.targeting.photonPipelineResult import PhotonPipelineResult
 from photonlibpy.timesync.timeSyncServer import inst
-from photonlibpy.version import PHOTONLIB_VERSION  # type: ignore[import-untyped]
+from photonlibpy.version import PHOTONLIB_VERSION
 
 from constants import kRobotUpdatePeriodS
 from subsystems.state.robottopsubsystem import RobotTopSubsystem

@@ -31,6 +31,7 @@ class MotorModuleIO:
         velRadps: float = 0.0  # rad / sec
         appliedV: float = 0.0  # volts
         torqueCurrentA: float = 0.0  # amps
+        drive_supply_current: float = 0.0  # amps
 
     def __init__(self, name: str) -> None:
         self.name = name
@@ -65,6 +66,9 @@ class MotorModuleIO:
             velCmdRadps (float): motor desired shaft velocity in radians per second
             arbFF (int, optional): _description_. Defaults to 0.
         """
+
+    def setMaxMotionVelParams(self, maxAccRadps2: float) -> None:
+        pass
 
     def setMaxMotionVelCmd(self, velCmdRadps: float):
         pass
