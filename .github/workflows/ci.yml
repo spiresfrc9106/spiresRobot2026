@@ -5,11 +5,14 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.14"]
     steps:
     - name: "Set up Python"
       uses: actions/setup-python@v6
       with:
-        python-version: "3.12"
+        python-version: ${{ matrix.python-version }}
     - uses: actions/checkout@v6
     - name: Install uv
       uses: astral-sh/setup-uv@v7
