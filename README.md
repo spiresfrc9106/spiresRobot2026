@@ -25,21 +25,111 @@ TODO - clean this up to reflect a `uv` python development environment.
 Before developing code on a new computer, perform the following:
 
 1. [Download and install wpilib](https://github.com/wpilibsuite/allwpilib/releases)
-2. [Download and install python](https://www.python.org/downloads/)
+2. [Download and install python 3.14](https://www.python.org/downloads/)
+
+On Windows use the Python Installation Manager:
+```
+Welcome to the Python installation manager configuration helper.
+
+********************************************************************************
+
+Windows is not configured to allow paths longer than 260 characters.
+
+Python and some other apps can exceed this limit, but it requires changing a
+system-wide setting, which may need an administrator to approve, and will
+require a reboot. Some packages may fail to install without long path support
+enabled.
+Update setting now? [y/N] y
+The setting has been successfully updated, and will take effect after the next reboot.
+
+********************************************************************************
+
+The global shortcuts directory is not configured.
+
+Configuring this enables commands like python3.14.exe to run from your
+terminal, but is not needed for the python or py commands (for example, py
+-V:3.14).
+
+We can add the directory (C:\Users\mikestitt\AppData\Local\Python\bin) to PATH
+now, but you will need to restart your terminal to use it. The entry will be
+removed if you run py uninstall --purge, or else you can remove it manually when
+uninstalling Python.
+Add commands directory to your PATH now? [y/N] y
+PATH has been updated, and will take effect after opening a new terminal.
+
+********************************************************************************
+
+You do not have the latest Python runtime.
+
+Install the current latest version of CPython? If not, you can use 'py install
+default' later to install.
+
+Install CPython now? [Y/n] y
+Python install manager was successfully updated to 26.0.
+
+This update adds global shortcuts for installed scripts such as pip.exe.
+Use py install --refresh to update all shortcuts.
+This will be needed after installing new scripts, as it is not run automatically.
+
+********************************************************************************
+Installing Python 3.14.3.
+Extracting: ...................................................................✅
+To see all available commands, run 'py help'
+********************************************************************************
+
+********************************************************************************
+
+Configuration checks completed.
+
+To run these checks again, launch Python install manager from your Start menu,
+or py install --configure from the terminal.
+
+********************************************************************************
+
+Usage:
+    py <regular Python options>
+                         Launch the default runtime with specified options. This
+                         is the equivalent of the python command.
+    py -V:<TAG>          Launch runtime identified by <TAG>, which should
+                         include the company name if not PythonCore. Regular
+                         Python options may follow this option.
+    py -3<VERSION>       Equivalent to -V:PythonCore\3<VERSION>. The version
+                         must begin with the digit 3, platform overrides are
+                         permitted, and regular Python options may follow. py -3
+                         is the equivalent of the python3 command.
+    py exec <any of the above>
+                         Equivalent to any of the above launch options, and the
+                         requested runtime will be installed if needed.
+    py help [<CMD>]      Show help for Python installation manager commands
+    py install <TAG>     Download new Python runtimes, or pass --update to
+                         update existing installs.
+    py list [<FILTER>]   Show installed Python runtimes, optionally filtering by
+                         <FILTER>.
+    py uninstall <TAG>   Remove one or more runtimes from your machine. Pass
+                         --purge to clean up all runtimes and cached files.
+
+Find additional information at https://docs.python.org/dev/using/windows.
+
+View online help? [y/N] N
+```
+3. [Download and install GitHub CLI](https://cli.github.com/)
+4. https://git-scm.com/install/windows
+5. https://cli.github.com/
+6. uv: https://docs.astral.sh/uv/getting-started/installation/
 3. cd to this directory
 3. run these commands:
 
-```cmd
-    python -m pip install --upgrade pip
-    python -m venv .venv
+```
+uv sync
+uv run robotpy sync
+uv run ruff check
+uv run mypy .
+uv run robotpy sim
+uv run robotpy test
+uv run robotpy deploy --skip-tests
 ```
 
-`. .\.venv\bin\activate` or `.\.venv\Scripts\activate`
 
-```cmd
-    python -m pip install -r requirements_dev.txt
-    robotpy sync
-```
 
 ## Docs
 
@@ -48,16 +138,7 @@ Before developing code on a new computer, perform the following:
 - [Most recent relationship diagram between classes](.docs/graph.md)
     - Keep this file up to date by periodically running `codeStructureReportGen/reportGen.py`
 
-
-## The robot website
-
-On a simulator
-- http://localhost:5805/
-
-On a RoboRIO
-- http://10.91.6.2:5805/
-- Be sure that you are connected to the RoboRIO's network via WiFi or Ethernet
-
+  
 ## Interesting links
 
 [RobotPy source code](https://github.com/robotpy/mostrobotpy)
@@ -68,15 +149,12 @@ On a RoboRIO
 
 ## Deploying to the Robot
 
-Use the `WPILib: Deploy Robot Code` task in VSCode's command palette.
 
-OR
-
-`robotpy deploy` will deploy all code to the robot. Be sure to be on the robot's network via WiFi or Ethernet.
+`uv run robotpy deploy` will deploy all code to the robot. Be sure to be on the robot's network via WiFi or Ethernet.
 
 ### Deploy Notes
 
-`robotpy deploy --skip-tests` to avoid requiring tests to pass before deployment can proceed. This is helpful for quick iterations, but don't make it a bad habit.
+`uv run robotpy deploy --skip-tests` to avoid requiring tests to pass before deployment can proceed. This is helpful for quick iterations, but don't make it a bad habit.
 
 `.deploy_cfg` contains specific configuration about the deploy process.
 
@@ -86,77 +164,43 @@ Any folder or file prefixed with a `.` will be skipped in the deploy. This is go
 
 "Linting" is the process of checking our code format and style to keep it looking nice and avoid unnecessary inconsistencies.
 
-`pylint --rcfile=.pylintrc **\*.py`
+```
+uv run ruff check
+uv run mypy .
+```
 
-`.pylintrc` contains configuration about what checks the linter runs, and what formatting it enforces
-
-
-to lint a specific directory:
-
-`pylint --rcfile=.pylintrc --source-roots=. utils\**\*.py`
-
-to lint a specific file:
-
-`pylint --rcfile=.pylintrc --source-roots=. drivetrain\poseEstimation\drivetrainPoseEstimator.py`
 
 ## Testing
 
-Run the `WPILib: Test Robot Code` task in VSCode's command palette.
 
-OR
-
-`robotpy test`
+`uv run robotpy test`
 
 OR to get details of what is happening during the tests:
 
-`robotpy test -- --no-header -vvv -s`
+`uv run robotpy test -- --no-header -vvv -s`
 
 OR to run a specific test file from the '.\tests' directory:
 
-`robotpy test autoSequencer_test.py -- --no-header -vvv -s`
+`uv run robotpy test autoSequencer_test.py -- --no-header -vvv -s`
 
 OR to run a specific test file and test case from the '.\tests' directory:
 
-`robotpy test autoSequencer_test.py::test_parallel -- --no-header -vvv -s`
+`uv run robotpy test autoSequencer_test.py::test_parallel -- --no-header -vvv -s`
 
 OR to skip a specific test:
 
-`robotpy test -- -k 'not pyfrc_test.py'`
+`uv run robotpy test -- -k 'not pyfrc_test.py'`
 
 ## Simulating
 
-Run the `WPILib: Simulate Robot Code` task in VSCode's command palette.
-
-OR
-
-`robotpy sim`
+`uv run robotpy sim`
 
 ## Dependency Management
 
-`requirements_dev.txt` is used to list dependencies that we only need on our development computers, not on the RoboRIO.
-Some tools like linting and formatting aren't mission-critical (or even used) at runtime, but still very helpful to
-have.
-`robotpy` is on this is on this list because it exists on the development computers, and by placing it on this list
-it removes an installation step.
-
-`robotpy` then uses `pyproject.toml` to the dependencies that are required to be installed on the RoboRIO for our code
-to successfully run. For tests and simulations you will also need these dependencies on your development machine.
-They are managed automatically via `robotpy sync`.
-
-## To rebuild a '.venv' from scratch
-
-`. .\.venv\bin\activate` or `.\.venv\Scripts\activate`
-
-```cmd
-python -m pip freeze > temp.txt
-python -m pip uninstall -y -r temp.txt
-python -m pip install -r .\requirements_dev.txt
-robotpy sync
-```
 
 ## Useful commands:
 
-See network logs: `python -m netconsole roboRIO-9106-frc.local` or `python -m netconsole 10.91.6.2`
+See network logs: `uv run netconsole roboRIO-9106-frc.local` or `uv run netconsole 10.91.6.2`
 
 SSH into the robot: `ssh lvuser@roboRIO-9106-frc.local` or `ssh lvuser@10.91.6.2`
 
