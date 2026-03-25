@@ -14,9 +14,9 @@ We think we might see if the software can be configured to use either Robot Cass
 
 We are grateful to Teams #1736 and #1757 for the inspiration!
 
+![ci Test Status](https://github.com/spiresfrc9106/spiresRobot2026/actions/workflows/ci.yml/badge.svg?branch=main)
+![lint Status](https://github.com/spiresfrc9106/spiresRobot2026/actions/workflows/lint.yml/badge.svg?branch=main)
 
-
-![Dev CI Status](https://github.com/spiresfrc9106/spiresRobot2025/actions/workflows/ci.yml/badge.svg?branch=main)
 
 ## Installation
 
