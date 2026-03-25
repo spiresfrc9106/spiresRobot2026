@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List
 
 from wpilib import Timer
 from wpimath.geometry import Pose2d, Translation2d

@@ -49,7 +49,6 @@ from utils.constants import (
 from utils.units import rad2Deg
 from util.logtracer import LogTracer
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
-from wrappers.wrapperedRevThroughBoreEncoder import WrapperedRevThroughBoreEncoder
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
 
 
