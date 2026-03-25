@@ -1,4 +1,0 @@
-# Development utilities - not needed on the RIO
-pylint==3.0.3
-black
-coverage

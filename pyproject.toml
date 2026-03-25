@@ -7,14 +7,11 @@ name = "spiresRobot2026"
 version = "0.1.0"
 description = "FRC9106 - Spires - REBUILT Competition Robot"
 readme = "README.md"
-requires-python = "==3.12.*"
+requires-python = "==3.14.*"
 
 dependencies = [
-    "black~=26.1.0",
-    "mypy>=1.19.1",
     "phoenix6>=26.1.0",
     "photonlibpy~=2026.3.1",
-    "pylint>=4.0.2",
     "robotpy>=2026.2.2",
     "robotpy-apriltag>=2026.2.1",
     "robotpy-cli>=2026.0.1",
@@ -28,18 +25,24 @@ dependencies = [
     "robotpy-commands-v2>=2026.2.1",
     "robotpy-halsim-ws",
     "sleipnirgroup-choreolib",
-    "coverage>=7.13.1",
     "debugpy",
-    #"opencv-python",
     "robotpy-opencv",
     "photonlibpy",
     "robotpy-cscore",
     "robotpy-halsim-ds-socket",
     "robotpy-native-apriltag",
     "robotpy-playingwithfusion",
+]
+
+
+[dependency-groups]
+dev = [
+    "coverage>=7.13.1",
+    "mypy>=1.19.1",
     "pre-commit>=4.5.0",
     "ruff>=0.15",
 ]
+
 [tool.robotpy]
 
 # Version of robotpy this project depends on
@@ -78,7 +81,7 @@ requires = [
 
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.14"
 warn_unused_configs = true
 explicit_package_bases = true
 mypy_path = "."
