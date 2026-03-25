@@ -1,4 +1,4 @@
-name: lint - ruff, mypi
+name: lint - ruff, mypy
 
 on: [push, pull_request]
 
