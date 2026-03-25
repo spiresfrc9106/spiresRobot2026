@@ -165,7 +165,8 @@ Any folder or file prefixed with a `.` will be skipped in the deploy. This is go
 "Linting" is the process of checking our code format and style to keep it looking nice and avoid unnecessary inconsistencies.
 
 ```
-uv run ruff check
+uv run ruff format --check
+uv run ruff format
 uv run mypy .
 ```
 
