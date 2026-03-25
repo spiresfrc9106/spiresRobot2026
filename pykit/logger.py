@@ -6,7 +6,6 @@ from wpilib import RobotController
 from pykit.alertlogger import AlertLogger
 from pykit.autolog import AutoLogInputManager, AutoLogOutputManager
 from pykit.inputs.loggableds import LoggedDriverStation
-from pykit.inputs.loggablepowerdistribution import LoggedPowerDistribution
 from pykit.inputs.loggablesystemstats import LoggedSystemStats
 from pykit.logdatareciever import LogDataReciever
 from pykit.logreplaysource import LogReplaySource
@@ -158,7 +157,6 @@ class Logger:
         """
         Starts the logger. This initializes logging or replay and sets up the necessary tables.
         """
-        print("-----------------------------------Starting LOCAL COPY OF LOGGER")
         if not cls.running:
             cls.running = True
             cls.cycleCount = 0

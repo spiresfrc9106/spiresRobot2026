@@ -10,7 +10,6 @@ from wpimath.geometry import (
     Translation3d,
 )
 
-from constants import RobotModes
 from subsystems.vision.visionio import (
     ObservationType,
     VisionSubsystemIO,
@@ -85,7 +84,7 @@ class VisionSubsystemIOSim(VisionSubsystemIO):
                         botPose,
                         0.1,
                         1,
-                        [tagId],
+                        1 << (tagId - 1),  # bitmask: bit (tagId-1) set
                         avgDist,
                         ObservationType.PHOTONVISION.value,
                     )

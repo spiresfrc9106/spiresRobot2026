@@ -1,8 +1,7 @@
 import wpilib
 
 
-
-'''
+"""
 static getCurrent3V3() → float
 
     Get the current output of the 3.3V rail.
@@ -51,12 +50,14 @@ static getInputVoltage() → float
 
         The controller input voltage value in Volts
 
-'''
+"""
+
 
 class PowerMonitor:
     """
     Wrapper class to log electrical statistics on robot usage
     """
+
     def __init__(self):
         self.powerDist = wpilib.PowerDistribution()
 

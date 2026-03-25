@@ -7,7 +7,6 @@ class EncoderModuleIOWrappered(EncoderModuleIO):
         super().__init__(name)
         self.encoder = encoder
 
-
     def updateInputs(self, inputs: EncoderModuleIO.EncoderModuleIOInputs) -> None:
         self.encoder.update()
         inputs.faulted = self.encoder.isFaulted()
@@ -18,5 +17,3 @@ class EncoderModuleIOWrappered(EncoderModuleIO):
 
     def isFaulted(self) -> bool:
         return self.encoder.isFaulted()
-
-

@@ -58,14 +58,15 @@ class FaultStatusLEDs(metaclass=Singleton):
     Pit crew should be trained to look for a good heartbeat, AND no fix-me.
 
     No heartbeat means code isn't running. SW team needed to investigate.
-    Heartbeat AND fix-me means software detected hardware broken or disconnected. The driver dashboard should be pulled up to investigate the actual root cause. 
+    Heartbeat AND fix-me means software detected hardware broken or disconnected. The driver dashboard should be pulled up to investigate the actual root cause.
 
-    Admonition to software people: You must be very rigirous about not cerating false positives here. If 
+    Admonition to software people: You must be very rigirous about not cerating false positives here. If
     the fix-me light is on and blinking when the robot _doesn't_ need pit crew attention, they'll quickly
     learn to just ignore it. And thereby ignore any real faults that get detected.
 
     Unless you want the pit crew to stop and fix the robot, DON'T blink the fix-me light.
     """
+
     def __init__(self):
         self.fixMeLED = wpilib.DigitalOutput(FIX_ME_LED_PIN)
         self.fixMeLED.setPWMRate(500.0)
@@ -92,7 +93,9 @@ class FaultStatusLEDs(metaclass=Singleton):
     # Returns a time-varying blink intensity to drive the LED
     # at a given frequency
     def _blinkPattern(self, freq):
-        return abs(math.sin(2 * math.pi * RobotTopSubsystem().getFPGATimestampS() * freq / 2.0))
+        return abs(
+            math.sin(2 * math.pi * RobotTopSubsystem().getFPGATimestampS() * freq / 2.0)
+        )
 
 
 ###########################################

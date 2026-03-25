@@ -10,12 +10,14 @@ from utils.singleton import _instances
 from constants import kRobotMode
 from util.logtracer import LogTracer
 
+
 # pylint: disable-next=too-many-instance-attributes
 @autologgable_output
 class ConfigSubsystem(Subsystem):
     """
     A singleton class that records the robot's configuration.
     """
+
     _initalized = False
 
     # Because this is a singleton, we need to override __new__ to return the same instance every time.
@@ -37,7 +39,6 @@ class ConfigSubsystem(Subsystem):
         self.setName(type(self).__name__)
         self.inputs = ConfigIO.ConfigIOInputs()
 
-
         # Call periodic early so we can load self.inputs.robotType before the other Subsytems
         # are created. So that in replay, they can replay as their configured type.
         self.periodic()
@@ -45,16 +46,20 @@ class ConfigSubsystem(Subsystem):
         self._isSpiresRobot: bool = ConfigIO.isSpiresRobot(self.inputs)
 
         # Deferred import to avoid circular dependency
-        from drivetrain.drivetrainDependentConstants import DrivetrainDependentConstants, CameraDependentConstants
+        from drivetrain.drivetrainDependentConstants import (
+            DrivetrainDependentConstants,
+            CameraDependentConstants,
+        )
+
         self.dpc = DrivetrainDependentConstants()
         self.drivetrainDepConstants = self.dpc.get(self._robotType)
 
         self.cameraDepConstants = CameraDependentConstants().get(self._robotType)
         self.inoutDepConstants = InOutDependentConstants().get(self._robotType)
         self.visionDepConstants = VisionDependentConstants().get(self._robotType)
-        print(f":::::::::::")
+        print(":::::::::::")
         print(f"::::::::::: ConfigSubsystem: {kRobotMode} {self._robotType}")
-        print(f":::::::::::")
+        print(":::::::::::")
         self._initalized = True
 
     @classmethod
@@ -85,9 +90,12 @@ class ConfigSubsystem(Subsystem):
         return self._isSpiresRobot
 
     def useCasseroleSwerve(self) -> bool:
-        return self.drivetrainDepConstants["HAS_DRIVETRAIN"] and self.dpc.useCasseroleSwerve
+        return (
+            self.drivetrainDepConstants["HAS_DRIVETRAIN"]
+            and self.dpc.useCasseroleSwerve
+        )
 
     def useWestwoodSwerve(self) -> bool:
-        return self.drivetrainDepConstants["HAS_DRIVETRAIN"] and self.dpc.useWestwoodSwerve
-
-
+        return (
+            self.drivetrainDepConstants["HAS_DRIVETRAIN"] and self.dpc.useWestwoodSwerve
+        )

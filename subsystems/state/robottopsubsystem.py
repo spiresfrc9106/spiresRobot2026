@@ -5,7 +5,7 @@ from wpimath import angleModulus
 
 from constants.field import kFarHubLocation, kCloseHubLocation
 from pykit.logger import Logger
-from pykit.autolog import autolog_output, autologgable_output
+from pykit.autolog import autologgable_output
 
 from subsystems.state.robottopio import RobotTopIO
 from utils.allianceTransformUtils import onRed
@@ -20,6 +20,7 @@ class RobotTopSubsystem(Subsystem):
     """
     A singleton class that records the robot's high-level state.
     """
+
     _initalized = False
 
     # Because this is a singleton, we need to override __new__ to return the same instance every time.
@@ -41,7 +42,7 @@ class RobotTopSubsystem(Subsystem):
         self.setName(type(self).__name__)
         self.inputs = RobotTopIO.RobotTopIOInputs()
 
-        self.robotPose: Pose2d()|None = None
+        self.robotPose: Pose2d | None = None
 
         self._initalized = True
 
@@ -78,25 +79,28 @@ class RobotTopSubsystem(Subsystem):
     def hubLocation(self):
         return kFarHubLocation if onRed() else kCloseHubLocation
 
-    def getDistanceToHubM(self)->float:
+    def getDistanceToHubM(self) -> float:
         result = 0.0
         if self.robotPose is not None:
             result = self.robotPose.translation().distance(self.hubLocation())
         return result
 
-    def getRotationToHub(self)->Rotation2d:
+    def getRotationToHub(self) -> Rotation2d | None:
         rotationToTarget = None
         if self.robotPose is not None:
-            bearingToTarget = (self.hubLocation()-self.robotPose.translation()).angle()
-            rotationToTarget = bearingToTarget - self.robotPose.rotation()+Rotation2d.fromDegrees(180.0)
+            bearingToTarget = (
+                self.hubLocation() - self.robotPose.translation()
+            ).angle()
+            rotationToTarget = (
+                bearingToTarget
+                - self.robotPose.rotation()
+                + Rotation2d.fromDegrees(180.0)
+            )
         return rotationToTarget
 
-    def getAngleToHubRad(self)->float:
+    def getAngleToHubRad(self) -> float:
         rotation = self.getRotationToHub()
         angleToHubRad = 0.0
         if rotation is not None:
             angleToHubRad = angleModulus(rotation.radians())
         return angleToHubRad
-
-
-

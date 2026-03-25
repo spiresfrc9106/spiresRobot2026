@@ -2,9 +2,7 @@ from enum import Enum
 
 from utils.faults import Fault
 from wpilib import DriverStation, XboxController
-from utils.mapLookup2d import MapLookup2D
 from utils.singleton import Singleton
-
 
 
 class FlywheelCommand(Enum):
@@ -19,6 +17,7 @@ class InOutCommand(Enum):
     kOutaking = 2
     kShooting = 3
 
+
 class OperatorInterface(metaclass=Singleton):
     """Class to gather input from the driver of the robot"""
 
@@ -30,7 +29,6 @@ class OperatorInterface(metaclass=Singleton):
         self.intake = False
         self.inOutCommand = InOutCommand.kOff
         self.flywheelCommand = FlywheelCommand.kNoCommand
-
 
     def update(self) -> None:
         # value of controller buttons
@@ -62,7 +60,7 @@ class OperatorInterface(metaclass=Singleton):
 
         else:
             # If the joystick is unplugged, pick safe-state xyzzy and raise a fault
-            if(DriverStation.isFMSAttached()):
+            if DriverStation.isFMSAttached():
                 self.connectedFault.setFaulted()
                 self.inOutCommand = InOutCommand.kOff
                 self.flywheelCommand = FlywheelCommand.kNoCommand

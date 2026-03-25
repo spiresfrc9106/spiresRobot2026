@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Tuple
 from commands2.button import Trigger
 from pykit.logger import Logger
 from wpilib import RobotBase, DriverStation
@@ -18,7 +18,6 @@ from util.robotposeestimator import (
     OdometryObservation,
     TurretObservation,
     TurretedRobotPoseEstimator,
-    TurretedVisionObservation,
     VisionObservation,
 )
 from util.logtracer import LogTracer
@@ -27,10 +26,16 @@ from constants.turret import kTurretLocation
 from constants.auto import kAutoDistanceTolerance, kAutoRotationTolerance
 from constants.field import kEndgameDuration, kShiftDuration, kCloseHubLocation
 from constants.vision import kRedHubAprilTags, kBlueHubAprilTags
-from constants.field import kEndgameDuration, kShiftDuration, kCloseHubLocation
-from constants.vision import kRedHubAprilTags, kBlueHubAprilTags
 
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
+
+
+ModulePositionsType = Tuple[
+    SwerveModulePosition,
+    SwerveModulePosition,
+    SwerveModulePosition,
+    SwerveModulePosition,
+]
 
 
 # pylint: disable-next=too-many-public-methods
@@ -40,30 +45,35 @@ class RobotState:
     turretRotation: Rotation2d = Rotation2d()
     intakeRotation: Rotation2d = Rotation2d()
 
-    modulePositions: tuple[
-        SwerveModulePosition,
-        SwerveModulePosition,
-        SwerveModulePosition,
-        SwerveModulePosition,
-    ] = (
+    modulePositions: ModulePositionsType = (
         SwerveModulePosition(),
         SwerveModulePosition(),
         SwerveModulePosition(),
         SwerveModulePosition(),
     )
-
 
     fieldEstimator: TurretedRobotPoseEstimator = TurretedRobotPoseEstimator(
-        kDriveKinematics, Rotation2d(), modulePositions, Pose2d(), (0.1, 0.1, 0.1)
+        kDriveKinematics,
+        Rotation2d(),
+        modulePositions,
+        Pose2d(),
+        (0.1, 0.1, 0.1),
     )
     hubEstimator: TurretedRobotPoseEstimator = TurretedRobotPoseEstimator(
-        kDriveKinematics, Rotation2d(), modulePositions, Pose2d(), (0.1, 0.1, 0.1)
+        kDriveKinematics,
+        Rotation2d(),
+        modulePositions,
+        Pose2d(),
+        (0.1, 0.1, 0.1),
     )
 
     """hub estimator is a pose estimator that cares about being relative to the hub.
     Its poses will be returned as full field, but only use apriltags that are on the hub."""
     odometry: SwerveDrive4Odometry = SwerveDrive4Odometry(
-        DrivetrainPhysical().kinematics, Rotation2d(), modulePositions, Pose2d()
+        DrivetrainPhysical().kinematics,
+        Rotation2d(),
+        modulePositions,
+        Pose2d(),
     )
 
     simResetPoseConsumers: list[Callable[[Pose2d], None]] = []
@@ -217,12 +227,7 @@ class RobotState:
         headingTimestamp: float,
         robotYawVelocity: float,
         fieldRelativeRobotVelocity: ChassisSpeeds,
-        modulePositions: tuple[
-            SwerveModulePosition,
-            SwerveModulePosition,
-            SwerveModulePosition,
-            SwerveModulePosition,
-        ],
+        modulePositions: ModulePositionsType,
         turretRotation: Rotation2d,
         intakeRotation: Rotation2d,
     ) -> None:
@@ -336,7 +341,9 @@ class RobotState:
             for consumer in cls.simResetPoseConsumers:
                 consumer(pose)
             return
-        print(f"resetSimPose: len={len(cls.simPoseReceiverConsumers)} This is not supposed to happen")
+        print(
+            f"resetSimPose: len={len(cls.simPoseReceiverConsumers)} This is not supposed to happen"
+        )
 
     @classmethod
     def registerSimPoseResetConsumer(cls, consumer: Callable[[Pose2d], None]) -> None:
@@ -346,7 +353,9 @@ class RobotState:
     def getSimPose(cls) -> Pose2d:
         if len(cls.simPoseReceiverConsumers) == 1:
             return cls.simPoseReceiverConsumers[0]()
-        print(f"getSimPose: len={len(cls.simPoseReceiverConsumers)} This is not supposed to happen")
+        print(
+            f"getSimPose: len={len(cls.simPoseReceiverConsumers)} This is not supposed to happen"
+        )
         return cls.getFieldPose()
 
     @classmethod

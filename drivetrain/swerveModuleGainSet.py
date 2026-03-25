@@ -1,6 +1,5 @@
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from utils.calibration import Calibration
-from utils.units import RPM2RadPerSec
 
 
 class SwerveModuleGainSet:
@@ -31,7 +30,7 @@ class SwerveModuleGainSet:
         self.azmthV = Calibration("Drivetrain Module Azmth kV", p.AZMTH_V)
         self.azmthS = Calibration("Drivetrain Module Azmth kS", p.AZMTH_S, "volts")
 
-    def hasChanged(self)->bool:
+    def hasChanged(self) -> bool:
         """
         Returns:
             bool: True if any gain in the set is modified, false otherwise
@@ -50,27 +49,39 @@ class SwerveModuleGainSet:
             or self.azmthV.isChanged()
             or self.azmthS.isChanged()
         )
+
     def setWheelP(self, wheel_P):
         self.wheelP = wheel_P
+
     def setWheelI(self, wheel_I):
         self.wheelI = wheel_I
+
     def setWheelD(self, wheel_D):
         self.wheelD = wheel_D
+
     def setWheelA(self, wheel_A):
         self.wheelA = wheel_A
+
     def setWheelV(self, wheel_V):
         self.wheelV = wheel_V
+
     def setWheelS(self, wheel_S):
         self.wheelS = wheel_S
+
     def setAzmthP(self, azmth_P):
         self.azmthP = azmth_P
+
     def setAzmthI(self, azmth_I):
         self.azmthI = azmth_I
-    def setAzmthD(self,azmth_D):
+
+    def setAzmthD(self, azmth_D):
         self.azmthD = azmth_D
+
     def setAzmthA(self, azmth_A):
         self.azmthA = azmth_A
+
     def setAzmthV(self, azmth_V):
         self.azmthV = azmth_V
+
     def setAzmthS(self, azmth_S):
         self.azmthS = azmth_S

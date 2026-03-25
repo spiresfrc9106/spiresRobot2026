@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from pykit.autolog import autolog
 
+
 class EncoderModuleIO:
     @autolog
     @dataclass
@@ -19,11 +20,7 @@ class EncoderModuleIO:
         """
 
     def getAngleRad(self) -> float:
-        pass
+        return 0.0
 
     def isFaulted(self) -> bool:
-        pass
-
-
-
-
+        return False

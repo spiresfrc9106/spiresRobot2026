@@ -10,15 +10,21 @@ from pykit.autolog import autologgable_output
 from pykit.logger import Logger
 from subsystems.common.motormodule import MotorModule
 
+
 @autologgable_output
 class SysIdMotorModule:
-    def __init__(self, controller:XboxController, preinit: Callable[[],None], postinit: Callable[[],None], *requirements: Subsystem ):
+    def __init__(
+        self,
+        controller: XboxController,
+        preinit: Callable[[], None],
+        postinit: Callable[[], None],
+        *requirements: Subsystem,
+    ):
         self.controller = controller
         self.preinit = preinit
         self.postinit = postinit
         self.requirements = requirements
         self.loggedStateStr = "none"
-
 
     def feedForwardCharacterization(self, motorModule: MotorModule) -> Command:
         velocitySamples: list[float] = []
@@ -45,50 +51,67 @@ class SysIdMotorModule:
             sumX2 = sum(v**2 for v in velocitySamples)
             kS = 0.0
             kV = 0.0
-            divisor = (n * sumX2 - sumX * sumX)
+            divisor = n * sumX2 - sumX * sumX
             if divisor != 0.0:
                 kS = (sumY * sumX2 - sumX * sumXY) / divisor
                 kV = (n * sumXY - sumX * sumY) / divisor
 
             print("************************************************************")
-            print(f"{motorModule.name} Feed Forward Characterization Results: \nkS = {kS}\nkV = {kV}")
+            print(
+                f"{motorModule.name} Feed Forward Characterization Results: \nkS = {kS}\nkV = {kV}"
+            )
             self.postinit()
 
         ffWaitCmd = cmd.waitUntil(
-            lambda: self.controller.getRightBumper()  and abs(motorModule.getMotorVelocityRadPerSec())<0.1)
-        ffCmd = (cmd.runOnce(setup, self.requirements)
-                 .andThen(cmd.run(run, self.requirements).withName(f"{motorModule.name} FeedForwardCharacterization"))
-                 .finallyDo(end))
-        ffWithWaits = ffWaitCmd.andThen(ffCmd.onlyWhile(lambda: self.controller.getRightBumper()))
+            lambda: (
+                self.controller.getRightBumper()
+                and abs(motorModule.getMotorVelocityRadPerSec()) < 0.1
+            )
+        )
+        ffCmd = (
+            cmd.runOnce(setup, self.requirements)  # type: ignore[arg-type]
+            .andThen(
+                cmd.run(run, self.requirements).withName(  # type: ignore[arg-type]
+                    f"{motorModule.name} FeedForwardCharacterization"
+                )
+            )
+            .finallyDo(end)
+        )
+        ffWithWaits = ffWaitCmd.andThen(
+            ffCmd.onlyWhile(lambda: self.controller.getRightBumper())
+        )
 
         return ffWithWaits
 
-
-    def sysIdRoutine(self,
-                     name:str,
-                     motorModule: MotorModule,
-                     voltsPerSec:float=0.5,
-                     stepVolts:float=6.0,
-                     timeoutS:float=10.0) -> Command:
+    def sysIdRoutine(
+        self,
+        name: str,
+        motorModule: MotorModule,
+        voltsPerSec: float = 0.5,
+        stepVolts: float = 6.0,
+        timeoutS: float = 10.0,
+    ) -> Command:
         """Model the behavior of the system (for better control) by sweeping through the max and min angles."""
 
         self.loggedStateStr = "none"
 
-        def logOutputs(_)->None:
+        def logOutputs(_) -> None:
 
-            volts = motorModule.io.motor.getDesiredVoltageOrFF()
+            volts = motorModule.io.motor.getDesiredVoltageOrFF()  # type: ignore[attr-defined]
             Logger.recordOutput(f"inout {name} SysId/voltage", volts)
-            radsPerSec = motorModule.io.motor.getMotorVelocityRadPerSec()
+            radsPerSec = motorModule.io.motor.getMotorVelocityRadPerSec()  # type: ignore[attr-defined]
             Logger.recordOutput(f"inout {name} SysId/radsPerSec", radsPerSec)
-            rad = motorModule.io.motor.getMotorPositionRad()
+            rad = motorModule.io.motor.getMotorPositionRad()  # type: ignore[attr-defined]
             Logger.recordOutput(f"inout {name} SysId/rad", rad)
 
-            #print(f"{Timer.getTimestamp():.6} {name} {self.loggedStateStr} SysID: volts={volts}, radsPerSec={radsPerSec}, rad={rad}")
-            assert type(volts) == float, f"volts is not a float: {volts}"
-            assert type(radsPerSec) == float, f"radsPerSec is not a float: {radsPerSec}"
-            assert type(rad) == float, f"rad is not a float: {rad}"
+            # print(f"{Timer.getTimestamp():.6} {name} {self.loggedStateStr} SysID: volts={volts}, radsPerSec={radsPerSec}, rad={rad}")
+            assert type(volts) is float, f"volts is not a float: {volts}"
+            assert type(radsPerSec) is float, f"radsPerSec is not a float: {radsPerSec}"
+            assert type(rad) is float, f"rad is not a float: {rad}"
             assert -1.0e10 <= volts <= 1.0e10, f"volts is out of bounds: {volts}"
-            assert -1.0e10 <= radsPerSec <= 1.0e10, f"radsPerSec is out of bounds: {radsPerSec}"
+            assert -1.0e10 <= radsPerSec <= 1.0e10, (
+                f"radsPerSec is out of bounds: {radsPerSec}"
+            )
             assert -1.0e10 <= rad <= 1.0e10, f"rad is out of bounds: {rad}"
 
         def logState(state: State) -> None:
@@ -101,51 +124,78 @@ class SysIdMotorModule:
                     self.loggedStateStr = "dynamic-forward"
                 case State.kDynamicReverse:
                     self.loggedStateStr = "dynamic-reverse"
-                case State.kNone|_:
+                case State.kNone | _:
                     self.loggedStateStr = "none"
             Logger.recordOutput(f"inout {name} SysId/state", self.loggedStateStr)
 
         charactarizationRoutine = SysIdRoutine(
             SysIdRoutine.Config(
-                voltsPerSec, # ramp voltage rate in V/sec
-                stepVolts, # step voltage in V
-                timeoutS, # timeout in seconds
-                logState),
+                voltsPerSec,  # ramp voltage rate in V/sec
+                stepVolts,  # step voltage in V
+                timeoutS,  # timeout in seconds
+                logState,
+            ),
             SysIdRoutine.Mechanism(
-                motorModule.setVoltage,
-                logOutputs,
-                self.requirements[0]
+                motorModule.setVoltage, logOutputs, self.requirements[0]
             ),
         )
 
         sysIdQFWaitCmd = cmd.waitUntil(
-            lambda: self.controller.getRightBumper() and abs(motorModule.getMotorVelocityRadPerSec())<0.1)
-        sysIdQFCmd = charactarizationRoutine.quasistatic(SysIdRoutine.Direction.kForward)
-        sysIdQFWithWaits = sysIdQFWaitCmd.andThen(sysIdQFCmd.onlyWhile(lambda: self.controller.getRightBumper()))
+            lambda: (
+                self.controller.getRightBumper()
+                and abs(motorModule.getMotorVelocityRadPerSec()) < 0.1
+            )
+        )
+        sysIdQFCmd = charactarizationRoutine.quasistatic(
+            SysIdRoutine.Direction.kForward
+        )
+        sysIdQFWithWaits = sysIdQFWaitCmd.andThen(
+            sysIdQFCmd.onlyWhile(lambda: self.controller.getRightBumper())
+        )
 
         sysIdQRWaitCmd = cmd.waitUntil(
-            lambda: self.controller.getRightBumper() and abs(motorModule.getMotorVelocityRadPerSec())<0.1)
-        sysIdQRCmd = charactarizationRoutine.quasistatic(SysIdRoutine.Direction.kReverse)
-        sysIdQRWithWaits = sysIdQRWaitCmd.andThen(sysIdQRCmd.onlyWhile(lambda: self.controller.getRightBumper()))
+            lambda: (
+                self.controller.getRightBumper()
+                and abs(motorModule.getMotorVelocityRadPerSec()) < 0.1
+            )
+        )
+        sysIdQRCmd = charactarizationRoutine.quasistatic(
+            SysIdRoutine.Direction.kReverse
+        )
+        sysIdQRWithWaits = sysIdQRWaitCmd.andThen(
+            sysIdQRCmd.onlyWhile(lambda: self.controller.getRightBumper())
+        )
 
         sysIdDFWaitCmd = cmd.waitUntil(
-            lambda: self.controller.getRightBumper()  and abs(motorModule.getMotorVelocityRadPerSec())<0.1)
+            lambda: (
+                self.controller.getRightBumper()
+                and abs(motorModule.getMotorVelocityRadPerSec()) < 0.1
+            )
+        )
         sysIdDFCmd = charactarizationRoutine.dynamic(SysIdRoutine.Direction.kForward)
-        sysIdDFWithWaits = sysIdDFWaitCmd.andThen(sysIdDFCmd.onlyWhile(lambda: self.controller.getRightBumper()))
+        sysIdDFWithWaits = sysIdDFWaitCmd.andThen(
+            sysIdDFCmd.onlyWhile(lambda: self.controller.getRightBumper())
+        )
 
         sysIdDRWaitCmd = cmd.waitUntil(
-            lambda: self.controller.getRightBumper()  and abs(motorModule.getMotorVelocityRadPerSec())<0.1)
+            lambda: (
+                self.controller.getRightBumper()
+                and abs(motorModule.getMotorVelocityRadPerSec()) < 0.1
+            )
+        )
         sysIdDRCmd = charactarizationRoutine.dynamic(SysIdRoutine.Direction.kReverse)
-        sysIdDRWithWaits = sysIdDRWaitCmd.andThen(sysIdDRCmd.onlyWhile(lambda: self.controller.getRightBumper()))
+        sysIdDRWithWaits = sysIdDRWaitCmd.andThen(
+            sysIdDRCmd.onlyWhile(lambda: self.controller.getRightBumper())
+        )
 
-        def beforeTests()->None:
+        def beforeTests() -> None:
             self.preinit()
 
         return cmd.sequence(
-            cmd.runOnce(beforeTests, self),
+            cmd.runOnce(beforeTests, self),  # type: ignore[arg-type]
             sysIdQFWithWaits,
             sysIdQRWithWaits,
             sysIdDFWithWaits,
             sysIdDRWithWaits,
-            cmd.runOnce(lambda: self.postinit(), self),
+            cmd.runOnce(lambda: self.postinit(), self),  # type: ignore[arg-type]
         )

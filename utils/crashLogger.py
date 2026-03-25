@@ -7,7 +7,6 @@ from utils.extDriveManager import ExtDriveManager
 
 
 class CrashLogger:
-
     """
     Python code has many more issues which are caught at runtime. In case one of these happens while on the field,
     it's important that we record what happened. This class adds an extra logging handle to record these to uniquely
@@ -43,10 +42,9 @@ class CrashLogger:
             self.fileHandler.setLevel(logging.ERROR)
             rootLogger.addHandler(self.fileHandler)
 
-            self.logPrint(f"\n==============================================")
+            self.logPrint("\n==============================================")
             self.logPrint(f"Beginning of Log {logPath}")
             self.logPrint(f"Started {datetime.now()}")
-
 
     def update(self):
         """
@@ -59,7 +57,7 @@ class CrashLogger:
         ):
             # One-time prefix write, which needs to wait until the FMS is attached.
             # Once it is, dump the match info the log file for later retrieval.
-            self.logPrint(f"==========================================")
+            self.logPrint("==========================================")
             self.logPrint(f"== FMS Data Received {datetime.now()}:")
             self.logPrint(f"Event: {wpilib.DriverStation.getEventName()}")
             self.logPrint(f"Match Type: {wpilib.DriverStation.getMatchType()}")
@@ -69,12 +67,11 @@ class CrashLogger:
                 f"Game Message: {wpilib.DriverStation.getGameSpecificMessage()}"
             )
             self.logPrint(f"Cur FPGA Time: {wpilib.Timer.getFPGATimestamp()}")
-            self.logPrint(f"==========================================")
+            self.logPrint("==========================================")
             self.flushPrint()
             self.prefixWritten = True
 
-
-    def logPrint(self, msg:str):
+    def logPrint(self, msg: str):
         """
         Print a message into the log, with a newline
         """

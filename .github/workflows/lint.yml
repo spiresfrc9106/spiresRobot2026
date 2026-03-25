@@ -1,10 +1,11 @@
-name: Continuous Integration
+name: lint
 
 on: [push, pull_request]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    name: ruff-mypy
     steps:
     - name: "Set up Python"
       uses: actions/setup-python@v6
@@ -23,7 +24,12 @@ jobs:
       run: |
         uv sync --all-extras
         uv run -- robotpy sync
-    - name: Run Regression Test Suite
+    - name: ruff check (lint)
+      run: |        
+        uv run ruff check
+    - name: ruff format
       run: |
-        uv run -- robotpy coverage test -- --no-header -vvv -s
-
+        uv run ruff format --check --diff
+    - name: mypy (type check)
+      run: |
+        uv run mypy .

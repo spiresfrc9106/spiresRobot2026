@@ -46,7 +46,7 @@ class LoggedNetworkValue(LoggedNetworkInput, Generic[T, V]):
         self._defaultValue = defaultValue
         Logger.registerDashboardInput(self)
 
-        self._entry.set(defaultValue)
+        self._entry.set(defaultValue)  # type: ignore[arg-type]
         self.setDefault(defaultValue)
 
     def __call__(self) -> T:

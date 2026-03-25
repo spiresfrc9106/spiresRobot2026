@@ -68,8 +68,8 @@ FUDGE_DIST_Y_RED_TOW = inchesToMeters(0.0)
 # Note: not sure if multiple rotations are needed depending where we are climbing
 # on the tower
 TOWER_ROTS = [
-Rotation2d.fromDegrees(180.0), # Left side of tower?
-Rotation2d.fromDegrees(180.0), # Right side of tower?
+    Rotation2d.fromDegrees(180.0),  # Left side of tower?
+    Rotation2d.fromDegrees(180.0),  # Right side of tower?
 ]
 
 # Radius from center of hub to center of the face
@@ -80,7 +80,8 @@ HUB_RADIUS = inchesToMeters(47.00)
 TOWER_HALF_LENGTH = inchesToMeters(23.00)
 
 # Distance needed to position climbing mechanism
-CLIMBER_DIST_IN_ROBOT = inchesToMeters(12) # Needs to be measured when robot is built
+CLIMBER_DIST_IN_ROBOT = inchesToMeters(12)  # Needs to be measured when robot is built
+
 
 class AutoDriveNavConstants(metaclass=Singleton):
     def __init__(self):
@@ -89,10 +90,9 @@ class AutoDriveNavConstants(metaclass=Singleton):
         # This might need to change since I don't know how exactly the climb
         # works at time of writing
         p = DrivetrainPhysical()
-        CLIMB_DIST_FROM_TOWER_CENTER = \
-            TOWER_HALF_LENGTH + \
-            p.WHEEL_BASE_HALF_LENGTH_M + \
-            p.BUMPER_THICKNESS_M
+        CLIMB_DIST_FROM_TOWER_CENTER = (
+            TOWER_HALF_LENGTH + p.WHEEL_BASE_HALF_LENGTH_M + p.BUMPER_THICKNESS_M
+        )
 
         # Pre-calculate blue tower positions
         self._goalListCacheBlue = []
@@ -117,12 +117,13 @@ class AutoDriveNavConstants(metaclass=Singleton):
             tmp = tmp.transformBy(Transform2d(xOffset, yOffset, Rotation2d()))
             self._goalListCacheBlue.append(tmp)
 
-
         # Pre-calculate red tower positions
         self._goalListCacheRed = []
         for idx, rot in enumerate(TOWER_ROTS):
             # start at the reef location, pointed in the right direction.
-            rot = Rotation2d.fromDegrees(180) + rot # Invert for other side of the field
+            rot = (
+                Rotation2d.fromDegrees(180) + rot
+            )  # Invert for other side of the field
             tmp = Pose2d(redTowerLocation, rot)
             # Transform to the score locations
 
@@ -144,7 +145,7 @@ class AutoDriveNavConstants(metaclass=Singleton):
     # NOTE - This function returns goals ALREADY transformed to the correct side.
     # You do NOT need to call transform again on the result of poses
     def getTransformedGoalList(self) -> list[Pose2d]:
-        if(onRed()):
+        if onRed():
             return self._goalListCacheRed
         else:
             return self._goalListCacheBlue

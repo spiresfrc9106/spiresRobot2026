@@ -1,31 +1,50 @@
+from typing import List
+
 from wpilib import Timer
 from wpimath.geometry import Pose2d, Translation2d
-from drivetrain.controlStrategies.holonomicDriveController import HolonomicDriveController
+from drivetrain.controlStrategies.holonomicDriveController import (
+    HolonomicDriveController,
+)
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from utils.singleton import Singleton
-from navigation.repulsorFieldPlanner import RepulsorFieldPlanner, RepulsorFieldPlannerState
+from navigation.repulsorFieldPlanner import (
+    RepulsorFieldPlanner,
+    RepulsorFieldPlannerState,
+)
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 
 
-
 class AutoDrive(metaclass=Singleton):
-    def __init__(self):
+    def __init__(self) -> None:
         self._autoDrive = False
         self.rfp = RepulsorFieldPlanner()
         self._trajCtrl = HolonomicDriveController("AutoDrive")
-        self._telemTraj = []
-        #self._obsDet = ObstacleDetector()
+        self._telemTraj: List[Pose2d] = []
+        # self._obsDet = ObstacleDetector()
         self._olCmd = DrivetrainCommand()
-        self._prevCmd:DrivetrainCommand|None = None
-        self._plannerDur:float = 0.0
-        self._autoPrevEnabled = False #This name might be a wee bit confusing. It just keeps track if we were in auto targeting the speaker last refresh.
+        self._prevCmd: DrivetrainCommand | None = None
+        self._plannerDur: float = 0.0
+        self._autoPrevEnabled = False  # This name might be a wee bit confusing. It just keeps track if we were in auto targeting the speaker last refresh.
         self.targetIndexNumber = 0
-        self.stuckTracker = 0 
+        self.stuckTracker = 0
         self.prevCallTime = Timer.getFPGATimestamp()
         self.prevPose = Pose2d()
-        self.LenList = []
-        self.dashboardConversionList = [9, 11, 6, 8, 3, 5, 0, 2, 15, 17, 12, 14] #used by getDashTargetPositionIndex() to convert the target numbers from the python standard to the dashboard/JS standard
-        #^ Bottom is the side facing our driver station.
+        self.LenList: List[float] = []
+        self.dashboardConversionList = [
+            9,
+            11,
+            6,
+            8,
+            3,
+            5,
+            0,
+            2,
+            15,
+            17,
+            12,
+            14,
+        ]  # used by getDashTargetPositionIndex() to convert the target numbers from the python standard to the dashboard/JS standard
+        # ^ Bottom is the side facing our driver station.
 
         p = DrivetrainPhysical()
         # Maximum speed that we'll attempt to path plan at. Needs to be at least
@@ -40,26 +59,30 @@ class AutoDrive(metaclass=Singleton):
         self._autoPrevEnabled = self._autoDrive
         self._autoDrive = autoDrive
 
-    def getDashTargetPositionIndex(self) -> int: #Only use this for the dashboard. This Automatically converts the python standard for goals to the JS standard. 
-        return self.dashboardConversionList[self.targetIndexNumber] 
-        
-    def updateTelemetry(self) -> None:        
+    def getDashTargetPositionIndex(
+        self,
+    ) -> int:  # Only use this for the dashboard. This Automatically converts the python standard for goals to the JS standard.
+        return self.dashboardConversionList[self.targetIndexNumber]
+
+    def updateTelemetry(self) -> None:
         self._telemTraj = self.rfp.getLookaheadTraj()
 
     def getWaypoints(self) -> list[Pose2d]:
         return self._telemTraj
-    
+
     def getObstacles(self) -> list[Translation2d]:
         return self.rfp.getObstacleTransList()
-    
-    def isRunning(self)->bool:
-        return self.rfp.goal != None
-    
-    def isAtGoal(self)->bool:
-        return  self.isRunning() and self.rfp.curState == RepulsorFieldPlannerState.ATGOAL
+
+    def isRunning(self) -> bool:
+        return self.rfp.goal is not None
+
+    def isAtGoal(self) -> bool:
+        return (
+            self.isRunning() and self.rfp.curState == RepulsorFieldPlannerState.ATGOAL
+        )
 
     def update(self, cmdIn: DrivetrainCommand, curPose: Pose2d) -> DrivetrainCommand:
-        
+
         startTime = Timer.getFPGATimestamp()
 
         curTime = Timer.getFPGATimestamp()
@@ -68,10 +91,10 @@ class AutoDrive(metaclass=Singleton):
 
         self.LenList.clear()
 
-        retCmd = cmdIn # default - no auto driving
+        retCmd = cmdIn  # default - no auto driving
 
         # TODO obstacle camera
-        #for obs in self._obsDet.getObstacles(curPose):
+        # for obs in self._obsDet.getObstacles(curPose):
         #    self.rfp.addObstacleObservation(obs)
 
         self.rfp._decayObservations()
@@ -101,35 +124,47 @@ class AutoDrive(metaclass=Singleton):
         else:
             self.rfp.setGoal(flip(transform(None)))
         """
-        #version 2 - this is based on distance, then rotation if the distances are too close
+        # version 2 - this is based on distance, then rotation if the distances are too close
 
         # NOTE - this function internally transforms to correct red/blue side
         # No need to apply additional alliance-utils transform to use it.
-        goalListTot = getTransformedGoalList()
+        # goalListTot = getTransformedGoalList()
+        goalListTot: list = []
 
-        if(not self._autoDrive):
+        if not self._autoDrive:
             # Driving not requested, set no goal
             self.rfp.setGoal(None)
-        elif(self._autoDrive and not self._autoPrevEnabled):
+        elif self._autoDrive and not self._autoPrevEnabled:
             # First loop of auto drive, calc a new goal based on current position
             for goalOption in goalListTot:
                 goalWTransform = goalOption.translation()
                 self.LenList.append(goalWTransform.distance(curPose.translation()))
 
-            #find the nearest one
+            # find the nearest one
             primeTargetIndex = self.LenList.index(min(self.LenList))
             primeTarget = goalListTot[primeTargetIndex]
-            #pop the nearest in order to find the second nearest
+            # pop the nearest in order to find the second nearest
             self.LenList.pop(primeTargetIndex)
-            #second nearest
+            # second nearest
             secondTargetIndex = self.LenList.index(min(self.LenList))
             secondTarget = goalListTot[secondTargetIndex]
-            #if they're close enough, look at rotation 
-            closeEnough = abs(secondTarget.translation().distance(curPose.translation()) - primeTarget.translation().distance(curPose.translation())) <= 1.0
-            difAngle = abs(secondTarget.rotation().degrees() - primeTarget.rotation().degrees()) >= 10
-            if (closeEnough and difAngle):
-                #checking rotation
-                #dif in degrees
+            # if they're close enough, look at rotation
+            closeEnough = (
+                abs(
+                    secondTarget.translation().distance(curPose.translation())
+                    - primeTarget.translation().distance(curPose.translation())
+                )
+                <= 1.0
+            )
+            difAngle = (
+                abs(
+                    secondTarget.rotation().degrees() - primeTarget.rotation().degrees()
+                )
+                >= 10
+            )
+            if closeEnough and difAngle:
+                # checking rotation
+                # dif in degrees
                 curRot = curPose.rotation().degrees()
                 primeTargetDiff = abs(primeTarget.rotation().degrees() - curRot)
                 secondTargetDiff = abs(secondTarget.rotation().degrees() - curRot)
@@ -152,31 +187,37 @@ class AutoDrive(metaclass=Singleton):
         """
 
         # If being asked to auto-align, use the command from the dynamic path planner
-        if(self._autoDrive):
-            
-            # Open Loop - Calculate the new desired pose and velocity to get there from the 
+        if self._autoDrive:
+            # Open Loop - Calculate the new desired pose and velocity to get there from the
             # repulsor field path planner
-            if(self._prevCmd is None):
-                initCmd = DrivetrainCommand(0,0,0,curPose) # TODO - init this from current odometry vel
-                self._olCmd = self.rfp.update(initCmd, self.MAX_PATHPLAN_SPEED_MPS*Ts, Ts)
+            if self._prevCmd is None:
+                initCmd = DrivetrainCommand(
+                    0, 0, 0, False, curPose
+                )  # TODO - init this from current odometry vel
+                self._olCmd = self.rfp.update(
+                    initCmd, self.MAX_PATHPLAN_SPEED_MPS * Ts, Ts
+                )
             else:
-                self._olCmd = self.rfp.update(self._prevCmd, self.MAX_PATHPLAN_SPEED_MPS*Ts, Ts=Ts)
+                self._olCmd = self.rfp.update(
+                    self._prevCmd, self.MAX_PATHPLAN_SPEED_MPS * Ts, Ts=Ts
+                )
 
-            # Add closed loop - use the trajectory controller to add in additional 
+            # Add closed loop - use the trajectory controller to add in additional
             # velocity if we're currently far away from the desired pose
-            retCmd = self._trajCtrl.update2(self._olCmd.velX, 
-                                            self._olCmd.velY, 
-                                            self._olCmd.velT, 
-                                            self._olCmd.desPose, curPose)    
+            retCmd = self._trajCtrl.update2(
+                self._olCmd.velX,
+                self._olCmd.velY,
+                self._olCmd.velT,
+                self._olCmd.desPose,
+                curPose,
+            )
             self._prevCmd = retCmd
         else:
             self._prevCmd = None
 
         self._plannerDur = Timer.getFPGATimestamp() - startTime
 
-        #Set our curPos as the new old pose
+        # Set our curPos as the new old pose
         self.prevPose = curPose
 
-
         return retCmd
-    

@@ -62,7 +62,7 @@ class ControlPOV(ControlBase):
         self.pov_angle = pov_angle
 
     def __call__(self) -> AnalogInput:
-        return (
-            lambda: ControlBase.joysticks[self.controller_id].getPOV(self.pov_idx)
+        return lambda: (
+            ControlBase.joysticks[self.controller_id].getPOV(self.pov_idx)
             == self.pov_angle
         )

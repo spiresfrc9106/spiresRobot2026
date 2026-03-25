@@ -1,9 +1,7 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pykit.autolog import autolog
 
 from wpilib import RobotController
-
-
 
 
 class RobotTopIO:
@@ -13,6 +11,7 @@ class RobotTopIO:
     @dataclass
     class RobotTopIOInputs:
         """Hold I/O data for the robot high-level state subsystem."""
+
         timeUSec: int = 0
 
     def updateInputs(self, inputs: RobotTopIOInputs) -> None:
@@ -22,5 +21,3 @@ class RobotTopIO:
             inputs (RobotTopIOInputs): The robot high-level state I/O inputs to update.
         """
         inputs.timeUSec = RobotController.getFPGATime()
-
-

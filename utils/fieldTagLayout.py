@@ -1,6 +1,4 @@
-import os
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
-import wpilib
 from utils.singleton import Singleton
 from wpimath.geometry import Pose3d
 
@@ -9,6 +7,7 @@ class FieldTagLayout(metaclass=Singleton):
     """
     Very thin wrapper around WPILib's apriltag field layout functions. But should expand in the future
     """
+
     def __init__(self):
         """
         Performs a one-time load from file of the apriltag field layout .json
@@ -18,8 +17,8 @@ class FieldTagLayout(metaclass=Singleton):
         # Throws exceptions if it has issues accessing the file. We should be catching
         # those exceptions so the robot code doesn't outright crash, but raise a fault
         # to indicate something has gone wrong with the RIO's ability to load the file.
-        self.fieldTags =  AprilTagFieldLayout.loadField(AprilTagField.kDefaultField)
-        #self.fieldTags = AprilTagFieldLayout(path=os.path.join(wpilib.getDeployDirectory(), "combined_calibration.json"))
+        self.fieldTags = AprilTagFieldLayout.loadField(AprilTagField.kDefaultField)
+        # self.fieldTags = AprilTagFieldLayout(path=os.path.join(wpilib.getDeployDirectory(), "combined_calibration.json"))
 
     def lookup(self, tagId) -> Pose3d | None:
         """

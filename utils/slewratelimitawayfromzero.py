@@ -1,6 +1,11 @@
-
-class SlewRateLimitAwayFromZero():
-    def __init__(self, awayRate:float, towardsZeroRate:float, initialValue:float, dtSeconds:float) -> None:
+class SlewRateLimitAwayFromZero:
+    def __init__(
+        self,
+        awayRate: float,
+        towardsZeroRate: float,
+        initialValue: float,
+        dtSeconds: float,
+    ) -> None:
         self.awayRate = awayRate
         self.towardsZeroRate = towardsZeroRate
         self.value = initialValue
@@ -32,12 +37,12 @@ class SlewRateLimitAwayFromZero():
         deltaMag = abs(delta)
 
         if away:
-            awayDeltaLimit = self.awayRate*self.dtSeconds
+            awayDeltaLimit = self.awayRate * self.dtSeconds
             deltaMag = min(deltaMag, awayDeltaLimit)
         else:
-            towardsDeltaLimit = self.towardsZeroRate*self.dtSeconds
+            towardsDeltaLimit = self.towardsZeroRate * self.dtSeconds
             deltaMag = min(deltaMag, towardsDeltaLimit)
 
-        self.value = self.value + self.sign(delta)*deltaMag
+        self.value = self.value + self.sign(delta) * deltaMag
 
         return self.value

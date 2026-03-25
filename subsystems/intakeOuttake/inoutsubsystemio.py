@@ -1,8 +1,5 @@
-from dataclasses import dataclass, field
-from enum import Enum
+from dataclasses import dataclass
 from pykit.autolog import autolog
-from wpimath.geometry import Rotation2d
-
 
 
 class InOutSubsystemIO:
@@ -24,6 +21,3 @@ class InOutSubsystemIO:
 
     def updateInputs(self, inputs: InOutSubsystemIOInputs):
         pass
-
-
-

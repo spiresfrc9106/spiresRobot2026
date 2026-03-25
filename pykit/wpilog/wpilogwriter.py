@@ -36,7 +36,7 @@ class WPILOGWriter(LogDataReciever):
     folder: str
     filename: str
     randomIdentifier: str
-    dsAttachedTime: int = 0
+    dsAttachedTime: float = 0
     autoRename: bool
     logDate: datetime.datetime | None
     logMatchText: str
@@ -48,20 +48,38 @@ class WPILOGWriter(LogDataReciever):
     entryTypes: dict[str, LogValue.LoggableType]
     entryUnits: dict[str, str]
 
-    def __init__(self, filename: str | None = None) -> None:
+    def __init__(self, filename: str | None = None, path: str | None = None) -> None:
         """
         Initializes the WPILOGWriter.
 
         :param filename: The path to the `.wpilog` file. If None, a default path is used,
                          and the file is named with a random identifier.
+        :param path: The directory to save the log file. If None, a default path is used based
+                         on whether it's running in simulation or on the robot.
+
+        in the event that both a filename and a path are provided, the combination of the path and
+        the filename will be used in determining the location of where to put the log file
         """
-        path = self.defaultPathSim if RobotBase.isSimulation() else self.defaultPathRio
+        actualPath = (
+            (self.defaultPathSim if RobotBase.isSimulation() else self.defaultPathRio)
+            if path is None
+            else path
+        )
 
         self.randomIdentifier = f"{random.randint(0, 0xFFFF):04X}"
 
-        self.folder = os.path.abspath(
-            os.path.dirname(filename) if filename is not None else path
-        )
+        if path is None:
+            self.folder = os.path.abspath(
+                os.path.dirname(filename) if filename is not None else actualPath
+            )
+        else:
+            # need to combine if both are specified
+            self.folder = os.path.abspath(
+                os.path.join(actualPath, os.path.dirname(filename))
+                if filename is not None
+                else actualPath
+            )
+
         self.filename = (
             os.path.basename(filename)
             if filename is not None
@@ -75,7 +93,11 @@ class WPILOGWriter(LogDataReciever):
         """
         # Create folder if necessary
         if not os.path.exists(self.folder):
-            os.makedirs(self.folder)
+            try:
+                os.makedirs(self.folder)
+            except PermissionError as e:
+                print(f"[WPILogWriter] Failed to create log folder! ({e})")
+                return
 
         # Initialize the WPILOG file
         fullPath = os.path.join(self.folder, self.filename)
@@ -179,7 +201,9 @@ class WPILOGWriter(LogDataReciever):
                 # Generate new filename with timestamp, event, and match info
                 filename = "pykit_"
                 if self.logDate is not None:
-                    filename += self.logDate.strftime("%Y%m%d_%H%M%S")
+                    filename += self.logDate.strftime("%Y%m%d_%H%M%S.%f")
+                    filename += "_"
+                    filename += f"{random.randint(0, 0xFFFF_FFFF_FFFF_FFFF):016X}"
                 else:
                     filename += self.randomIdentifier
                 eventName = (

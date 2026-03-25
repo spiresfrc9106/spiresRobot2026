@@ -1,14 +1,12 @@
-
 from subsystems.drivetrain.drivetrainsubsystemio import DrivetrainSubsystemIO
 
-class DrivetrainSubsystemIOReal(DrivetrainSubsystemIO):
 
+class DrivetrainSubsystemIOReal(DrivetrainSubsystemIO):
     def __init__(
-            self,
-            name:str,
+        self,
+        name: str,
     ) -> None:
         self.name = name
-
 
     def updateInputs(self, inputs: DrivetrainSubsystemIO.DrivetrainSubsystemIOInputs):
         """Update state of motor per the appropriate specifc API."""
@@ -18,4 +16,3 @@ class DrivetrainSubsystemIOReal(DrivetrainSubsystemIO):
         inputs.turretAppliedVolts = self.applied.value
         inputs.turretSupplyAmps = self.supply.value
         """
-

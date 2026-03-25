@@ -23,9 +23,13 @@ class MotorModuleCals:
 
 
 class MotorModule:
-    def __init__(self, name: str, io: MotorModuleIO,
-                 controller: 'MotorModuleController',
-                 ffCharacterizationRampVPerS=0.1) -> None:
+    def __init__(
+        self,
+        name: str,
+        io: MotorModuleIO,
+        controller: "MotorModuleController",
+        ffCharacterizationRampVPerS=0.1,
+    ) -> None:
         self.name = name
         self.io = io
         self.controller = controller
@@ -52,7 +56,9 @@ class MotorModule:
     def setPID(self, kP: float, kI: float, kD: float) -> None:
         self.io.setPID(kP, kI, kD)
 
-    def setPIDFF(self, kP: float, kI: float, kD: float, kS: float, kV: float, kA: float) -> None:
+    def setPIDFF(
+        self, kP: float, kI: float, kD: float, kS: float, kV: float, kA: float
+    ) -> None:
         self.io.setPIDFF(kP, kI, kD, kS, kV, kA)
 
     def setMaxMotionVelParams(self, maxAccRadps2: float) -> None:
@@ -61,29 +67,29 @@ class MotorModule:
     def setFeedForwardKA(self, kA: float) -> None:
         self.io.setFeedForwardKA(kA)
 
-    def setPosCmd(self, posCmdRad:float, arbFF:float=0.0)->None:
+    def setPosCmd(self, posCmdRad: float, arbFF: float = 0.0) -> None:
         self.io.setPosCmd(posCmdRad, arbFF)
 
-    def setVelCmd(self, velCmdRadps:float, arbFF:float=0.0)->None:
+    def setVelCmd(self, velCmdRadps: float, arbFF: float = 0.0) -> None:
         self.io.setVelCmd(velCmdRadps, arbFF)
 
     def setMaxMotionVelCmd(self, velCmdRadps: float):
         self.io.setMaxMotionVelCmd(velCmdRadps)
 
-    def setVoltage(self, outputVoltageVolts:float)->None:
+    def setVoltage(self, outputVoltageVolts: float) -> None:
         self.io.setVoltage(outputVoltageVolts)
 
-    def getMotorPositionRad(self)->float:
+    def getMotorPositionRad(self) -> float:
         return self.inputs.posRad
 
-    def getMotorVelocityRadPerSec(self)->float:
+    def getMotorVelocityRadPerSec(self) -> float:
         return self.inputs.velRadps
 
-    def getAppliedOutput(self)->float:
+    def getAppliedOutput(self) -> float:
         return self.inputs.appliedV
 
-    def getdesVoltsOrFfVolts(self)->float:
+    def getdesVoltsOrFfVolts(self) -> float:
         return self.inputs.desVoltsOrFfVolts
 
-    def getOutputTorqueCurrentA(self)->float:
+    def getOutputTorqueCurrentA(self) -> float:
         return self.inputs.torqueCurrentA

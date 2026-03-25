@@ -39,7 +39,6 @@ class VisionSubsystemTurretedPoseObservation:
 
 
 class VisionSubsystemIO:
-
     @autolog
     @dataclass
     class VisionSubsystemIOInputs:

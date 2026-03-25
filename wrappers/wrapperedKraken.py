@@ -1,6 +1,7 @@
 from phoenix6 import hardware, configs, signals, controls, StatusCode, SignalLogger
 from wpilib import TimedRobot
-#from memes.ctreMusicPlayback import CTREMusicPlayback
+
+# from memes.ctreMusicPlayback import CTREMusicPlayback
 from constants import kRobotUpdateFrequency
 from utils.units import rev2Rad, rad2Rev, radPerSec2RPM, RPM2RadPerSec
 from utils.faults import Fault
@@ -15,8 +16,11 @@ from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
 # https://github.com/CrossTheRoadElec/Phoenix6-Examples/blob/main/python/PositionClosedLoop/robot.py
 # https://github.com/CrossTheRoadElec/Phoenix6-Examples/blob/main/python/VelocityClosedLoop/robot.py
 
+
 class WrapperedKraken(WrapperedMotorSuper):
-    def __init__(self, canID:int, name:str, brakeMode:bool=False, currentLimitA:int=40):
+    def __init__(
+        self, canID: int, name: str, brakeMode: bool = False, currentLimitA: int = 40
+    ):
         SignalLogger.enable_auto_logging(False)
         self.ctrl = hardware.TalonFX(canID, "rio")
         self.name = name
@@ -39,53 +43,57 @@ class WrapperedKraken(WrapperedMotorSuper):
         self.motorVelSig = self.ctrl.get_rotor_velocity()
         self.motorVelSig.set_update_frequency(kRobotUpdateFrequency)
 
-        self.cfg.motor_output.neutral_mode = signals.NeutralModeValue.BRAKE if brakeMode else signals.NeutralModeValue.COAST 
+        self.cfg.motor_output.neutral_mode = (
+            signals.NeutralModeValue.BRAKE
+            if brakeMode
+            else signals.NeutralModeValue.COAST
+        )
 
         self._applyCurCfg()
 
-        self.desPos = 0
-        self.desVel = 0
-        self.desVolt = 0
-        self.actPos = 0
-        self.actVel = 0
+        self.desPos: float = 0.0
+        self.desVel: float = 0.0
+        self.desVolt: float = 0.0
+        self.actPos: float = 0.0
+        self.actVel: float = 0.0
         self.controlState = MotorControlStates.UNKNOWN
 
         # Simulation Suport
-        self.simActPos = 0
+        self.simActPos: float = 0.0
 
         # Register with the music player
-        #CTREMusicPlayback().registerDevice(self.ctrl)
-        
+        # CTREMusicPlayback().registerDevice(self.ctrl)
 
-    def _applyCurCfg(self):
+    def _applyCurCfg(self) -> None:
         # Retry state apply up to 5 times, report if failure
         status: StatusCode = StatusCode.STATUS_CODE_NOT_INITIALIZED
         for _ in range(0, 5):
-            status = self.ctrl.configurator.apply(self.cfg, 0.5) # type: ignore
+            status = self.ctrl.configurator.apply(self.cfg, 0.5)
             if status.is_ok():
                 self.configSuccess = True
                 break
 
         self.disconFault.set(not self.configSuccess)
 
-    def setFollow(self, leaderCanID:int, invert:bool=False)->None:
+    def setFollow(self, leaderCanID: int, invert: bool = False) -> None:
         assert False, "Not Implemented"
 
-    def setInverted(self, isInverted:bool)->None:
-        if(isInverted):
+    def setInverted(self, isInverted: bool) -> None:
+        if isInverted:
             self.cfg.motor_output.inverted = signals.InvertedValue.CLOCKWISE_POSITIVE
         else:
-            self.cfg.motor_output.inverted = signals.InvertedValue.COUNTER_CLOCKWISE_POSITIVE
+            self.cfg.motor_output.inverted = (
+                signals.InvertedValue.COUNTER_CLOCKWISE_POSITIVE
+            )
         self._applyCurCfg()
 
-
-    def setPID(self, kP:float, kI:float, kD:float)->None:
+    def setPID(self, kP: float, kI: float, kD: float) -> None:
         self.cfg.slot0.k_p = kP
         self.cfg.slot0.k_i = kI
         self.cfg.slot0.k_d = kD
         self._applyCurCfg()
 
-    def setPosCmd(self, posCmdRad:float, arbFF:float=0.0)->None:
+    def setPosCmd(self, posCmdRad: float, arbFF: float = 0.0) -> None:
         """_summary_
 
         Args:
@@ -96,12 +104,14 @@ class WrapperedKraken(WrapperedMotorSuper):
         self.desPos = posCmdRad
         self.desVolt = arbFF
         posCmdRev = rad2Rev(posCmdRad)
-        #if(not CTREMusicPlayback().isPlaying()):
-        self.ctrl.set_control(controls.PositionVoltage(posCmdRev).with_slot(0).with_feed_forward(arbFF))
+        # if(not CTREMusicPlayback().isPlaying()):
+        self.ctrl.set_control(
+            controls.PositionVoltage(posCmdRev).with_slot(0).with_feed_forward(arbFF)
+        )
         self.motorSupplyCurrent.refresh()
         self.controlState = MotorControlStates.POSITION
 
-    def setVelCmd(self, velCmdRadps:float, arbFF:float=0.0)->None:
+    def setVelCmd(self, velCmdRadps: float, arbFF: float = 0.0) -> None:
         """_summary_
 
         Args:
@@ -111,38 +121,40 @@ class WrapperedKraken(WrapperedMotorSuper):
         velCmdRPM = radPerSec2RPM(velCmdRadps)
         self.desVel = velCmdRPM
         self.desVolt = arbFF
-        velCmdRotPS = velCmdRPM/60.0
-        #if(not CTREMusicPlayback().isPlaying()):
-        self.ctrl.set_control(controls.VelocityVoltage(velCmdRotPS).with_slot(0).with_feed_forward(arbFF))
+        velCmdRotPS = velCmdRPM / 60.0
+        # if(not CTREMusicPlayback().isPlaying()):
+        self.ctrl.set_control(
+            controls.VelocityVoltage(velCmdRotPS).with_slot(0).with_feed_forward(arbFF)
+        )
         self.motorSupplyCurrent.refresh()
 
-    def setVoltage(self, outputVoltageVolts:float)->None:
+    def setVoltage(self, outputVoltageVolts: float) -> None:
         self.desVolt = outputVoltageVolts
-        #if(not CTREMusicPlayback().isPlaying()):
+        # if(not CTREMusicPlayback().isPlaying()):
         self.ctrl.set_control(controls.VoltageOut(outputVoltageVolts))
         self.motorSupplyCurrent.refresh()
         self.controlState = MotorControlStates.VOLTAGE
 
-    def getMotorPositionRad(self)->float:
-        if(TimedRobot.isSimulation()):
+    def getMotorPositionRad(self) -> float:
+        if TimedRobot.isSimulation():
             pos = self.simActPos
         else:
             if self.configSuccess:
                 self.motorPosSig.refresh()
                 pos = rev2Rad(self.motorPosSig.value_as_double)
             else:
-                pos = 0
+                pos = 0.0
         return pos
 
-    def getMotorVelocityRadPerSec(self)->float:
+    def getMotorVelocityRadPerSec(self) -> float:
         if self.configSuccess:
             self.motorVelSig.refresh()
-            velRpm = self.motorVelSig.value_as_double*60.0
+            velRpm = self.motorVelSig.value_as_double * 60.0
         else:
             velRpm = 0
         return RPM2RadPerSec(velRpm)
 
-    def getAppliedOutput(self)->float:
+    def getAppliedOutput(self) -> float:
         if self.configSuccess:
             self.motorAppliedVoltage.refresh()
             voltage = self.motorAppliedVoltage.value_as_double
@@ -150,16 +162,16 @@ class WrapperedKraken(WrapperedMotorSuper):
             voltage = 0
         return voltage
 
-    def getCurrentLimitA(self)->int:
+    def getCurrentLimitA(self) -> int:
         return int(self.currentLimitA)
 
-    def getControlState(self)->MotorControlStates:
+    def getControlState(self) -> MotorControlStates:
         return self.controlState
 
-    def setSmartCurrentLimit(self, currentLimitA: int)->None:
+    def setSmartCurrentLimit(self, currentLimitA: int) -> None:
         assert False, "Not implemented"
 
-    def getOutputTorqueCurrentA(self)->float:
+    def getOutputTorqueCurrentA(self) -> float:
         if self.configSuccess:
             self.motorTorqueCurrent.refresh()
             current = self.motorTorqueCurrent.value_as_double
