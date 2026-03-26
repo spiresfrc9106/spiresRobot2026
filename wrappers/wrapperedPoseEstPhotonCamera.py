@@ -1,15 +1,21 @@
 from dataclasses import dataclass
+from typing import List
+
 from robotpy_apriltag import AprilTagFieldLayout, AprilTagField
 from wpimath.units import feetToMeters, degreesToRadians
-from wpimath.geometry import Pose2d, Transform3d
+from wpimath.geometry import Pose2d, Transform3d, Pose3d
 
 from constants import kRobotUpdatePeriodS
+from pykit.logger import Logger
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from photonlibpy.targeting.photonTrackedTarget import PhotonTrackedTarget
 from photonlibpy.photonCamera import setVersionCheckEnabled
 from photonlibpy import PhotonPoseEstimator, PhotonCamera, EstimatedRobotPose
 
 from utils.faults import Fault
+
+MAX_CAMERA_TARGETS = 4
+MAX_CAMERA_SOLUTIONS = 4
 
 
 # Describes one on-field pose estimate from the acamera at a specific time.
@@ -23,11 +29,7 @@ class CameraPoseObservation:
     )  # std dev of measurement, in units of radians
 
 
-# Sort Tags by location
-REEF_TAG_IDS = [6, 7, 8, 9, 10, 11, 17, 18, 19, 20, 21, 22]
-BARGE_TAG_IDS = [4, 5, 14, 15]
-PROCESSOR_TAG_IDS = [3, 16]
-HUMAN_STATION_TAG_IDS = [1, 2, 12, 13]
+EMPTY_TRANSFORM = Transform3d()
 
 
 # Wrappers photonvision to:
@@ -74,11 +76,60 @@ class WrapperedPoseEstPhotonCamera:
             return
 
         result = self.cam.getLatestResult()
+        i = 0
         if (
             result.hasTargets()
             and RobotTopSubsystem().getFPGATimestampS() - result.getTimestampSeconds()
             < 2.0 * kRobotUpdatePeriodS
         ):
+            targets: List[PhotonTrackedTarget] = result.getTargets()
+
+            for target in targets[:MAX_CAMERA_TARGETS]:
+                id = target.getFiducialId()
+                poseAmbiguity = target.getPoseAmbiguity()
+                bestCameraToTarget = target.getBestCameraToTarget()
+                alternateCameraToTarget = target.getAlternateCameraToTarget()
+                bestCameraFieldPose = Pose3d(
+                    bestCameraToTarget.translation(), bestCameraToTarget.rotation()
+                )
+                alternateCameraFieldPose = Pose3d(
+                    alternateCameraToTarget.translation(),
+                    alternateCameraToTarget.rotation(),
+                )
+                bestRobotPredictedPose = bestCameraFieldPose.transformBy(
+                    self.robotToCam.inverse()
+                )
+                alternateRobotPredictedPose = alternateCameraFieldPose.transformBy(
+                    self.robotToCam.inverse()
+                )
+
+                # cameraFieldPose.transformBy(robotToCamera.inverse())
+                yaw = target.getYaw()
+                pitch = target.getPitch()
+                area = target.getArea()
+                Logger.recordOutput(f"{self.name}/target/{i}/id", id)
+                Logger.recordOutput(
+                    f"{self.name}/target/{i}/poseAmbiguity", poseAmbiguity
+                )
+                Logger.recordOutput(
+                    f"{self.name}/target/{i}/bestCameraToTarget", bestCameraToTarget
+                )
+                Logger.recordOutput(
+                    f"{self.name}/target/{i}/bestRobotField", bestRobotPredictedPose
+                )
+                Logger.recordOutput(
+                    f"{self.name}/target/{i}/alternateCameraToTarget",
+                    alternateCameraToTarget,
+                )
+                Logger.recordOutput(
+                    f"{self.name}/target/{i}/alternateRobotField",
+                    alternateRobotPredictedPose,
+                )
+                Logger.recordOutput(f"{self.name}/target/{i}/yaw", yaw)
+                Logger.recordOutput(f"{self.name}/target/{i}/pitch", pitch)
+                Logger.recordOutput(f"{self.name}/target/{i}/area", area)
+                i += 1
+
             camEstPose: EstimatedRobotPose | None = (
                 self.camPoseEst.estimateCoprocMultiTagPose(result)
             )
@@ -94,6 +145,37 @@ class WrapperedPoseEstPhotonCamera:
                         rotStdDev=degreesToRadians(60.0),
                     )
                 )
+
+        targets_found = i
+        for i in range(MAX_CAMERA_TARGETS - targets_found):
+            Logger.recordOutput(f"{self.name}/target/{targets_found + i}/id", 0)
+            Logger.recordOutput(
+                f"{self.name}/target/{targets_found + i}/poseAmbiguity", 0.0
+            )
+            Logger.recordOutput(
+                f"{self.name}/target/{targets_found + i}/bestCameraToTarget",
+                EMPTY_TRANSFORM,
+            )
+            Logger.recordOutput(
+                f"{self.name}/target/{targets_found + i}/bestRobotField", Pose3d()
+            )
+            Logger.recordOutput(
+                f"{self.name}/target/{targets_found + i}/alternateCameraToTarget",
+                EMPTY_TRANSFORM,
+            )
+            Logger.recordOutput(
+                f"{self.name}/target/{targets_found + i}/alternateRobotField", Pose3d()
+            )
+            Logger.recordOutput(f"{self.name}/target/{targets_found + i}/yaw", 0.0)
+            Logger.recordOutput(f"{self.name}/target/{targets_found + i}/pitch", 0.0)
+            Logger.recordOutput(f"{self.name}/target/{targets_found + i}/area", 0.0)
+
+        posesFound = 0
+        for pose in self.poseEstimates[:MAX_CAMERA_SOLUTIONS]:
+            Logger.recordOutput(f"{self.name}/sol/{posesFound}/pose", pose.estFieldPose)
+            posesFound += 1
+        for i in range(MAX_CAMERA_SOLUTIONS - posesFound):
+            Logger.recordOutput(f"{self.name}/sol/{posesFound + i}/pose", Pose2d())
 
         endTime = RobotTopSubsystem().getFPGATimestampS()
         self.updateDuration = (endTime - startTime) * 1000.0
