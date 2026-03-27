@@ -75,6 +75,9 @@ class VisionSubsystem(Subsystem):
                 if tagPose is not None:
                     tagPoses.append(tagPose)
 
+            #if len(camera.poseObservations) or len(camera.turretedObservations):
+            #    print(f"camera observations: {camera.poseObservations} {camera.turretedObservations}")
+
             for observation in camera.poseObservations:
                 rejectPose = (
                     observation.tagCount == 0
