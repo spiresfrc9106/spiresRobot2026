@@ -51,6 +51,7 @@ class VisionSubsystemIOPhotonSim(VisionSubsystemIOPhotonVision):
 
     def updateInputs(self, inputs: VisionSubsystemIO.VisionSubsystemIOInputs):
         from robotstate import RobotState
+
         if self.isTurreted:
             assert VisionSubsystemIOPhotonSim.turretSim is not None
             VisionSubsystemIOPhotonSim.turretSim.update(self.poseSupplier())
