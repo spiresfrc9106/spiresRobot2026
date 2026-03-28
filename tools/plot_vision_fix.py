@@ -51,7 +51,7 @@ def pick_csv() -> Path:
 def safe_float(val: str) -> float | None:
     try:
         return float(val)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return None
 
 
@@ -126,11 +126,15 @@ def mean(vals: list[float]) -> float:
 def plot(data: dict, csv_path: Path) -> None:
     err_best = [
         math.hypot(bx - sx, by - sy)
-        for bx, by, sx, sy in zip(data["best_x"], data["best_y"], data["sol_x"], data["sol_y"])
+        for bx, by, sx, sy in zip(
+            data["best_x"], data["best_y"], data["sol_x"], data["sol_y"]
+        )
     ]
     err_closest = [
         math.hypot(cx - sx, cy - sy)
-        for cx, cy, sx, sy in zip(data["closest_x"], data["closest_y"], data["sol_x"], data["sol_y"])
+        for cx, cy, sx, sy in zip(
+            data["closest_x"], data["closest_y"], data["sol_x"], data["sol_y"]
+        )
     ]
 
     fig, axes = plt.subplots(2, 1, figsize=(12, 10))
@@ -142,10 +146,40 @@ def plot(data: dict, csv_path: Path) -> None:
 
     # --- Subplot 1: XY trajectory ---
     ax = axes[0]
-    ax.plot(data["est_x"], data["est_y"], "b-", linewidth=1.5, label="Estimator (ref)", zorder=1)
-    ax.scatter(data["sol_x"], data["sol_y"], c="green", s=20, zorder=4, label="sol/0/pose (multi-tag)")
-    ax.scatter(data["best_x"], data["best_y"], c="red", s=15, zorder=2, alpha=0.6, label="bestRobotField")
-    ax.scatter(data["closest_x"], data["closest_y"], c="orange", s=15, zorder=3, alpha=0.8, label="closest(best, alternate)")
+    ax.plot(
+        data["est_x"],
+        data["est_y"],
+        "b-",
+        linewidth=1.5,
+        label="Estimator (ref)",
+        zorder=1,
+    )
+    ax.scatter(
+        data["sol_x"],
+        data["sol_y"],
+        c="green",
+        s=20,
+        zorder=4,
+        label="sol/0/pose (multi-tag)",
+    )
+    ax.scatter(
+        data["best_x"],
+        data["best_y"],
+        c="red",
+        s=15,
+        zorder=2,
+        alpha=0.6,
+        label="bestRobotField",
+    )
+    ax.scatter(
+        data["closest_x"],
+        data["closest_y"],
+        c="orange",
+        s=15,
+        zorder=3,
+        alpha=0.8,
+        label="closest(best, alternate)",
+    )
     ax.set_xlabel("X (m)")
     ax.set_ylabel("Y (m)")
     ax.set_title("XY Trajectory")
@@ -155,8 +189,22 @@ def plot(data: dict, csv_path: Path) -> None:
 
     # --- Subplot 2: distance from sol/0/pose vs time ---
     ax = axes[1]
-    ax.scatter(data["times_tag"], err_best, c="red", s=12, alpha=0.6, label=f"bestRobotField (mean={mean(err_best):.2f}m)")
-    ax.scatter(data["times_tag"], err_closest, c="orange", s=12, alpha=0.8, label=f"closest(best,alt) (mean={mean(err_closest):.2f}m)")
+    ax.scatter(
+        data["times_tag"],
+        err_best,
+        c="red",
+        s=12,
+        alpha=0.6,
+        label=f"bestRobotField (mean={mean(err_best):.2f}m)",
+    )
+    ax.scatter(
+        data["times_tag"],
+        err_closest,
+        c="orange",
+        s=12,
+        alpha=0.8,
+        label=f"closest(best,alt) (mean={mean(err_closest):.2f}m)",
+    )
     ax.axhline(0.5, color="gray", linestyle="--", label="0.5m threshold")
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("Distance from sol/0/pose (m)")
@@ -176,5 +224,7 @@ if __name__ == "__main__":
     csv_path = pick_csv()
     data = load(csv_path)
     if not data["times_tag"]:
-        sys.exit("No rows with tags detected. Check COL_TAG_ID or run the path test again.")
+        sys.exit(
+            "No rows with tags detected. Check COL_TAG_ID or run the path test again."
+        )
     plot(data, csv_path)

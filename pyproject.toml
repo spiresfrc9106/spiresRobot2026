@@ -88,6 +88,14 @@ mypy_path = "."
 ignore_missing_imports = true
 warn_unused_ignores = true
 warn_no_return = true
+exclude = ["(^examples/)"]
+
+[tool.ruff]
+exclude = [
+    # Default exclusions are included automatically.
+    # Add your custom directories here:
+    "examples/**",
+]
 
 [tool.uv.sources]
 #robotpy-pykit = { path = "../PyKit", editable = true }

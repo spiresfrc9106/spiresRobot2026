@@ -28,23 +28,24 @@ from wpiutil.log import DataLogReader
 # All little-endian.
 # ---------------------------------------------------------------------------
 _PRIM: dict[str, tuple[str, int]] = {
-    "bool":   ("<B", 1),  # stored as uint8
-    "char":   ("<B", 1),
-    "int8":   ("<b", 1),
-    "uint8":  ("<B", 1),
-    "int16":  ("<h", 2),
+    "bool": ("<B", 1),  # stored as uint8
+    "char": ("<B", 1),
+    "int8": ("<b", 1),
+    "uint8": ("<B", 1),
+    "int16": ("<h", 2),
     "uint16": ("<H", 2),
-    "int32":  ("<i", 4),
+    "int32": ("<i", 4),
     "uint32": ("<I", 4),
-    "int64":  ("<q", 8),
+    "int64": ("<q", 8),
     "uint64": ("<Q", 8),
-    "float":  ("<f", 4),
+    "float": ("<f", 4),
     "double": ("<d", 8),
 }
 
 # ---------------------------------------------------------------------------
 # Schema parsing
 # ---------------------------------------------------------------------------
+
 
 def _parse_schema_fields(schema_str: str) -> list[tuple[str, str, int]]:
     """
@@ -59,7 +60,9 @@ def _parse_schema_fields(schema_str: str) -> list[tuple[str, str, int]]:
         tokens = part.split()
         if len(tokens) < 2:
             continue
-        raw_type = tokens[0].split(":")[0]  # strip bit-field width (e.g. uint8:4 -> uint8)
+        raw_type = tokens[0].split(":")[
+            0
+        ]  # strip bit-field width (e.g. uint8:4 -> uint8)
         name = tokens[-1]
         m = re.match(r"(\w+)\[(\d+)\]", raw_type)
         if m:
@@ -115,6 +118,7 @@ def _decode_struct(
 # Log reading
 # ---------------------------------------------------------------------------
 
+
 def _read_log(
     wpilog_path: Path,
 ) -> tuple[list[float], dict[str, list[tuple[float, Any]]]]:
@@ -142,7 +146,11 @@ def _read_log(
                 # e.g. name='/.schema/struct:Pose2d'
                 struct_name = sd.name.removeprefix("/.schema/struct:")
                 schema_entry_ids[sd.entry] = struct_name
-        elif not record.isFinish() and not record.isSetMetadata() and not record.isControl():
+        elif (
+            not record.isFinish()
+            and not record.isSetMetadata()
+            and not record.isControl()
+        ):
             eid = record.getEntry()
             if eid in schema_entry_ids:
                 schema_str = bytes(record.getRaw()).decode("utf-8", errors="replace")
@@ -160,7 +168,12 @@ def _read_log(
         timestamps_set.add(ts)
 
     for record in DataLogReader(str(wpilog_path)):
-        if record.isStart() or record.isFinish() or record.isSetMetadata() or record.isControl():
+        if (
+            record.isStart()
+            or record.isFinish()
+            or record.isSetMetadata()
+            or record.isControl()
+        ):
             continue
         eid = record.getEntry()
         if eid not in entries or eid in schema_entry_ids:
@@ -174,8 +187,16 @@ def _read_log(
                 _add(name, ts, record.getDouble())
             elif type_str == "float":
                 _add(name, ts, record.getFloat())
-            elif type_str in ("int64", "int32", "int16", "int8",
-                              "uint64", "uint32", "uint16", "uint8"):
+            elif type_str in (
+                "int64",
+                "int32",
+                "int16",
+                "int8",
+                "uint64",
+                "uint32",
+                "uint16",
+                "uint8",
+            ):
                 _add(name, ts, record.getInteger())
             elif type_str == "boolean":
                 _add(name, ts, record.getBoolean())
@@ -194,8 +215,8 @@ def _read_log(
                 for i, v in enumerate(record.getBooleanArray()):
                     _add(f"{name}[{i}]", ts, v)
             elif type_str == "string[]":
-                for i, v in enumerate(record.getStringArray()):
-                    _add(f"{name}[{i}]", ts, v)
+                for i, vstr in enumerate(record.getStringArray()):
+                    _add(f"{name}[{i}]", ts, str(vstr))
             elif type_str.startswith("struct:"):
                 struct_name = type_str.removeprefix("struct:")
                 raw = bytes(record.getRaw())
@@ -213,6 +234,7 @@ def _read_log(
 # ---------------------------------------------------------------------------
 # CSV output
 # ---------------------------------------------------------------------------
+
 
 def to_csv(wpilog_path: Path, csv_path: Path | None = None) -> Path:
     """Convert wpilog to CSV. Returns the path of the written CSV."""
@@ -240,9 +262,11 @@ def to_csv(wpilog_path: Path, csv_path: Path | None = None) -> Path:
         for ts in timestamps:
             # Advance iterators for all columns at this timestamp
             for col in columns:
-                while col_next[col] is not None and col_next[col][0] <= ts:
-                    col_current[col] = col_next[col][1]
-                    col_next[col] = next(col_iters[col], None)
+                nxt = col_next[col]
+                while nxt is not None and nxt[0] <= ts:
+                    col_current[col] = nxt[1]
+                    nxt = next(col_iters[col], None)
+                col_next[col] = nxt
             row = [ts] + [col_current.get(col, "") for col in columns]
             writer.writerow(row)
 
@@ -254,7 +278,8 @@ def to_csv(wpilog_path: Path, csv_path: Path | None = None) -> Path:
 # pandas helper (optional — requires pandas to be installed)
 # ---------------------------------------------------------------------------
 
-def to_dataframe(wpilog_path: str | Path):  # type: ignore[return]
+
+def to_dataframe(wpilog_path: str | Path):
     """
     Read a wpilog and return a pandas DataFrame with forward-filled values.
     Requires: pip install pandas  (or: uv run --with pandas python ...)
@@ -262,7 +287,9 @@ def to_dataframe(wpilog_path: str | Path):  # type: ignore[return]
     try:
         import pandas as pd
     except ImportError:
-        raise ImportError("pandas is required: uv run --with pandas python tools/wpilog_to_csv.py")
+        raise ImportError(
+            "pandas is required: uv run --with pandas python tools/wpilog_to_csv.py"
+        )
 
     timestamps, series = _read_log(Path(wpilog_path))
 
@@ -280,6 +307,7 @@ def to_dataframe(wpilog_path: str | Path):  # type: ignore[return]
 # ---------------------------------------------------------------------------
 # CLI entry point
 # ---------------------------------------------------------------------------
+
 
 def _pick_wpilog() -> Path:
     if len(sys.argv) > 1:

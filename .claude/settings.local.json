@@ -6,12 +6,20 @@
       "Bash(uv run -- ruff: *)",
       "Bash(uv run -- mypy: *)",
       "Bash(uv run -- robotpy: *)",
+      "Bash(uv run ruff: *)",
+      "Bash(uv run mypy: *)",
+      "Bash(uv run robotpy: *)",
       "Bash(grep: *)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(uv run:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/mikestitt/.cache/uv"
     ]
   },
   "sandbox": {
     "enabled": true,
-    "autoAllowBashIfSandboxed": false
+    "autoAllowBashIfSandboxed": false,
+    "allowUnsandboxedCommands": false
   }
 }

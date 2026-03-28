@@ -157,12 +157,18 @@ class WrapperedPoseEstPhotonCamera:
                 if isMultiTag:
                     usedIds = set(result.multitagResult.fiducialIDsUsed)  # type: ignore[union-attr]
                     usedTargets = [
-                        t for t in camEstPose.targetsUsed if t.getFiducialId() in usedIds
+                        t
+                        for t in camEstPose.targetsUsed
+                        if t.getFiducialId() in usedIds
                     ]
                     nTags = max(len(usedTargets), 1)
-                    avgDist = sum(
-                        t.getBestCameraToTarget().translation().norm() for t in usedTargets
-                    ) / nTags
+                    avgDist = (
+                        sum(
+                            t.getBestCameraToTarget().translation().norm()
+                            for t in usedTargets
+                        )
+                        / nTags
+                    )
                     xyStdDev = _K_XY_MULTI * avgDist**2 / nTags
                     rotStdDev = _K_ROT_MULTI * avgDist**2 / nTags
                 else:
