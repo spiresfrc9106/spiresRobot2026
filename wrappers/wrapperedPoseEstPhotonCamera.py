@@ -17,6 +17,15 @@ from utils.faults import Fault
 MAX_CAMERA_TARGETS = 4
 MAX_CAMERA_SOLUTIONS = 4
 
+# Std dev scaling: xyStdDev = K_XY * avg_dist^2 / n_tags (multi-tag)
+#                  xyStdDev = K_XY_SINGLE * dist^2       (single-tag)
+# Rotation: multi-tag uses K_ROT * avg_dist^2 / n_tags; single-tag trusts gyro (very large).
+_K_XY_MULTI = 0.05
+_K_ROT_MULTI = 0.05
+_K_XY_SINGLE = 0.3
+_MAX_SINGLE_TAG_AMBIGUITY = 0.2
+_ROT_STD_DEV_SINGLE_TAG = degreesToRadians(99999.0)
+
 
 # Describes one on-field pose estimate from the acamera at a specific time.
 @dataclass
@@ -89,13 +98,17 @@ class WrapperedPoseEstPhotonCamera:
                 poseAmbiguity = target.getPoseAmbiguity()
                 bestCameraToTarget = target.getBestCameraToTarget()
                 alternateCameraToTarget = target.getAlternateCameraToTarget()
-                bestCameraFieldPose = Pose3d(
-                    bestCameraToTarget.translation(), bestCameraToTarget.rotation()
-                )
-                alternateCameraFieldPose = Pose3d(
-                    alternateCameraToTarget.translation(),
-                    alternateCameraToTarget.rotation(),
-                )
+                tagFieldPose = self.camPoseEst.fieldTags.getTagPose(id)
+                if tagFieldPose is not None:
+                    bestCameraFieldPose = tagFieldPose.transformBy(
+                        bestCameraToTarget.inverse()
+                    )
+                    alternateCameraFieldPose = tagFieldPose.transformBy(
+                        alternateCameraToTarget.inverse()
+                    )
+                else:
+                    bestCameraFieldPose = Pose3d()
+                    alternateCameraFieldPose = Pose3d()
                 bestRobotPredictedPose = bestCameraFieldPose.transformBy(
                     self.robotToCam.inverse()
                 )
@@ -133,16 +146,41 @@ class WrapperedPoseEstPhotonCamera:
             camEstPose: EstimatedRobotPose | None = (
                 self.camPoseEst.estimateCoprocMultiTagPose(result)
             )
+            isMultiTag = camEstPose is not None
             if camEstPose is None:
                 camEstPose = self.camPoseEst.estimateLowestAmbiguityPose(result)
+
+            xyStdDev = 1.0
+            rotStdDev = _ROT_STD_DEV_SINGLE_TAG
+
+            if camEstPose is not None:
+                if isMultiTag:
+                    usedIds = set(result.multitagResult.fiducialIDsUsed)  # type: ignore[union-attr]
+                    usedTargets = [
+                        t for t in camEstPose.targetsUsed if t.getFiducialId() in usedIds
+                    ]
+                    nTags = max(len(usedTargets), 1)
+                    avgDist = sum(
+                        t.getBestCameraToTarget().translation().norm() for t in usedTargets
+                    ) / nTags
+                    xyStdDev = _K_XY_MULTI * avgDist**2 / nTags
+                    rotStdDev = _K_ROT_MULTI * avgDist**2 / nTags
+                else:
+                    singleTarget = camEstPose.targetsUsed[0]
+                    if singleTarget.getPoseAmbiguity() > _MAX_SINGLE_TAG_AMBIGUITY:
+                        camEstPose = None
+                    else:
+                        dist = singleTarget.getBestCameraToTarget().translation().norm()
+                        xyStdDev = _K_XY_SINGLE * dist**2
+                        rotStdDev = _ROT_STD_DEV_SINGLE_TAG
 
             if camEstPose is not None:
                 self.poseEstimates.append(
                     CameraPoseObservation(
                         time=camEstPose.timestampSeconds,
                         estFieldPose=camEstPose.estimatedPose.toPose2d(),
-                        xyStdDev=3.0,
-                        rotStdDev=degreesToRadians(60.0),
+                        xyStdDev=xyStdDev,
+                        rotStdDev=rotStdDev,
                     )
                 )
 
