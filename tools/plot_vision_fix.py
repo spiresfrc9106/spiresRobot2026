@@ -42,10 +42,10 @@ COL_EST_Y = "/RealOutputs/Robot/Pose/Estimator/Pose/translation/y"
 def pick_csv() -> Path:
     if len(sys.argv) > 1:
         return Path(sys.argv[1])
-    candidates = sorted(glob("pyLogs/*.csv"))
+    candidates = glob("pyLogs/*.csv")
     if not candidates:
         sys.exit("No CSV files found in pyLogs/. Run camera_path_test first.")
-    return Path(candidates[-1])
+    return Path(max(candidates, key=lambda p: Path(p).stat().st_mtime))
 
 
 def safe_float(val: str) -> float | None:
