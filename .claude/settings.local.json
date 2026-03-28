@@ -6,6 +6,7 @@
       "Bash(uv run -- ruff: *)",
       "Bash(uv run -- mypy: *)",
       "Bash(uv run -- robotpy: *)",
+      "Bash(grep: *)"
     ]
   },
   "sandbox": {
