@@ -13,7 +13,6 @@ from pykit.logger import Logger
 from subsystems.common.encodermodule import EncoderModule
 from subsystems.common.motormodule import MotorModule
 from utils.allianceTransformUtils import onRed
-from wrappers.wrapperedGyro import wrapperedGyro
 
 
 class DrivetrainControl:
@@ -30,7 +29,6 @@ class DrivetrainControl:
     ):
         p = DrivetrainPhysical()
         self.name = p.DRIVETRAIN_NAME
-        self.gyro = wrapperedGyro()
         self.modules = []
         self.kinematics = p.kinematics
         for motorAndEncoderModules in motorAndEncoderModuleSets:
@@ -52,7 +50,7 @@ class DrivetrainControl:
 
         self.gainsSwerveModule = SwerveModuleGainSet()
 
-        self.poseEst = DrivetrainPoseEstimator(self.getModulePositions(), self.gyro)
+        self.poseEst = DrivetrainPoseEstimator(self.getModulePositions())
 
         self._updateAllCals()
 

@@ -31,6 +31,7 @@ from subsystems.common.motormoduleio import MotorModuleIO
 from subsystems.common.motormoduleiowrappered import MotorModuleIOWrappered
 from subsystems.common.motormoduleiowrapperedsim import MotorModuleIOWrapperedSim
 from subsystems.state.configsubsystem import ConfigSubsystem
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from utils.constants import (
     DT_FL_AZMTH_CANID,
     DT_FL_AZMTH_ENC_PORT,
@@ -122,13 +123,7 @@ class DrivetrainSubsystem(Subsystem):
     @autolog_output(key="Robot/velocity")
     def getAngularVelocity(self) -> float:
         """radians per sec"""
-        # TODO to get playback to work this needs to become an input/output module.
-        # if RobotBase.isSimulation() and not Logger.isReplay():
-        #    # todo value: ChassisSpeeds = self.simVelocityGetter.get()
-        #    #value: ChassisSpeeds = self.simVelocityGetter.get()
-        #    #return value.omega
-        #    #return self.casseroleDrivetrain.gyro.getRate()
-        return self.casseroleDrivetrain.gyro.getRate()
+        return RobotTopSubsystem().inputs.gyroYawRateRadPerSec
 
     def getFieldRelativeChassisSpeeds(self) -> ChassisSpeeds:
         return self.casseroleDrivetrain.getFieldRelativeChassisSpeeds()

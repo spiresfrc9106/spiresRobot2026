@@ -10,7 +10,6 @@ from drivetrain.poseEstimation.drivetrainPoseTelemetry import DrivetrainPoseTele
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
 
 # TODO-rms was:from navigation.autoDriveNavConstants import SCORE_DIST_FROM_REEF_CENTER
-from utils.faults import Fault
 from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
 # from utils.constants import blueReefLocation, redReefLocation #2025 code
 
@@ -39,16 +38,12 @@ class DrivetrainPoseEstimator:
     def __init__(
         self,
         initialModulePositions: PosTupleType,
-        gyro,
     ):
 
         # Represents our current best-guess as to our location on the field.
         self._curEstPose = Pose2d()
 
-        # Gyroscope - measures our rotational velocity.
-        # Fairly accurate and trustworthy, but not a full pose estimate
-        self._gyro = gyro
-        self._gyroDisconFault = Fault("Gyroscope not sending data")
+        # Gyroscope angle is read from RobotTopSubsystem().inputs (logged/replay-safe)
         self._curRawGyroAngle = Rotation2d()
 
         # Cameras - measure our position on the field from apriltags
@@ -70,7 +65,7 @@ class DrivetrainPoseEstimator:
         self.kinematics = DrivetrainPhysical().kinematics
         self._poseEst = SwerveDrive4PoseEstimator(
             self.kinematics,
-            self._getGyroAngle(),
+            self._curRawGyroAngle,
             initialModulePositions,
             self._curEstPose,
         )
@@ -135,8 +130,7 @@ class DrivetrainPoseEstimator:
                     self._camTargetsVisible = True
                 self._telemetry.addVisionObservations(observations)
 
-        # Read the gyro angle
-        self._gyroDisconFault.set(not self._gyro.isConnected())
+        # Read the gyro angle from RobotTopSubsystem inputs (logged/replay-safe)
         if wpilib.TimedRobot.isSimulation():
             # Simulated Gyro
             # Simulate an angle based on (simulated) motor speeds with some noise
@@ -151,9 +145,8 @@ class DrivetrainPoseEstimator:
             noise = Rotation2d.fromDegrees(random.uniform(-0.0, 0.0))
             self._curRawGyroAngle = self._simPose.rotation() + noise
         else:
-            # Real Gyro
-            # Read the value from the hardware
-            self._curRawGyroAngle = self._getGyroAngle()
+            # Read logged gyro angle from RobotTopSubsystem
+            self._curRawGyroAngle = Rotation2d(RobotTopSubsystem().inputs.gyroAngleRad)
 
         # Update the WPILib Pose Estimate
         self._poseEst.update(self._curRawGyroAngle, curModulePositions)
@@ -187,10 +180,6 @@ class DrivetrainPoseEstimator:
         the pose estimate will go inaccurate
         """
         self._useAprilTags = use
-
-    # Local helper to wrap the real hardware angle into a Rotation2d
-    def _getGyroAngle(self) -> Rotation2d:
-        return self._gyro.getGyroAngleRotation2d()
 
     def getRealOrSimRawGyroAngle(self) -> Rotation2d:
         if wpilib.TimedRobot.isSimulation():

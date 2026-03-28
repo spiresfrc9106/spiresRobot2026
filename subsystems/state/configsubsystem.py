@@ -4,6 +4,7 @@ from pykit.logger import Logger
 from pykit.autolog import autologgable_output
 
 from subsystems.state.configio import ConfigIO, RobotTypes
+from subsystems.state.robottopio import RobotTopDependentConstants
 from subsystems.intakeOuttake.inout import InOutDependentConstants
 from subsystems.vision.vision import VisionDependentConstants
 from utils.singleton import _instances
@@ -54,6 +55,7 @@ class ConfigSubsystem(Subsystem):
         self.dpc = DrivetrainDependentConstants()
         self.drivetrainDepConstants = self.dpc.get(self._robotType)
 
+        self.robotTopDepConstants = RobotTopDependentConstants().get(self._robotType)
         self.cameraDepConstants = CameraDependentConstants().get(self._robotType)
         self.inoutDepConstants = InOutDependentConstants().get(self._robotType)
         self.visionDepConstants = VisionDependentConstants().get(self._robotType)

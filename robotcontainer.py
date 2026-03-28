@@ -27,7 +27,7 @@ from subsystems.intakeOuttake.inoutsubsystem import (
 )
 
 from subsystems.state.configsubsystem import ConfigSubsystem
-from subsystems.state.robottopsubsystem import RobotTopSubsystem
+from subsystems.state.robottopsubsystem import RobotTopSubsystemFactory
 from subsystems.vision.visionsubsystem import VisionSubsystem, VisionSubsystemFactory
 from utils.allianceTransformUtils import onRed
 from utils.units import deg2Rad, in2m
@@ -50,7 +50,7 @@ class RobotContainer:
     def __init__(self) -> None:
         # The robot's subsystems
         self.config = ConfigSubsystem()
-        self.robotop = RobotTopSubsystem()
+        self.robotop = RobotTopSubsystemFactory()
         self.inout: InOutSubsystem | None = inoutSubsystemFactory()
         self.drivetrainSubsystem: DrivetrainSubsystem | None = None
         if ConfigSubsystem().useCasseroleSwerve():

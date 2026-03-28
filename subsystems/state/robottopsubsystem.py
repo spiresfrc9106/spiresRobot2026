@@ -34,15 +34,24 @@ class RobotTopSubsystem(Subsystem):
             _instances[cls] = instance
         return _instances[cls]
 
-    def __init__(self) -> None:
+    def __init__(self, io: RobotTopIO | None = None) -> None:
         if self._initalized:
             return
-        self.io = RobotTopIO()
+        if io is None:
+            # Default: created early (before factory runs); factory will swap in the real gyro
+            from wrappers.wrapperedGyro import WrapperedNoGyro
+
+            io = RobotTopIO(WrapperedNoGyro())
+        self.io = io
         Subsystem.__init__(self)
         self.setName(type(self).__name__)
         self.inputs = RobotTopIO.RobotTopIOInputs()
 
         self.robotPose: Pose2d | None = None
+        # Deferred import to avoid circular dependency (faults.py imports RobotTopSubsystem)
+        from utils.faults import Fault
+
+        self._gyroDisconFault = Fault("Gyroscope not sending data")
 
         self._initalized = True
 
@@ -54,7 +63,7 @@ class RobotTopSubsystem(Subsystem):
         LogTracer.resetOuter("RobotTopSubsystemPeriodic")
         self.io.updateInputs(self.inputs)
         LogTracer.record("IOUpdate")
-        """put any RobotTop IOUpdates here"""
+        self._gyroDisconFault.set(not self.inputs.gyroConnected)
         LogTracer.record("StateUpdate")
         Logger.processInputs("RobotTop", self.inputs)
         LogTracer.record("LoggerProcessInputs")
@@ -104,3 +113,28 @@ class RobotTopSubsystem(Subsystem):
         if rotation is not None:
             angleToHubRad = angleModulus(rotation.radians())
         return angleToHubRad
+
+
+def RobotTopSubsystemFactory() -> RobotTopSubsystem:
+    # Deferred import to avoid circular dependency (configsubsystem imports from robottopio)
+    from subsystems.state.configsubsystem import ConfigSubsystem
+    from wrappers.wrapperedGyro import (
+        WrapperedAdis16470ImuSingleton,
+        WrapperedNavxSingleton,
+        WrapperedNoGyro,
+    )
+
+    # ConfigSubsystem initialization may trigger early RobotTopSubsystem creation
+    # (via WrapperedPoseEstPhotonCamera.__init__), so we replace the gyro after config loads.
+    rtdc = ConfigSubsystem().robotTopDepConstants
+    gyroType: str = rtdc["GYRO"]
+    gyro: WrapperedNavxSingleton | WrapperedAdis16470ImuSingleton | WrapperedNoGyro
+    if gyroType == "NAVX":
+        gyro = WrapperedNavxSingleton()
+    elif gyroType == "ADIS16470_IMU":
+        gyro = WrapperedAdis16470ImuSingleton()
+    else:
+        gyro = WrapperedNoGyro()
+    robotTop = RobotTopSubsystem()
+    robotTop.io.gyro = gyro
+    return robotTop
