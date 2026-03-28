@@ -6,41 +6,99 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 FRC Team 9106 (Spires) robot code for the 2026 season. Written in Python using RobotPy (WPILib's Python bindings) with the commands2 framework. Forked from FRC#1736 RobotCasserole2026 with PyKit logging from FRC#1757 Westwood Robotics.
 
-## Key Commands
+## Key Commands for the human that invokes claude
 
+Prior to starting claude, the human that invokes claude, the cwd must be the top level directory
+of this repo and must have activated the python virtual environment:
+
+```bash
+. .venv/bin/activate
+```
+
+if this has happened correctly then both the command:
+```bash
+.venv/bin/python -c "import sys; print(sys.prefix)"
+```
+and the command:
+```bash
+python -c "import sys; print(sys.prefix)"
+```
+
+should return the same directory path that ends in "/.venv", e.g. "/Users/mikestitt/Documents/first/2026/sw/spiresRobot2026/.venv"
+
+## Commands the human must run, and Claude may not run:
+
+"uv" commands. For example:
 ```bash
 # Sync dependencies (after pyproject.toml changes)
 uv sync
-uv run robotpy sync
+```
 
+"ssh" commands like:
+```bash
+# ssh into the roborio:
+ssh lvuser@roboRIO-9106-frc.local
+```
+
+"git" commands that change the state of git. For example: `git checkout`, `git commit`, `git push`, `git switch`.
+
+"robotpy" commands that deploy code to the robot. For example: `robotpy deploy`
+
+Claude may not invoke `robotpy deploy`, regardless of the methods to reach `robotpy`
+
+```bash
+# Claude may not run these:
+robotpy deploy
+robotpy deploy --skip-tests
+.venv/bin/robotpy deploy 
+.venv/bin/robotpy deploy --skip-tests
+python -m robotpy deploy
+python -m robotpy deploy --skip-tests
+.venv/bin/python -m robotpy deploy 
+.venv/bin/python -m robotpy deploy --skip-tests
+uv run robotpy deploy
+uv run robotpy deploy --skip-tests
+uv run -- robotpy deploy
+uv run -- robotpy deploy --skip-tests
+uv run python -m robotpy deploy
+uv run python -m robotpy deploy --skip-tests
+uv run -- python -m robotpy deploy
+uv run -- python -m robotpy deploy --skip-tests
+```
+
+## Commands that claude may run:
+
+```bash
 # Run tests
-uv run -- robotpy test
-uv run -- robotpy coverage test -- --no-header -vvv -s
+.venv/bin/robotpy test
+.venv/bin/robotpy coverage test -- --no-header -vvv -s
 
 # Run simulator
-uv run -- robotpy sim
-
-# Deploy to robot (must be connected to robot network)
-uv run robotpy deploy --skip-tests
+.venv/bin/robotpy sim
 
 # Lint / type checks (must all pass before merging)
-uv run -- ruff format          # auto-format
-uv run -- ruff check           # lint
-uv run -- ruff check --fix     # lint with auto-fix
-uv run -- mypy .               # type check
+.venv/bin/ruff format          # auto-format
+.venv/bin/ruff check           # lint
+.venv/bin/ruff check --fix     # lint with auto-fix
+.venv/bin/mypy .               # type check
 
 # Network utilities
-uv run netconsole roboRIO-9106-frc.local
-ssh lvuser@roboRIO-9106-frc.local
+.venv/bin/netconsole roboRIO-9106-frc.local
 ```
 
 ## CI Requirements
 
-All three must pass on every push/PR (checked by `.github/workflows/lint.yml`):
+Claude should ensure that these three formatting checks pass before completing a coding task. All three must pass on every push/PR (checked by `.github/workflows/lint.yml`):
+
 ```bash
-uv run -- ruff check
-uv run -- ruff format --check --diff
-uv run -- mypy .
+# versions of the three formating checks that Claude can run:
+.venv/bin/ruff check
+.venv/bin/ruff format --check --diff
+.venv/bin/mypy .
+# equivalent versions of the three that are invoked by the `.github/workflows/lint.yml`
+uv run ruff check
+uv run ruff format --check --diff
+uv run mypy .
 ```
 
 ## Project Structure
@@ -149,9 +207,9 @@ class MySubsystem(commands2.Subsystem):
 
 ## Python Version
 
-- Robot runs Python 3.12 on the roboRIO
+- Robot runs Python 3.14 on the roboRIO
 - `match`/`case` syntax is safe to use
-- `pyproject.toml` sets `requires-python = "==3.12.*"`
+- `pyproject.toml` sets `requires-python = "==3.14.*"`
 
 ## Pre-commit
 
