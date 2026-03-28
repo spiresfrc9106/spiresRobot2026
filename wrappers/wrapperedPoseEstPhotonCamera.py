@@ -86,6 +86,7 @@ class WrapperedPoseEstPhotonCamera:
 
         result = self.cam.getLatestResult()
         i = 0
+        logTargets = False
         if (
             result.hasTargets()
             and RobotTopSubsystem().getFPGATimestampS() - result.getTimestampSeconds()
@@ -93,55 +94,56 @@ class WrapperedPoseEstPhotonCamera:
         ):
             targets: List[PhotonTrackedTarget] = result.getTargets()
 
-            for target in targets[:MAX_CAMERA_TARGETS]:
-                id = target.getFiducialId()
-                poseAmbiguity = target.getPoseAmbiguity()
-                bestCameraToTarget = target.getBestCameraToTarget()
-                alternateCameraToTarget = target.getAlternateCameraToTarget()
-                tagFieldPose = self.camPoseEst.fieldTags.getTagPose(id)
-                if tagFieldPose is not None:
-                    bestCameraFieldPose = tagFieldPose.transformBy(
-                        bestCameraToTarget.inverse()
+            if logTargets:
+                for target in targets[:MAX_CAMERA_TARGETS]:
+                    id = target.getFiducialId()
+                    poseAmbiguity = target.getPoseAmbiguity()
+                    bestCameraToTarget = target.getBestCameraToTarget()
+                    alternateCameraToTarget = target.getAlternateCameraToTarget()
+                    tagFieldPose = self.camPoseEst.fieldTags.getTagPose(id)
+                    if tagFieldPose is not None:
+                        bestCameraFieldPose = tagFieldPose.transformBy(
+                            bestCameraToTarget.inverse()
+                        )
+                        alternateCameraFieldPose = tagFieldPose.transformBy(
+                            alternateCameraToTarget.inverse()
+                        )
+                    else:
+                        bestCameraFieldPose = Pose3d()
+                        alternateCameraFieldPose = Pose3d()
+                    bestRobotPredictedPose = bestCameraFieldPose.transformBy(
+                        self.robotToCam.inverse()
                     )
-                    alternateCameraFieldPose = tagFieldPose.transformBy(
-                        alternateCameraToTarget.inverse()
+                    alternateRobotPredictedPose = alternateCameraFieldPose.transformBy(
+                        self.robotToCam.inverse()
                     )
-                else:
-                    bestCameraFieldPose = Pose3d()
-                    alternateCameraFieldPose = Pose3d()
-                bestRobotPredictedPose = bestCameraFieldPose.transformBy(
-                    self.robotToCam.inverse()
-                )
-                alternateRobotPredictedPose = alternateCameraFieldPose.transformBy(
-                    self.robotToCam.inverse()
-                )
 
-                # cameraFieldPose.transformBy(robotToCamera.inverse())
-                yaw = target.getYaw()
-                pitch = target.getPitch()
-                area = target.getArea()
-                Logger.recordOutput(f"{self.name}/target/{i}/id", id)
-                Logger.recordOutput(
-                    f"{self.name}/target/{i}/poseAmbiguity", poseAmbiguity
-                )
-                Logger.recordOutput(
-                    f"{self.name}/target/{i}/bestCameraToTarget", bestCameraToTarget
-                )
-                Logger.recordOutput(
-                    f"{self.name}/target/{i}/bestRobotField", bestRobotPredictedPose
-                )
-                Logger.recordOutput(
-                    f"{self.name}/target/{i}/alternateCameraToTarget",
-                    alternateCameraToTarget,
-                )
-                Logger.recordOutput(
-                    f"{self.name}/target/{i}/alternateRobotField",
-                    alternateRobotPredictedPose,
-                )
-                Logger.recordOutput(f"{self.name}/target/{i}/yaw", yaw)
-                Logger.recordOutput(f"{self.name}/target/{i}/pitch", pitch)
-                Logger.recordOutput(f"{self.name}/target/{i}/area", area)
-                i += 1
+                    # cameraFieldPose.transformBy(robotToCamera.inverse())
+                    yaw = target.getYaw()
+                    pitch = target.getPitch()
+                    area = target.getArea()
+                    Logger.recordOutput(f"{self.name}/target/{i}/id", id)
+                    Logger.recordOutput(
+                        f"{self.name}/target/{i}/poseAmbiguity", poseAmbiguity
+                    )
+                    Logger.recordOutput(
+                        f"{self.name}/target/{i}/bestCameraToTarget", bestCameraToTarget
+                    )
+                    Logger.recordOutput(
+                        f"{self.name}/target/{i}/bestRobotField", bestRobotPredictedPose
+                    )
+                    Logger.recordOutput(
+                        f"{self.name}/target/{i}/alternateCameraToTarget",
+                        alternateCameraToTarget,
+                    )
+                    Logger.recordOutput(
+                        f"{self.name}/target/{i}/alternateRobotField",
+                        alternateRobotPredictedPose,
+                    )
+                    Logger.recordOutput(f"{self.name}/target/{i}/yaw", yaw)
+                    Logger.recordOutput(f"{self.name}/target/{i}/pitch", pitch)
+                    Logger.recordOutput(f"{self.name}/target/{i}/area", area)
+                    i += 1
 
             camEstPose: EstimatedRobotPose | None = (
                 self.camPoseEst.estimateCoprocMultiTagPose(result)
@@ -190,36 +192,46 @@ class WrapperedPoseEstPhotonCamera:
                     )
                 )
 
-        targets_found = i
-        for i in range(MAX_CAMERA_TARGETS - targets_found):
-            Logger.recordOutput(f"{self.name}/target/{targets_found + i}/id", 0)
-            Logger.recordOutput(
-                f"{self.name}/target/{targets_found + i}/poseAmbiguity", 0.0
-            )
-            Logger.recordOutput(
-                f"{self.name}/target/{targets_found + i}/bestCameraToTarget",
-                EMPTY_TRANSFORM,
-            )
-            Logger.recordOutput(
-                f"{self.name}/target/{targets_found + i}/bestRobotField", Pose3d()
-            )
-            Logger.recordOutput(
-                f"{self.name}/target/{targets_found + i}/alternateCameraToTarget",
-                EMPTY_TRANSFORM,
-            )
-            Logger.recordOutput(
-                f"{self.name}/target/{targets_found + i}/alternateRobotField", Pose3d()
-            )
-            Logger.recordOutput(f"{self.name}/target/{targets_found + i}/yaw", 0.0)
-            Logger.recordOutput(f"{self.name}/target/{targets_found + i}/pitch", 0.0)
-            Logger.recordOutput(f"{self.name}/target/{targets_found + i}/area", 0.0)
+        if logTargets:
+            targets_found = i
+            for i in range(MAX_CAMERA_TARGETS - targets_found):
+                Logger.recordOutput(f"{self.name}/target/{targets_found + i}/id", 0)
+                Logger.recordOutput(
+                    f"{self.name}/target/{targets_found + i}/poseAmbiguity", 0.0
+                )
+                Logger.recordOutput(
+                    f"{self.name}/target/{targets_found + i}/bestCameraToTarget",
+                    EMPTY_TRANSFORM,
+                )
+                Logger.recordOutput(
+                    f"{self.name}/target/{targets_found + i}/bestRobotField", Pose3d()
+                )
+                Logger.recordOutput(
+                    f"{self.name}/target/{targets_found + i}/alternateCameraToTarget",
+                    EMPTY_TRANSFORM,
+                )
+                Logger.recordOutput(
+                    f"{self.name}/target/{targets_found + i}/alternateRobotField",
+                    Pose3d(),
+                )
+                Logger.recordOutput(f"{self.name}/target/{targets_found + i}/yaw", 0.0)
+                Logger.recordOutput(
+                    f"{self.name}/target/{targets_found + i}/pitch", 0.0
+                )
+                Logger.recordOutput(f"{self.name}/target/{targets_found + i}/area", 0.0)
 
         posesFound = 0
         for pose in self.poseEstimates[:MAX_CAMERA_SOLUTIONS]:
             Logger.recordOutput(f"{self.name}/sol/{posesFound}/pose", pose.estFieldPose)
+            Logger.recordOutput(f"{self.name}/sol/{posesFound}/xyStdDev", pose.xyStdDev)
+            Logger.recordOutput(
+                f"{self.name}/sol/{posesFound}/rotStdDev", pose.rotStdDev
+            )
             posesFound += 1
         for i in range(MAX_CAMERA_SOLUTIONS - posesFound):
             Logger.recordOutput(f"{self.name}/sol/{posesFound + i}/pose", Pose2d())
+            Logger.recordOutput(f"{self.name}/sol/{posesFound}/xyStdDev", 0.0)
+            Logger.recordOutput(f"{self.name}/sol/{posesFound}/rotStdDev", 0.0)
 
         endTime = RobotTopSubsystem().getFPGATimestampS()
         self.updateDuration = (endTime - startTime) * 1000.0
