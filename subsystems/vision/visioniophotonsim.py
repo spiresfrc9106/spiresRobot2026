@@ -55,7 +55,7 @@ class VisionSubsystemIOPhotonSim(VisionSubsystemIOPhotonVision):
         if self.isTurreted:
             assert VisionSubsystemIOPhotonSim.turretSim is not None
             VisionSubsystemIOPhotonSim.turretSim.update(self.poseSupplier())
-            turretPose = RobotTopSubsystem().getTurretPose()
+            turretPose = RobotTopSubsystem().getSimTurretPose()
             camPose = turretPose + self._wrapperedCam.robotToCam
         else:
             assert VisionSubsystemIOPhotonSim.visionSim is not None

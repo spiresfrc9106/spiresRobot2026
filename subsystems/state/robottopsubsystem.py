@@ -61,8 +61,8 @@ class RobotTopSubsystem(Subsystem):
 
         self._gyroDisconFault = Fault("Gyroscope not sending data")
 
-        self.simResetPoseConsumers = []
-        self.simPoseReceiverConsumers = []
+        self.simResetPoseConsumers: list[Callable[[Pose2d], None]] = []
+        self.simPoseReceiverConsumers: list[Callable[[], Pose2d]] = []
 
         self._initalized = True
 
@@ -127,14 +127,13 @@ class RobotTopSubsystem(Subsystem):
     def getSimTurretPose(self) -> Pose3d:
         turretRotation = Rotation2d()
         return (
-                pose3dFrom2d(self.getSimPose())
-                + kTurretLocation
-                + Transform3d(0, 0, 0, Rotation3d(0, 0, turretRotation.radians()))
+            pose3dFrom2d(self.getSimPose())
+            + kTurretLocation
+            + Transform3d(0, 0, 0, Rotation3d(0, 0, turretRotation.radians()))
         )
 
     def registerSimPoseReceiverConsumer(self, consumer: Callable[[], Pose2d]) -> None:
         self.simPoseReceiverConsumers.append(consumer)
-
 
     def hubLocation(self):
         return kFarHubLocation if onRed() else kCloseHubLocation
@@ -144,13 +143,9 @@ class RobotTopSubsystem(Subsystem):
         return result
 
     def getRotationToHub(self) -> Rotation2d | None:
-        bearingToTarget = (
-            self.hubLocation() - self.robotPose.translation()
-        ).angle()
+        bearingToTarget = (self.hubLocation() - self.robotPose.translation()).angle()
         rotationToTarget = (
-            bearingToTarget
-            - self.robotPose.rotation()
-            + Rotation2d.fromDegrees(180.0)
+            bearingToTarget - self.robotPose.rotation() + Rotation2d.fromDegrees(180.0)
         )
         return rotationToTarget
 
