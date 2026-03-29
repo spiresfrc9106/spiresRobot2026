@@ -1,9 +1,9 @@
 import wpilib
-from wpimath.geometry import Pose2d, Pose3d, Transform2d
+from wpimath.geometry import Pose2d, Transform2d
 
 from pykit.logger import Logger
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
-from wrappers.wrapperedPoseEstPhotonCamera import CameraPoseObservation
+from util.robotposeestimator import VisionObservation
 
 
 class DrivetrainPoseTelemetry:
@@ -26,27 +26,8 @@ class DrivetrainPoseTelemetry:
 
         self.autoDriveGoalPose = Pose2d()
 
-        self.camPublishers = []
-        self.robotToCams = []
-        self.variabchnag = 0
-        self.theInterestingValue = []
-        self.interestingTracker = []
-
         p = DrivetrainPhysical()
         self.robotToModuleTranslations = p.robotToModuleTranslations
-        CAMS = p.CAMS
-        icount = 0
-        for camConfig in CAMS:
-            self.camPublishers.append(camConfig["PUBLISHER"])
-            self.robotToCams.append(camConfig["ROBOT_TO_CAM"])
-            # camName = camConfig['POSE_EST_LOG_NAME']
-
-            # self.interestingTracker.append(NetworkTableInstance.getDefault()
-            # .getStructTopic("/pos-interesting-output-" + camName, Pose3d)
-            # .publish())
-            icount += 1
-
-        self.camPublishersAndRobotToCams = zip(self.camPublishers, self.robotToCams)
 
         self.visionPoses = []
         self.modulePoses = []
@@ -57,10 +38,8 @@ class DrivetrainPoseTelemetry:
     # def setCurAutoDriveWaypoints(self, waypoints:list[Pose2d]):
     #    self.curTrajWaypoints = waypoints
 
-    def addVisionObservations(self, observations: list[CameraPoseObservation]):
-        if len(observations) > 0:
-            for obs in observations:
-                self.visionPoses.append(obs.estFieldPose)
+    def addVisionObservation(self, obs: VisionObservation) -> None:
+        self.visionPoses.append(obs.visionPose)
 
     def setCurObstacles(self, obstacles):
         (
@@ -136,14 +115,6 @@ class DrivetrainPoseTelemetry:
 
         self.field.getObject("visionObservations").setPoses(self.visionPoses)
         self.visionPoses = []
-
-        """
-        self.field.getObject("autoDriveGoalPose").setPose(self.autoDriveGoalPose)
-        """
-        icount = 0
-        for publisher, robotToCam in self.camPublishersAndRobotToCams:
-            publisher.set(Pose3d(estPose).transformBy(robotToCam))
-            icount += 1
 
     # def setCurAutoTrajectory(self, trajIn):
     #     """Display a specific trajectory on the robot Field2d

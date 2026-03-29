@@ -342,7 +342,7 @@ class RobotState:
                 consumer(pose)
             return
         print(
-            f"resetSimPose: len={len(cls.simPoseReceiverConsumers)} This is not supposed to happen"
+            f"resetSimPose: len={len(cls.simResetPoseConsumers)} This is not supposed to happen"
         )
 
     @classmethod

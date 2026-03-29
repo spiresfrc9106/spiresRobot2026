@@ -4,8 +4,8 @@ from wpimath.geometry import Transform3d
 
 from constants import kRobotMode, RobotModes
 from pykit.logger import Logger
-from robotstate import RobotState
 from subsystems.state.configsubsystem import ConfigSubsystem
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from subsystems.vision.vision import CameraConfiguration
 
 from subsystems.vision.visionio import (
@@ -29,11 +29,11 @@ from util.robotposeestimator import TurretedVisionObservation, VisionObservation
 class VisionSubsystem(Subsystem):
     def __init__(
         self,
-        visionConsumer: Callable[[VisionObservation], None],
+        visionConsumers: List[Callable[[VisionObservation], None]],
         turretedVisionConsumer: Callable[[TurretedVisionObservation], None],
         io: List[VisionSubsystemIO],
     ) -> None:
-        self.consumer = visionConsumer
+        self.consumers = visionConsumers
         self.turretedConsumer = turretedVisionConsumer
         self.io = io
 
@@ -101,11 +101,17 @@ class VisionSubsystem(Subsystem):
                 if rejectPose:
                     continue
 
-                stdDevFactor = (
-                    pow(observation.averageTagDistance, 2.0) / observation.tagCount
-                )
-                linearStdDev = kXyStdDevCoeff * stdDevFactor
-                angularStdDev = kThetaStdDevCoeff * stdDevFactor
+                if observation.xyStdDev > 0.0:
+                    # Pre-computed stddevs from WrapperedPoseEstPhotonCamera — use directly
+                    linearStdDev = observation.xyStdDev
+                    angularStdDev = observation.rotStdDev
+                else:
+                    # Fallback: compute from distance/tagCount (limelight and other IO)
+                    stdDevFactor = (
+                        pow(observation.averageTagDistance, 2.0) / observation.tagCount
+                    )
+                    linearStdDev = kXyStdDevCoeff * stdDevFactor
+                    angularStdDev = kThetaStdDevCoeff * stdDevFactor
 
                 # here you can also factor in per-camera weighting
 
@@ -117,14 +123,14 @@ class VisionSubsystem(Subsystem):
                             tagId + 1
                         )  # need to add 1 since tag IDs are 1 indexed but our bitmask is 0 indexed
 
-                self.consumer(
-                    VisionObservation(
-                        observation.pose.toPose2d(),
-                        observation.timestamp,
-                        [linearStdDev, linearStdDev, angularStdDev],
-                        observedTags,
-                    )
+                visionObs = VisionObservation(
+                    observation.pose.toPose2d(),
+                    observation.timestamp,
+                    [linearStdDev, linearStdDev, angularStdDev],
+                    observedTags,
                 )
+                for consumer in self.consumers:
+                    consumer(visionObs)
             LogTracer.record(f"Camera{idx} ProcessObservations")
             for tObs in camera.turretedObservations:
                 tObsTyped: VisionSubsystemTurretedPoseObservation = cast(
@@ -225,7 +231,9 @@ class VisionSubsystem(Subsystem):
         LogTracer.recordTotal()
 
 
-def VisionSubsystemFactory() -> VisionSubsystem | None:
+def VisionSubsystemFactory(
+    visionConsumers: List[Callable[[VisionObservation], None]] | None = None,
+) -> VisionSubsystem | None:
     VDC = ConfigSubsystem().visionDepConstants
     vision: Optional[VisionSubsystem] = None
     if VDC["HAS_VISION"]:
@@ -251,12 +259,16 @@ def VisionSubsystemFactory() -> VisionSubsystem | None:
                             config.cameraName,
                             config.robotToCameraTransform,
                             # pylint: disable-next=unnecessary-lambda
-                            lambda: RobotState.getSimPose(),
+                            lambda: RobotTopSubsystem().getSimPose(),
                         )
                     )
                 case _:
                     io.append(VisionSubsystemIO())
 
-        vision = VisionSubsystem(RobotState.addVisionMeasurement, lambda: None, io=io)  # type: ignore[arg-type, misc]
+        vision = VisionSubsystem(
+            visionConsumers if visionConsumers is not None else [],
+            lambda _: None,
+            io=io,
+        )
 
     return vision

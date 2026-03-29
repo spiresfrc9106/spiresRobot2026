@@ -8,6 +8,7 @@ from constants import kRobotUpdatePeriodS
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.poseEstimation.drivetrainPoseTelemetry import DrivetrainPoseTelemetry
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
+from util.robotposeestimator import VisionObservation
 
 # TODO-rms was:from navigation.autoDriveNavConstants import SCORE_DIST_FROM_REEF_CENTER
 from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
@@ -46,18 +47,6 @@ class DrivetrainPoseEstimator:
         # Gyroscope angle is read from RobotTopSubsystem().inputs (logged/replay-safe)
         self._curRawGyroAngle = Rotation2d()
 
-        # Cameras - measure our position on the field from apriltags
-        # Generally accurate, but slow and laggy. Might need to be disabled
-        # if the robot isn't flat on the ground for some reason.
-        self.cams: list = []
-        self.posEstLogs: list = []
-        self.includeInFilter: list = []
-        CAMS = DrivetrainPhysical().CAMS
-        for camConfig in CAMS:
-            self.cams.append(camConfig["CAM"])
-            # self.posEstLogs.append(YTestForPosition(camConfig['POSE_EST_LOG_NAME']))
-            self.includeInFilter.append(camConfig["WEIGH_IN_FILTER"])
-        self._camTargetsVisible = False
         self._useAprilTags = True
 
         # The kalman filter to fuse all sources of information together into a single
@@ -110,26 +99,6 @@ class DrivetrainPoseEstimator:
             and wheel positions as read in from swerve module sensors
         """
 
-        # Add any vision observations to the pose estimate
-        self._camTargetsVisible = False
-
-        if self._useAprilTags:
-            for cam in self.cams:
-                cam.update(self._curEstPose)
-                observations = cam.getPoseEstimates()
-                for observation in observations:
-                    self._poseEst.addVisionMeasurement(
-                        observation.estFieldPose,
-                        observation.time,
-                        (
-                            observation.xyStdDev,
-                            observation.xyStdDev,
-                            observation.rotStdDev,
-                        ),
-                    )
-                    self._camTargetsVisible = True
-                self._telemetry.addVisionObservations(observations)
-
         # Read the gyro angle from RobotTopSubsystem inputs (logged/replay-safe)
         if wpilib.TimedRobot.isSimulation():
             # Simulated Gyro
@@ -172,6 +141,17 @@ class DrivetrainPoseEstimator:
             Pose2d: The most recent estimate of where the robot is at
         """
         return self._curEstPose
+
+    def addVisionObservation(self, obs: VisionObservation) -> None:
+        """Accept a vision observation from VisionSubsystem and feed it to the pose estimator."""
+        if not self._useAprilTags:
+            return
+        self._poseEst.addVisionMeasurement(
+            obs.visionPose,
+            obs.timestamp,
+            (obs.std[0], obs.std[1], obs.std[2]),
+        )
+        self._telemetry.addVisionObservation(obs)
 
     def setUseAprilTags(self, use: bool):
         """

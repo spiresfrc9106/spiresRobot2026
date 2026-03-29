@@ -1,13 +1,18 @@
+from typing import Callable
+
 from typing_extensions import Self
 from commands2 import Subsystem
-from wpimath.geometry import Pose2d, Rotation2d
+from wpilib import RobotBase
+from wpimath.geometry import Pose2d, Rotation2d, Pose3d, Transform3d, Rotation3d
 from wpimath import angleModulus
 
 from constants.field import kFarHubLocation, kCloseHubLocation
+from constants.turret import kTurretLocation
 from pykit.logger import Logger
 from pykit.autolog import autologgable_output
 
 from subsystems.state.robottopio import RobotTopIO
+from util.convenientmath import pose3dFrom2d
 from utils.allianceTransformUtils import onRed
 from utils.singleton import _instances
 from util.logtracer import LogTracer
@@ -35,23 +40,29 @@ class RobotTopSubsystem(Subsystem):
         return _instances[cls]
 
     def __init__(self, io: RobotTopIO | None = None) -> None:
+        if io is not None:
+            self.io = io
         if self._initalized:
             return
+
         if io is None:
             # Default: created early (before factory runs); factory will swap in the real gyro
             from wrappers.wrapperedGyro import WrapperedNoGyro
 
-            io = RobotTopIO(WrapperedNoGyro())
-        self.io = io
+            self.io = RobotTopIO(WrapperedNoGyro())
+
         Subsystem.__init__(self)
         self.setName(type(self).__name__)
         self.inputs = RobotTopIO.RobotTopIOInputs()
 
-        self.robotPose: Pose2d | None = None
+        self.robotPose: Pose2d = Pose2d()
         # Deferred import to avoid circular dependency (faults.py imports RobotTopSubsystem)
         from utils.faults import Fault
 
         self._gyroDisconFault = Fault("Gyroscope not sending data")
+
+        self.simResetPoseConsumers = []
+        self.simPoseReceiverConsumers = []
 
         self._initalized = True
 
@@ -82,29 +93,65 @@ class RobotTopSubsystem(Subsystem):
         """The time of the current robot periodic loop in seconds."""
         return self.inputs.timeUSec / 1.0e6
 
+    def getRobotPose(self) -> Pose2d:
+        return self.robotPose
+
     def setRobotPose(self, pose: Pose2d) -> None:
         self.robotPose = pose
+
+    def resetRobotPose(self, pose: Pose2d) -> None:
+        self.setRobotPose(pose)
+        if RobotBase.isSimulation():
+            self.resetSimPose(pose)
+
+    def resetSimPose(self, pose: Pose2d):
+        if len(self.simResetPoseConsumers) > 0:
+            for consumer in self.simResetPoseConsumers:
+                consumer(pose)
+            return
+        print(
+            f"resetSimPose: len={len(self.simPoseReceiverConsumers)} This is not supposed to happen"
+        )
+
+    def registerSimPoseResetConsumer(self, consumer: Callable[[Pose2d], None]) -> None:
+        self.simResetPoseConsumers.append(consumer)
+
+    def getSimPose(self) -> Pose2d:
+        if len(self.simPoseReceiverConsumers) == 1:
+            return self.simPoseReceiverConsumers[0]()
+        print(
+            f"getSimPose: len={len(self.simPoseReceiverConsumers)} This is not supposed to happen"
+        )
+        return self.getRobotPose()
+
+    def getSimTurretPose(self) -> Pose3d:
+        turretRotation = Rotation2d()
+        return (
+                pose3dFrom2d(self.getSimPose())
+                + kTurretLocation
+                + Transform3d(0, 0, 0, Rotation3d(0, 0, turretRotation.radians()))
+        )
+
+    def registerSimPoseReceiverConsumer(self, consumer: Callable[[], Pose2d]) -> None:
+        self.simPoseReceiverConsumers.append(consumer)
+
 
     def hubLocation(self):
         return kFarHubLocation if onRed() else kCloseHubLocation
 
     def getDistanceToHubM(self) -> float:
-        result = 0.0
-        if self.robotPose is not None:
-            result = self.robotPose.translation().distance(self.hubLocation())
+        result = self.robotPose.translation().distance(self.hubLocation())
         return result
 
     def getRotationToHub(self) -> Rotation2d | None:
-        rotationToTarget = None
-        if self.robotPose is not None:
-            bearingToTarget = (
-                self.hubLocation() - self.robotPose.translation()
-            ).angle()
-            rotationToTarget = (
-                bearingToTarget
-                - self.robotPose.rotation()
-                + Rotation2d.fromDegrees(180.0)
-            )
+        bearingToTarget = (
+            self.hubLocation() - self.robotPose.translation()
+        ).angle()
+        rotationToTarget = (
+            bearingToTarget
+            - self.robotPose.rotation()
+            + Rotation2d.fromDegrees(180.0)
+        )
         return rotationToTarget
 
     def getAngleToHubRad(self) -> float:
@@ -135,6 +182,7 @@ def RobotTopSubsystemFactory() -> RobotTopSubsystem:
         gyro = WrapperedAdis16470ImuSingleton()
     else:
         gyro = WrapperedNoGyro()
-    robotTop = RobotTopSubsystem()
-    robotTop.io.gyro = gyro
+
+    io = RobotTopIO(gyro)
+    robotTop = RobotTopSubsystem(io)
     return robotTop

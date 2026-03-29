@@ -247,8 +247,6 @@ class DrivetrainPhysical(metaclass=Singleton):
 
         self.WHEEL_MOTOR_WRAPPER = self.c.drivetrainDepConstants["WHEEL_MOTOR_WRAPPER"]
 
-        self.CAMS = self.c.drivetrainDepConstants["CAMS"]
-
         # Array of translations from robot's origin (center bottom, on floor) to the module's contact patch with the ground
         self.robotToModuleTranslations = []
         self.robotToModuleTranslations.append(

@@ -23,6 +23,8 @@ class VisionSubsystemPoseObservation:
     tagsList: uint32 = uint32(0)
     averageTagDistance: float = 0
     observationType: int = ObservationType.PHOTONVISION.value
+    xyStdDev: float = 0.0
+    rotStdDev: float = 0.0
 
 
 @make_wpistruct(name="turretedobservation")

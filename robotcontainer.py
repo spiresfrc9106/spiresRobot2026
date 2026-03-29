@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from typing import Callable, Optional
 
 import commands2
 import wpilib
@@ -29,9 +29,11 @@ from subsystems.intakeOuttake.inoutsubsystem import (
 from subsystems.state.configsubsystem import ConfigSubsystem
 from subsystems.state.robottopsubsystem import RobotTopSubsystemFactory
 from subsystems.vision.visionsubsystem import VisionSubsystem, VisionSubsystemFactory
+from util.robotposeestimator import VisionObservation
 from utils.allianceTransformUtils import onRed
 from utils.units import deg2Rad, in2m
 
+ALLOW_ROBOT_STATE = False
 
 class RobotContainer:
     """
@@ -45,18 +47,26 @@ class RobotContainer:
     Spires addendum to RobotContainer design, the robot container should know very little about the robot's subsystems,
     or how to build them or what they connect to. That information should be in the subsystem classes.
     """
-    autoOrTestCommand: Optional[Command] = None
 
     def __init__(self) -> None:
         # The robot's subsystems
+        self.autoOrTestCommand: Optional[Command] = None
         self.config = ConfigSubsystem()
         self.robotop = RobotTopSubsystemFactory()
         self.inout: InOutSubsystem | None = inoutSubsystemFactory()
         self.drivetrainSubsystem: DrivetrainSubsystem | None = None
         if ConfigSubsystem().useCasseroleSwerve():
             self.drivetrainSubsystem = DrivetrainSubsystemFactory()
-        self.visionSubsystem: VisionSubsystem | None = VisionSubsystemFactory()
-
+        visionConsumers: list[Callable[[VisionObservation], None]] = []
+        if ALLOW_ROBOT_STATE:
+            visionConsumers.append(RobotState.addVisionMeasurement)
+        if self.drivetrainSubsystem is not None:
+            visionConsumers.append(
+                self.drivetrainSubsystem.casseroleDrivetrain.poseEst.addVisionObservation
+            )
+        self.visionSubsystem: VisionSubsystem | None = VisionSubsystemFactory(
+            visionConsumers
+        )
         if self.inout is not None:
             NamedCommands.registerCommand(
                 "spinUpFlywheel", self.inout.spinUpFlywheelCommand()
@@ -196,7 +206,7 @@ class RobotContainer:
         self.testChooser.setDefaultOption("Do Nothing Once", cmd.none())
 
     def robotPeriodic(self) -> None:
-        if self.visionSubsystem is not None:
+        if ALLOW_ROBOT_STATE and self.visionSubsystem is not None:
             if self.drivetrainSubsystem is None:
                 RobotState.periodic(
                     Rotation2d().fromDegrees(0.0),  # self.drive.getRawRotation(),
@@ -274,7 +284,8 @@ class RobotContainer:
         print(f"resetPose: {pose}")
         if self.drivetrainSubsystem is not None:
             self.drivetrainSubsystem.casseroleDrivetrain.poseEst.setKnownPose(pose)
-        if self.visionSubsystem is not None:
+        self.robotop.resetRobotPose(pose)
+        if ALLOW_ROBOT_STATE and self.visionSubsystem is not None:
             RobotState.resetPose(pose)
 
     def testInit(self) -> None:

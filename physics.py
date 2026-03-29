@@ -13,12 +13,12 @@ from wpilib import RobotController
 from wpimath.geometry import Pose2d, Rotation2d, Transform2d
 from pyfrc.physics.core import PhysicsInterface
 from robot import MyRobot
-from robotstate import RobotState
 from subsystems.drivetrain.drivetrainsubsystem import DrivetrainSubsystem
 
 from constants.sim import (
     kSimDefaultRobotLocation,
 )
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 
 
 # TODO this comes from westwood and drives the westwood camera sim. Unify it with the drivetrain sim in the casserole swerve.
@@ -108,8 +108,8 @@ class PhysicsEngine:
         assert drivetrainSubsystem is not None
         self.driveSim = SwerveDriveSim(drivetrainSubsystem)
 
-        RobotState.registerSimPoseResetConsumer(self.driveSim.resetPose)
-        RobotState.registerSimPoseReceiverConsumer(self.driveSim.getSimPose)
+        RobotTopSubsystem().registerSimPoseResetConsumer(self.driveSim.resetPose)
+        RobotTopSubsystem().registerSimPoseReceiverConsumer(self.driveSim.getSimPose)
 
         self.sim_initialized = False
 

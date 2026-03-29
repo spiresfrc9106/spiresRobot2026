@@ -4,6 +4,7 @@ from pykit.logger import Logger
 from wpimath.geometry import Pose2d, Pose3d, Transform3d
 from photonlibpy.simulation import SimCameraProperties, PhotonCameraSim, VisionSystemSim
 
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from subsystems.vision.visionio import VisionSubsystemIO
 from subsystems.vision.visioniophoton import VisionSubsystemIOPhotonVision
 
@@ -37,7 +38,7 @@ class VisionSubsystemIOPhotonSim(VisionSubsystemIOPhotonVision):
 
         cameraProperties = SimCameraProperties.OV9281_1920_1080()
         self.cameraSim = PhotonCameraSim(
-            self.camera, cameraProperties, kApriltagFieldLayout
+            self._wrapperedCam.cam, cameraProperties, kApriltagFieldLayout
         )
 
         if isTurreted:
@@ -50,18 +51,19 @@ class VisionSubsystemIOPhotonSim(VisionSubsystemIOPhotonVision):
             )
 
     def updateInputs(self, inputs: VisionSubsystemIO.VisionSubsystemIOInputs):
-        from robotstate import RobotState
 
         if self.isTurreted:
             assert VisionSubsystemIOPhotonSim.turretSim is not None
             VisionSubsystemIOPhotonSim.turretSim.update(self.poseSupplier())
-            turretPose = RobotState.getSimTurretPose()
-            camPose = turretPose + self.robotToCamera
+            turretPose = RobotTopSubsystem().getTurretPose()
+            camPose = turretPose + self._wrapperedCam.robotToCam
         else:
             assert VisionSubsystemIOPhotonSim.visionSim is not None
             VisionSubsystemIOPhotonSim.visionSim.update(self.poseSupplier())
-            robotPose = pose3dFrom2d(RobotState.getFieldPose())
-            camPose = robotPose + self.robotToCamera
+            robotPose = pose3dFrom2d(RobotTopSubsystem().getSimPose())
+            camPose = robotPose + self._wrapperedCam.robotToCam
         super().updateInputs(inputs)
 
-        Logger.recordOutput("VisionSim/Cam" + self.camera.getName() + "Pose", camPose)
+        Logger.recordOutput(
+            "VisionSim/Cam" + self._wrapperedCam.cam.getName() + "Pose", camPose
+        )
