@@ -10,6 +10,7 @@ from wpimath.geometry import (
     Translation3d,
 )
 
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from subsystems.vision.visionio import (
     ObservationType,
     VisionSubsystemIO,
@@ -80,7 +81,7 @@ class VisionSubsystemIOSim(VisionSubsystemIO):
                 avgDist = botToTagPose.translation().norm()
                 poseObservations.append(
                     VisionSubsystemPoseObservation(
-                        RobotController.getFPGATime() / 1e6,
+                        RobotTopSubsystem().getFPGATimestampS(),
                         botPose,
                         0.1,
                         1,
