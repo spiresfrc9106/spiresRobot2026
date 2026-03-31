@@ -46,6 +46,7 @@ class RobotLoggerSetup:
             case constants.RobotModes.REPLAY:
                 self._useTiming = False
                 logPath = constants.LOG_PATH
+                assert logPath is not None, "Log path not set"
                 logPath = os.path.abspath(logPath)
                 print(f"Starting log from {logPath}")
                 replaySource = WPILOGReader(logPath)

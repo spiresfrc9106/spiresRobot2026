@@ -392,13 +392,13 @@ def DrivetrainSubsystemFactory() -> DrivetrainSubsystem | None:
                     azmthMotor,
                     azmthEncoder,
                 ) in wrapperedMotorsAndEncoderSets:
-                    wheelMotor_io = MotorModuleIO(  # type: ignore[call-arg]
+                    wheelMotor_io = MotorModuleIO(
                         name=f"{p.DRIVETRAIN_NAME}/{moduleName}WheelMotorModuleIO",
                     )
-                    azmthMotor_io = MotorModuleIO(  # type: ignore[call-arg]
+                    azmthMotor_io = MotorModuleIO(
                         name=f"{p.DRIVETRAIN_NAME}/{moduleName}AzmthMotorModuleIO",
                     )
-                    azmthEncoder_io = EncoderModuleIO(  # type: ignore[call-arg]
+                    azmthEncoder_io = EncoderModuleIO(
                         name=f"{p.DRIVETRAIN_NAME}/{moduleName}AzmthEncoderModuleIO",
                     )
                     motorModuleIOsAndEncoderIOSets.append(

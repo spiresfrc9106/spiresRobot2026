@@ -50,14 +50,15 @@ class RobotModes(Enum):
     REPLAY = 3
 
 
-kSimMode = (
-    RobotModes.REPLAY
+LOG_PATH = (
+    os.environ["LOG_PATH"]
     if "LOG_PATH" in os.environ and os.environ["LOG_PATH"] != ""
-    else RobotModes.SIMULATION
+    else None
 )
+
+kSimMode = RobotModes.REPLAY if LOG_PATH is not None else RobotModes.SIMULATION
 kRobotMode = RobotModes.REAL if RobotBase.isReal() else kSimMode
 
-LOG_PATH = os.environ["LOG_PATH"] if "LOG_PATH" in os.environ and os.environ["LOG_PATH"] != "" else None
 
 """
 origLogName = 'test_log_and_replay_step3.wpilog'

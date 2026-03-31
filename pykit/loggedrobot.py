@@ -76,11 +76,11 @@ class LoggedRobot(IterativeRobotBase):
             if not self.useTiming and self.isSimulation():
                 # Replay mode: step the HAL sim clock forward one period so C++
                 # WPILib code (e.g. SwerveDrive4PoseEstimator) sees correct dt.
-                #print(f"stepping {self.getPeriod()} useTiming={self.useTiming} isSimulation={self.isSimulation()} {RobotController.getFPGATime()}")
+                # print(f"stepping {self.getPeriod()} useTiming={self.useTiming} isSimulation={self.isSimulation()} {RobotController.getFPGATime()}")
                 wpilib.simulation.stepTimingAsync(self.getPeriod())
             else:
                 pass
-                #print(f"not stepping useTiming={self.useTiming} isSimulation={self.isSimulation()} {RobotController.getFPGATime()}")
+                # print(f"not stepping useTiming={self.useTiming} isSimulation={self.isSimulation()} {RobotController.getFPGATime()}")
 
             if self.useTiming:
                 currentTime = RobotController.getFPGATime()

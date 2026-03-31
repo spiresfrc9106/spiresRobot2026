@@ -219,6 +219,7 @@ class MyRobot(LoggedRobot):
 
         destroyAllSingletonInstances()
         from utils.singleton import _instances
+
         print(f"Goodbye! utils.singleton.instances={_instances}")
 
         super().endCompetition()

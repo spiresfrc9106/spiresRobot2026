@@ -38,10 +38,11 @@ _SKIP_SUBSTRINGS = ("/sol/",)
 origLogPath = ""
 replayLogPath = ""
 
+
 @pytest.fixture()
 def forceRobotInReplay():
     constants.kRobotMode = constants.kRobotMode.REPLAY
-    origLogName = 'test_log_and_replay_step3.wpilog'
+    origLogName = "test_log_and_replay_step3.wpilog"
     origLogPath = os.path.join(WPILOGWriter.defaultPathSim, origLogName)
     print(f"-----------------------")
     print(f"-----------------------")
@@ -50,7 +51,8 @@ def forceRobotInReplay():
     print(f"-----------------------")
     constants.LOG_PATH = origLogPath
 
-#@pytest.mark.dependency(name="test_log_and_replay_step1")
+
+# @pytest.mark.dependency(name="test_log_and_replay_step1")
 @pytest.mark.order(1)
 def test_log_and_replay_step1(control, robot):
     # -----------------------------------------------------------------------
@@ -70,7 +72,7 @@ def test_log_and_replay_step1(control, robot):
         origLogPath = robot.loggerSetup.logFiles[0]
 
         originalDir = os.path.dirname(origLogPath)  # r'c:\temp'
-        newName = 'test_log_and_replay_step3.wpilog'
+        newName = "test_log_and_replay_step3.wpilog"
         newPath = os.path.join(originalDir, newName)
         shutil.copyfile(origLogPath, newPath)
         global replayLogPath
@@ -78,23 +80,23 @@ def test_log_and_replay_step1(control, robot):
 
     assert os.path.exists(origLogPath), f"Log file not created: {origLogPath}"
 
+
 @pytest.mark.order(2)
 def test_step2():
     print(f"test_step2:instances={_instances}")
 
 
-#@pytest.mark.dependency(depends=["test_log_and_replay_step1"])
+# @pytest.mark.dependency(depends=["test_log_and_replay_step1"])
 @pytest.mark.order(3)
 def test_log_and_replay_step3(forceRobotInReplay, control, robot):
     # -----------------------------------------------------------------------
     # Phase 2: replay in a subprocess so REVLib/HAL device registries are fresh
     # -----------------------------------------------------------------------
-    #robot.container.autoChooser.sendableChooser.setDefaultOption(
+    # robot.container.autoChooser.sendableChooser.setDefaultOption(
     #    "C-c_backup", "C-c_backup"
-    #)
+    # )
 
-    #todo project_root = pathlib.Path(__file__).parent.parent
-
+    # todo project_root = pathlib.Path(__file__).parent.parent
 
     with control.run_robot():
         control.step_timing(seconds=0.5, autonomous=True, enabled=False)
@@ -109,13 +111,14 @@ def test_log_and_replay_step3(forceRobotInReplay, control, robot):
     _compareLogFiles(origLogPath, replayLogPath)
 
 
-
 # ---------------------------------------------------------------------------
 # Log comparison helpers
 # ---------------------------------------------------------------------------
 
 
-def _readLogEntries(path: str, prefix: str) -> Tuple[dict[str, list], dict[str, list[int]]]:
+def _readLogEntries(
+    path: str, prefix: str
+) -> Tuple[dict[str, list], dict[str, list[int]]]:
     """Read all entries under `prefix`, return {bare_key: [val, ...]}."""
     reader = DataLogReader(path)
     entryNames: dict[int, str] = {}
@@ -169,7 +172,9 @@ def _compareLogFiles(origPath: str, replayPath: str, tol: float = 1e-4) -> None:
         replayVals = replayOut[key]
         realTimes_us = realTimesDict[key]
         replayTimes_us = replayTimesDict[key]
-        for i, (rv, pv, rTime_us, pTime_us) in enumerate(zip(realVals, replayVals, realTimes_us, replayTimes_us)):
+        for i, (rv, pv, rTime_us, pTime_us) in enumerate(
+            zip(realVals, replayVals, realTimes_us, replayTimes_us)
+        ):
             if isinstance(rv, float):
                 assert math.isclose(rv, pv, rel_tol=tol, abs_tol=tol), (
                     f"{key}[{i}]: real={rv} at {rTime_us}, replay={pv} at {pTime_us}"
@@ -181,11 +186,12 @@ def _compareLogFiles(origPath: str, replayPath: str, tol: float = 1e-4) -> None:
                             f"{key}[{i}][{j}]: real={re} at {rTime_us}, replay={pe} at {pTime_us}"
                         )
             else:
-                assert rv == pv, f"{key}[{i}]: real={rv} at {rTime_us}, replay={pv} at {pTime_us}"
+                assert rv == pv, (
+                    f"{key}[{i}]: real={rv} at {rTime_us}, replay={pv} at {pTime_us}"
+                )
             assert rTime_us == pTime_us, f"{key}[{i}]: at {rTime_us}, at {pTime_us}"
         lenRealVals = len(realVals)
         lenReplayVals = len(replayVals)
         assert lenRealVals == lenReplayVals, (
             f"Cycle count mismatch for {key}: {lenRealVals} vs {lenReplayVals}"
         )
-
