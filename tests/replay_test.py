@@ -8,6 +8,7 @@ Run:
 
 import math
 import os
+import shutil
 import pathlib
 import subprocess
 import sys
@@ -16,6 +17,7 @@ from typing import Tuple
 import pytest
 from wpiutil.log import DataLogReader
 import constants
+from pykit.wpilog.wpilogwriter import WPILOGWriter
 from utils.singleton import _instances
 
 from robot import MyRobot
@@ -36,10 +38,21 @@ _SKIP_SUBSTRINGS = ("/sol/",)
 origLogPath = ""
 replayLogPath = ""
 
+@pytest.fixture()
+def forceRobotInReplay():
+    constants.kRobotMode = constants.kRobotMode.REPLAY
+    origLogName = 'test_log_and_replay_step3.wpilog'
+    origLogPath = os.path.join(WPILOGWriter.defaultPathSim, origLogName)
+    print(f"-----------------------")
+    print(f"-----------------------")
+    print(f"\n\n-----------------------Forcing replay mode LOG_PATH: {origLogPath}\n\n")
+    print(f"-----------------------")
+    print(f"-----------------------")
+    constants.LOG_PATH = origLogPath
 
-@pytest.mark.dependency()
-@pytest.mark.serial
-def test_log_and_replay(control, robot):
+#@pytest.mark.dependency(name="test_log_and_replay_step1")
+@pytest.mark.order(1)
+def test_log_and_replay_step1(control, robot):
     # -----------------------------------------------------------------------
     # Phase 1: sim run
     # -----------------------------------------------------------------------
@@ -53,23 +66,26 @@ def test_log_and_replay(control, robot):
         control.step_timing(seconds=0.5, autonomous=True, enabled=False)
         control.step_timing(seconds=15.0, autonomous=True, enabled=True)
         control.step_timing(seconds=0.5, autonomous=True, enabled=False)
-        global origLogPath, replayLogPath
+        global origLogPath
         origLogPath = robot.loggerSetup.logFiles[0]
+
+        originalDir = os.path.dirname(origLogPath)  # r'c:\temp'
+        newName = 'test_log_and_replay_step3.wpilog'
+        newPath = os.path.join(originalDir, newName)
+        shutil.copyfile(origLogPath, newPath)
+        global replayLogPath
         replayLogPath = origLogPath[:-7] + "_sim.wpilog"
 
     assert os.path.exists(origLogPath), f"Log file not created: {origLogPath}"
 
-    constants.kRobotMode = constants.RobotModes.REPLAY
-    os.environ["LOG_PATH"] = origLogPath
-
-@pytest.mark.serial
+@pytest.mark.order(2)
 def test_step2():
     print(f"test_step2:instances={_instances}")
 
 
-@pytest.mark.dependency(depends=["test_log_and_replay"])
-@pytest.mark.serial
-def test_log_and_replay_step3(control):
+#@pytest.mark.dependency(depends=["test_log_and_replay_step1"])
+@pytest.mark.order(3)
+def test_log_and_replay_step3(forceRobotInReplay, control, robot):
     # -----------------------------------------------------------------------
     # Phase 2: replay in a subprocess so REVLib/HAL device registries are fresh
     # -----------------------------------------------------------------------

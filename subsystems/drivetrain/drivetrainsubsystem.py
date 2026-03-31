@@ -272,7 +272,7 @@ def DrivetrainSubsystemFactory() -> DrivetrainSubsystem | None:
     drivetrain: Optional[DrivetrainSubsystem] = None
     if HAS_DRIVETRAIN:
         match kRobotMode:
-            case RobotModes.REAL | RobotModes.SIMULATION:
+            case RobotModes.REAL | RobotModes.SIMULATION | RobotModes.REPLAY:
                 wrapperedMotorsAndEncoderSets = []
                 p = DrivetrainPhysical()
 
@@ -394,15 +394,12 @@ def DrivetrainSubsystemFactory() -> DrivetrainSubsystem | None:
                 ) in wrapperedMotorsAndEncoderSets:
                     wheelMotor_io = MotorModuleIO(  # type: ignore[call-arg]
                         name=f"{p.DRIVETRAIN_NAME}/{moduleName}WheelMotorModuleIO",
-                        motor=wheelMotor,
                     )
                     azmthMotor_io = MotorModuleIO(  # type: ignore[call-arg]
                         name=f"{p.DRIVETRAIN_NAME}/{moduleName}AzmthMotorModuleIO",
-                        motor=azmthMotor,
                     )
                     azmthEncoder_io = EncoderModuleIO(  # type: ignore[call-arg]
                         name=f"{p.DRIVETRAIN_NAME}/{moduleName}AzmthEncoderModuleIO",
-                        encoder=azmthEncoder,
                     )
                     motorModuleIOsAndEncoderIOSets.append(
                         (moduleName, wheelMotor_io, azmthMotor_io, azmthEncoder_io)

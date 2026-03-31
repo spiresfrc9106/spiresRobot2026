@@ -29,6 +29,8 @@ import os
 
 from wpilib import RobotBase
 
+from pykit.wpilog.wpilogwriter import WPILOGWriter
+
 kRobotUpdatePeriodMs: int = 50
 kRobotUpdatePeriodS: float = kRobotUpdatePeriodMs / 1000
 kRobotUpdateFrequency: float = 1 / kRobotUpdatePeriodS
@@ -54,5 +56,15 @@ kSimMode = (
     else RobotModes.SIMULATION
 )
 kRobotMode = RobotModes.REAL if RobotBase.isReal() else kSimMode
+
+LOG_PATH = os.environ["LOG_PATH"] if "LOG_PATH" in os.environ and os.environ["LOG_PATH"] != "" else None
+
+"""
+origLogName = 'test_log_and_replay_step3.wpilog'
+origLogPath = os.path.join(WPILOGWriter.defaultPathSim, origLogName)
+
+kRobotMode = RobotModes.REPLAY
+LOG_PATH = origLogPath
+"""
 
 kTuningMode: bool = False

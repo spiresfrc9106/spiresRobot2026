@@ -45,7 +45,7 @@ class RobotLoggerSetup:
                 Logger.addDataReciever(writer)
             case constants.RobotModes.REPLAY:
                 self._useTiming = False
-                logPath = os.environ["LOG_PATH"]
+                logPath = constants.LOG_PATH
                 logPath = os.path.abspath(logPath)
                 print(f"Starting log from {logPath}")
                 replaySource = WPILOGReader(logPath)
