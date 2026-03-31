@@ -45,12 +45,20 @@ class SwerveDriveSim:
         deltaT = tm_diff
 
         chassisSpeed = self.drivetrainSubsystem.getRobotRelativeChassisSpeeds()
-        # Large noise (~3 deg/cycle heading, ~5 cm/cycle position) to confirm
-        # that replay is isolated from physics — fromLog() overwrites these values.
-        deltaHeading = chassisSpeed.omega * deltaT + random.gauss(0, 0.05)
-        deltaX = chassisSpeed.vx * deltaT + random.gauss(0, 0.05)
-        deltaY = chassisSpeed.vy * deltaT + random.gauss(0, 0.05)
-
+        sigma = None
+        if False:
+            # Large noise (~3 deg/cycle heading, ~5 cm/cycle position) to confirm
+            # that replay is isolated from physics — fromLog() overwrites these values.
+            sigma = 0.05
+        deltaHeading = chassisSpeed.omega * deltaT + (
+            random.gauss(0, sigma) if sigma is not None else 0.0
+        )
+        deltaX = chassisSpeed.vx * deltaT + (
+            random.gauss(0, sigma) if sigma is not None else 0.0
+        )
+        deltaY = chassisSpeed.vy * deltaT + (
+            random.gauss(0, sigma) if sigma is not None else 0.0
+        )
         deltaTrans = Transform2d(deltaX, deltaY, deltaHeading)
 
         newPose = self.pose + deltaTrans
