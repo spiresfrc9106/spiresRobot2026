@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import os
 import sys
 
 from commands2.commandscheduler import CommandScheduler
@@ -8,11 +7,9 @@ from commands2.commandscheduler import CommandScheduler
 from pathplannerlib.commands import PathPlannerLogging
 import commands2
 
-from pykit.wpilog.wpilogwriter import WPILOGWriter
-from pykit.wpilog.wpilogreader import WPILOGReader
-from pykit.networktables.nt4Publisher import NT4Publisher
 from pykit.loggedrobot import LoggedRobot
 from pykit.logger import Logger
+from utils.robotLoggerSetup import RobotLoggerSetup
 
 import constants
 
@@ -45,48 +42,8 @@ class MyRobot(LoggedRobot):
 
     def __init__(self):
         super().__init__()
-        Logger.recordMetadata("Robot", type(self).__name__)
-        match constants.kRobotMode:
-            case constants.RobotModes.REAL | constants.RobotModes.SIMULATION:
-                deploy_config = wpilib.deployinfo.getDeployData()
-                if deploy_config is not None:
-                    Logger.recordMetadata(
-                        "Deploy Host", deploy_config.get("deploy-host", "")
-                    )
-                    Logger.recordMetadata(
-                        "Deploy User", deploy_config.get("deploy-user", "")
-                    )
-                    Logger.recordMetadata(
-                        "Deploy Date", deploy_config.get("deploy-date", "")
-                    )
-                    Logger.recordMetadata(
-                        "Code Path", deploy_config.get("code-path", "")
-                    )
-                    Logger.recordMetadata("Git Hash", deploy_config.get("git-hash", ""))
-                    Logger.recordMetadata(
-                        "Git Branch", deploy_config.get("git-branch", "")
-                    )
-                    Logger.recordMetadata(
-                        "Git Description", deploy_config.get("git-desc", "")
-                    )
-                Logger.addDataReciever(NT4Publisher(True))
-                # TODO consider using the WPILOGWriter path parameter in simulation to save
-                # the log file in a directory outside of the project.
-                Logger.addDataReciever(WPILOGWriter())
-            case constants.RobotModes.REPLAY:
-                self.useTiming = (
-                    False  # Disable timing in replay mode, run as fast as possible
-                    # True # replay with timing
-                )
-                log_path = os.environ["LOG_PATH"]
-                log_path = os.path.abspath(log_path)
-                print(f"Starting log from {log_path}")
-                replaySource = WPILOGReader(log_path)
-                Logger.setReplaySource(replaySource)
-                # TODO consider using the WPILOGWriter path parameter in simulation to save
-                # the log file in a directory outside of the project.
-                Logger.addDataReciever(WPILOGWriter(log_path[:-7] + "_sim.wpilog"))
-        Logger.start()
+        self.loggerSetup = RobotLoggerSetup(type(self).__name__)
+        self.useTiming = self.loggerSetup.useTiming
 
         self.container = RobotContainer()
 
@@ -251,10 +208,6 @@ class MyRobot(LoggedRobot):
     #########################################################
     ## Cleanup
     def endCompetition(self):
-        print("Goodbye!")
-
-        # Stop robot code exectuion first
-        super().endCompetition()
 
         # Sometimes `robopy test pyfrc_test.py` will invoke endCompetition() without completing robotInit(),
         # this will create a confusing exception here because we can reach self.rioMonitor.stopThreads()
@@ -265,6 +218,9 @@ class MyRobot(LoggedRobot):
             self.rioMonitor.stopThreads()
 
         destroyAllSingletonInstances()
+        from utils.singleton import _instances
+        print(f"Goodbye! utils.singleton.instances={_instances}")
+
         super().endCompetition()
 
 

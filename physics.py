@@ -9,6 +9,8 @@
 # of your robot code without too much extra effort.
 #
 
+import random
+
 from wpilib import RobotController
 from wpimath.geometry import Pose2d, Rotation2d, Transform2d
 from pyfrc.physics.core import PhysicsInterface
@@ -43,9 +45,11 @@ class SwerveDriveSim:
         deltaT = tm_diff
 
         chassisSpeed = self.drivetrainSubsystem.getRobotRelativeChassisSpeeds()
-        deltaHeading = chassisSpeed.omega * deltaT
-        deltaX = chassisSpeed.vx * deltaT
-        deltaY = chassisSpeed.vy * deltaT
+        # Large noise (~3 deg/cycle heading, ~5 cm/cycle position) to confirm
+        # that replay is isolated from physics — fromLog() overwrites these values.
+        deltaHeading = chassisSpeed.omega * deltaT + random.gauss(0, 0.05)
+        deltaX = chassisSpeed.vx * deltaT + random.gauss(0, 0.05)
+        deltaY = chassisSpeed.vy * deltaT + random.gauss(0, 0.05)
 
         deltaTrans = Transform2d(deltaX, deltaY, deltaHeading)
 

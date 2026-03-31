@@ -104,13 +104,17 @@ class RobotTopSubsystem(Subsystem):
         if RobotBase.isSimulation():
             self.resetSimPose(pose)
 
+    def resetSimGyro(self, pose: Pose2d) -> None:
+        """Reset the simulated gyro origin to the given pose. No-op on real hardware."""
+        self.io.resetSimPose(pose)
+
     def resetSimPose(self, pose: Pose2d):
         if len(self.simResetPoseConsumers) > 0:
             for consumer in self.simResetPoseConsumers:
                 consumer(pose)
             return
         print(
-            f"resetSimPose: len={len(self.simPoseReceiverConsumers)} This is not supposed to happen"
+            f"resetSimPose: len={len(self.simResetPoseConsumers)} This is not supposed to happen"
         )
 
     def registerSimPoseResetConsumer(self, consumer: Callable[[Pose2d], None]) -> None:
@@ -159,6 +163,7 @@ class RobotTopSubsystem(Subsystem):
 
 def RobotTopSubsystemFactory() -> RobotTopSubsystem:
     # Deferred import to avoid circular dependency (configsubsystem imports from robottopio)
+    from constants import kRobotMode, RobotModes
     from subsystems.state.configsubsystem import ConfigSubsystem
     from wrappers.wrapperedGyro import (
         WrapperedAdis16470ImuSingleton,
@@ -171,13 +176,22 @@ def RobotTopSubsystemFactory() -> RobotTopSubsystem:
     rtdc = ConfigSubsystem().robotTopDepConstants
     gyroType: str = rtdc["GYRO"]
     gyro: WrapperedNavxSingleton | WrapperedAdis16470ImuSingleton | WrapperedNoGyro
-    if gyroType == "NAVX":
-        gyro = WrapperedNavxSingleton()
-    elif gyroType == "ADIS16470_IMU":
-        gyro = WrapperedAdis16470ImuSingleton()
+    if kRobotMode == RobotModes.REAL:
+        if gyroType == "NAVX":
+            gyro = WrapperedNavxSingleton()
+        elif gyroType == "ADIS16470_IMU":
+            gyro = WrapperedAdis16470ImuSingleton()
+        else:
+            gyro = WrapperedNoGyro()
     else:
         gyro = WrapperedNoGyro()
 
-    io = RobotTopIO(gyro)
+    io: RobotTopIO
+    if kRobotMode == RobotModes.SIMULATION:
+        from subsystems.state.robottopiosim import RobotTopIOSim
+
+        io = RobotTopIOSim(gyro)
+    else:
+        io = RobotTopIO(gyro)
     robotTop = RobotTopSubsystem(io)
     return robotTop

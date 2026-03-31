@@ -1,10 +1,7 @@
-import random
 from typing import Tuple
-import wpilib
 from wpimath.estimator import SwerveDrive4PoseEstimator
-from wpimath.geometry import Pose2d, Rotation2d, Twist2d, Translation2d
+from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 
-from constants import kRobotUpdatePeriodS
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.poseEstimation.drivetrainPoseTelemetry import DrivetrainPoseTelemetry
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
@@ -44,7 +41,8 @@ class DrivetrainPoseEstimator:
         # Represents our current best-guess as to our location on the field.
         self._curEstPose = Pose2d()
 
-        # Gyroscope angle is read from RobotTopSubsystem().inputs (logged/replay-safe)
+        # Gyroscope angle is always read from RobotTopSubsystem().inputs (logged/replay-safe).
+        # In simulation, RobotTopIOSim integrates chassis speeds to produce this value.
         self._curRawGyroAngle = Rotation2d()
 
         self._useAprilTags = True
@@ -65,11 +63,6 @@ class DrivetrainPoseEstimator:
         self._telemetry = DrivetrainPoseTelemetry()
         self.limelightPoseOfTarget = None
 
-        # Simulation Only - maintain a rough estimate of pose from velocities
-        # Using just inverse kinematics, no kalman filter. This is used only
-        # to produce a reasonable-looking simulated gyroscope.
-        self._simPose = Pose2d()
-        self._knownPose = Pose2d()
         self.lastCamEstRobotPos = Pose2d()
 
     def setKnownPose(self, knownPose: Pose2d):
@@ -79,10 +72,9 @@ class DrivetrainPoseEstimator:
         Args:
             knownPose (Pose2d): The pose we know we're at
         """
-        if wpilib.TimedRobot.isSimulation():
-            self._knownPose = knownPose
-            self._simPose = knownPose
-            self._curRawGyroAngle = knownPose.rotation()
+        # Reset the simulated gyro origin (no-op on real hardware / replay).
+        RobotTopSubsystem().resetSimGyro(knownPose)
+        self._curRawGyroAngle = knownPose.rotation()
 
         self._poseEst.resetPosition(
             self._curRawGyroAngle,
@@ -99,23 +91,9 @@ class DrivetrainPoseEstimator:
             and wheel positions as read in from swerve module sensors
         """
 
-        # Read the gyro angle from RobotTopSubsystem inputs (logged/replay-safe)
-        if wpilib.TimedRobot.isSimulation():
-            # Simulated Gyro
-            # Simulate an angle based on (simulated) motor speeds with some noise
-            chSpds = self.kinematics.toChassisSpeeds(curModuleSpeeds)
-            self._simPose = self._simPose.exp(
-                Twist2d(
-                    chSpds.vx * kRobotUpdatePeriodS,
-                    chSpds.vy * kRobotUpdatePeriodS,
-                    chSpds.omega * kRobotUpdatePeriodS,
-                )
-            )
-            noise = Rotation2d.fromDegrees(random.uniform(-0.0, 0.0))
-            self._curRawGyroAngle = self._simPose.rotation() + noise
-        else:
-            # Read logged gyro angle from RobotTopSubsystem
-            self._curRawGyroAngle = Rotation2d(RobotTopSubsystem().inputs.gyroAngleRad)
+        # Read the gyro angle from RobotTopSubsystem inputs (logged/replay-safe).
+        # In simulation, RobotTopIOSim writes the simulated gyro angle here each cycle.
+        self._curRawGyroAngle = Rotation2d(RobotTopSubsystem().inputs.gyroAngleRad)
 
         # Update the WPILib Pose Estimate
         self._poseEst.update(self._curRawGyroAngle, curModulePositions)
@@ -124,8 +102,8 @@ class DrivetrainPoseEstimator:
 
         """# make sure we're not inside the hub somewhow #2025 code -- so old code that should be updated
         startPoseEst = self._curEstPose
-        self._curEstPose = self._adjustOutsideReef(self._curEstPose, blueReefLocation) #2025 code 
-        self._curEstPose = self._adjustOutsideReef(self._curEstPose, redReefLocation) 
+        self._curEstPose = self._adjustOutsideReef(self._curEstPose, blueReefLocation) #2025 code
+        self._curEstPose = self._adjustOutsideReef(self._curEstPose, redReefLocation)
         if(startPoseEst != self._curEstPose):
             self._poseEst.resetTranslation(self._curEstPose.translation())"""
 
@@ -162,10 +140,7 @@ class DrivetrainPoseEstimator:
         self._useAprilTags = use
 
     def getRealOrSimRawGyroAngle(self) -> Rotation2d:
-        if wpilib.TimedRobot.isSimulation():
-            return self._curRawGyroAngle - self._knownPose.rotation()
-        else:
-            return self._curRawGyroAngle
+        return self._curRawGyroAngle
 
     def _adjustOutsideReef(self, poseIn: Pose2d, reefTrans: Translation2d) -> Pose2d:
         # TODO-rms was:if (poseIn.translation().distance(reefTrans) < SCORE_DIST_FROM_REEF_CENTER):

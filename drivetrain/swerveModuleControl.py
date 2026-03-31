@@ -9,6 +9,7 @@ from wpimath.geometry import Rotation2d
 from wpimath.filter import SlewRateLimiter
 from wpilib import TimedRobot
 
+import constants
 from constants import kRobotUpdatePeriodS
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.swerveModuleGainSet import SwerveModuleGainSet
@@ -226,9 +227,12 @@ class SwerveModuleControl:
 
         self._prevMotorDesSpeed = motorDesSpd  # save for next loop
 
-        if TimedRobot.isSimulation():
-            # Simulation only. Do a very rough simulation of module behavior, and populate
-            # sensor data for the next loop.
+        if (
+            TimedRobot.isSimulation()
+            and constants.kRobotMode != constants.RobotModes.REPLAY
+        ):
+            # Simulation only (not replay). Do a very rough simulation of module behavior,
+            # and populate sensor data for the next loop.
 
             # Very simple voltage/motor model of azimuth rotation
             azmthVoltage = self.azmthVoltage
@@ -245,6 +249,16 @@ class SwerveModuleControl:
             )  # self.wheelSimFilter.calculate(self.desiredState.speed)
             self.actualState.speed = speed  # + random.uniform(-0.0, 0.0)
             self.actualPosition.distance += self.actualState.speed * kRobotUpdatePeriodS
+        elif constants.kRobotMode == constants.RobotModes.REPLAY:
+            # Replay: read actual state from logged motor/encoder inputs.
+            self.actualState.angle = Rotation2d(self.azmthEnc.getAngleRad())
+            self.actualState.speed = self.dtMotorRotToLinear(
+                self.wheelMotor.getMotorVelocityRadPerSec()
+            )
+            self.actualPosition.distance = self.dtMotorRotToLinear(
+                self.wheelMotor.getMotorPositionRad()
+            )
+            self.actualPosition.angle = self.actualState.angle
 
         Logger.recordOutput(f"{self._azmthDesTopicName}_v", self.azmthVoltage)
         Logger.recordOutput(

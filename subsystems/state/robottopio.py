@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from pykit.autolog import autolog
 
 from wpilib import RobotController
+from wpimath.geometry import Pose2d
 
 from subsystems.state.configio import RobotTypes
 from utils.singleton import Singleton
@@ -37,6 +38,10 @@ class RobotTopIO:
     def __init__(self, gyro) -> None:
         self.gyro = gyro
 
+    def resetSimPose(self, pose: Pose2d) -> None:
+        """No-op on real hardware; overridden by RobotTopIOSim."""
+        ...
+
     def updateInputs(self, inputs: RobotTopIOInputs) -> None:
         """Update the robot high-level state I/O inputs.
 
@@ -44,6 +49,7 @@ class RobotTopIO:
             inputs (RobotTopIOInputs): The robot high-level state I/O inputs to update.
         """
         inputs.timeUSec = RobotController.getFPGATime()
-        inputs.gyroAngleRad = self.gyro.getGyroAngleRotation2d().radians()
-        inputs.gyroConnected = self.gyro.isConnected()
-        inputs.gyroYawRateRadPerSec = self.gyro.getRate()
+        if self.gyro is not None:
+            inputs.gyroAngleRad = self.gyro.getGyroAngleRotation2d().radians()
+            inputs.gyroConnected = self.gyro.isConnected()
+            inputs.gyroYawRateRadPerSec = self.gyro.getRate()

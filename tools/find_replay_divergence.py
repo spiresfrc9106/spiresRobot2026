@@ -1,0 +1,392 @@
+"""
+tools/find_replay_divergence.py
+
+Reads a _sim.wpilog (which contains both /RealOutputs/* and /ReplayOutputs/*)
+and finds the first cycle where any monitored key diverges between the two.
+
+Usage:
+    python tools/find_replay_divergence.py                        # newest pyLogs/*_sim.wpilog
+    python tools/find_replay_divergence.py pyLogs/foo_sim.wpilog  # specific file
+    python tools/find_replay_divergence.py --config my.toml       # custom config
+    python tools/find_replay_divergence.py --show-all             # all divergences, not just first
+
+Config (tools/replay_divergence.toml loaded automatically if present):
+    tolerance = 1e-4
+
+    skip_prefixes = ["Logger/", "LoggedRobot/", "SystemStats/", "Console", "LogTracer/"]
+    skip_substrings = ["/sol/"]
+    watch_keys = []   # if non-empty, only diff keys matching any substring here
+
+    [tolerances]
+    "Robot/top/distanceToHubIn" = 1e-3   # per-key override (first substring match wins)
+"""
+
+from __future__ import annotations
+
+import argparse
+import math
+import sys
+import tomllib
+from dataclasses import dataclass, field
+from glob import glob
+from pathlib import Path
+from typing import Any
+
+from wpiutil.log import DataLogReader
+
+# ---------------------------------------------------------------------------
+# Defaults
+# ---------------------------------------------------------------------------
+
+_DEFAULT_SKIP_PREFIXES: list[str] = [
+    "Logger/",
+    "LoggedRobot/",
+    "SystemStats/",
+    "Console",
+    "LogTracer/",
+]
+_DEFAULT_SKIP_SUBSTRINGS: list[str] = ["/sol/"]
+_DEFAULT_TOL: float = 1e-4
+
+
+# ---------------------------------------------------------------------------
+# Config
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class Config:
+    tolerance: float = _DEFAULT_TOL
+    skip_prefixes: list[str] = field(
+        default_factory=lambda: list(_DEFAULT_SKIP_PREFIXES)
+    )
+    skip_substrings: list[str] = field(
+        default_factory=lambda: list(_DEFAULT_SKIP_SUBSTRINGS)
+    )
+    watch_keys: list[str] = field(default_factory=list)
+    tolerances: dict[str, float] = field(default_factory=dict)
+
+
+def _load_config(path: Path | None) -> Config:
+    cfg = Config()
+    if path is None:
+        default = Path(__file__).parent / "replay_divergence.toml"
+        if default.exists():
+            path = default
+        else:
+            return cfg
+    with open(path, "rb") as f:
+        data = tomllib.load(f)
+    if "tolerance" in data:
+        cfg.tolerance = float(data["tolerance"])
+    if "skip_prefixes" in data:
+        cfg.skip_prefixes = [str(s) for s in data["skip_prefixes"]]
+    if "skip_substrings" in data:
+        cfg.skip_substrings = [str(s) for s in data["skip_substrings"]]
+    if "watch_keys" in data:
+        cfg.watch_keys = [str(s) for s in data["watch_keys"]]
+    if "tolerances" in data:
+        cfg.tolerances = {str(k): float(v) for k, v in data["tolerances"].items()}
+    return cfg
+
+
+def _tol_for_key(key: str, cfg: Config) -> float:
+    for pattern, tol in cfg.tolerances.items():
+        if pattern in key:
+            return tol
+    return cfg.tolerance
+
+
+# ---------------------------------------------------------------------------
+# Log reading
+# ---------------------------------------------------------------------------
+
+Value = float | int | bool | str | list[Any]
+
+
+def _read_log(
+    path: Path,
+    cfg: Config,
+) -> tuple[dict[str, list[tuple[float, Value]]], dict[str, list[tuple[float, Value]]]]:
+    """
+    Read a _sim.wpilog and return:
+        real[bare_key]   = [(ts_sec, value), ...]   from /RealOutputs/
+        replay[bare_key] = [(ts_sec, value), ...]   from /ReplayOutputs/
+    Skips and watch_keys filters are applied here.
+    """
+    real: dict[str, list[tuple[float, Value]]] = {}
+    replay: dict[str, list[tuple[float, Value]]] = {}
+
+    # entry_id -> (bare_key, target_dict)
+    entry_map: dict[int, tuple[str, dict[str, list[tuple[float, Value]]]]] = {}
+
+    reader = DataLogReader(str(path))
+
+    def _should_skip(bare: str) -> bool:
+        if any(bare.startswith(p) for p in cfg.skip_prefixes):
+            return True
+        if any(sub in bare for sub in cfg.skip_substrings):
+            return True
+        if cfg.watch_keys and not any(w in bare for w in cfg.watch_keys):
+            return True
+        return False
+
+    for record in reader:
+        if record.isControl():
+            if record.isStart():
+                sd = record.getStartData()
+                name: str = sd.name
+                if name.startswith("/RealOutputs/"):
+                    bare = name[len("/RealOutputs/") :]
+                    if not _should_skip(bare):
+                        entry_map[sd.entry] = (bare, real)
+                elif name.startswith("/ReplayOutputs/"):
+                    bare = name[len("/ReplayOutputs/") :]
+                    if not _should_skip(bare):
+                        entry_map[sd.entry] = (bare, replay)
+            continue
+
+        info = entry_map.get(record.getEntry())
+        if info is None:
+            continue
+        bare, target = info
+        ts = record.getTimestamp() / 1_000_000.0
+
+        val: Value | None = None
+        for getter in (
+            record.getDouble,
+            record.getFloat,
+            record.getInteger,
+            record.getBoolean,
+            record.getString,
+            record.getDoubleArray,
+        ):
+            try:
+                val = getter()
+                break
+            except Exception:
+                continue
+        if val is None:
+            continue
+
+        target.setdefault(bare, []).append((ts, val))
+
+    return real, replay
+
+
+# ---------------------------------------------------------------------------
+# Comparison
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class Divergence:
+    cycle: int
+    ts: float
+    key: str
+    real_val: Value
+    replay_val: Value
+    diff: float | None  # None for non-numeric
+
+
+def _vals_close(rv: Value, pv: Value, tol: float) -> bool:
+    if isinstance(rv, float) and isinstance(pv, float):
+        return math.isclose(rv, pv, rel_tol=tol, abs_tol=tol)
+    if isinstance(rv, list) and isinstance(pv, list):
+        if len(rv) != len(pv):
+            return False
+        return all(
+            math.isclose(float(a), float(b), rel_tol=tol, abs_tol=tol)
+            if isinstance(a, float) and isinstance(b, float)
+            else a == b
+            for a, b in zip(rv, pv)
+        )
+    return rv == pv
+
+
+def _numeric_diff(rv: Value, pv: Value) -> float | None:
+    if isinstance(rv, (int, float)) and isinstance(pv, (int, float)):
+        return abs(float(rv) - float(pv))
+    return None
+
+
+def _compare(
+    real: dict[str, list[tuple[float, Value]]],
+    replay: dict[str, list[tuple[float, Value]]],
+    cfg: Config,
+    show_all: bool,
+) -> tuple[list[Divergence], dict[str, tuple[int, int]], list[str]]:
+    """
+    Returns:
+        divergences:    list of Divergence (all or first-per-key depending on show_all)
+        count_mismatches: {key: (real_count, replay_count)}
+        missing_keys:   keys in real but not replay
+    """
+    divergences: list[Divergence] = []
+    count_mismatches: dict[str, tuple[int, int]] = {}
+    missing_keys: list[str] = []
+
+    all_keys = sorted(real.keys())
+    for key in all_keys:
+        if key not in replay:
+            missing_keys.append(key)
+            continue
+        real_vals = real[key]
+        replay_vals = replay[key]
+        if len(real_vals) != len(replay_vals):
+            count_mismatches[key] = (len(real_vals), len(replay_vals))
+        tol = _tol_for_key(key, cfg)
+        found_first = False
+        for i, ((rts, rv), (pts, pv)) in enumerate(zip(real_vals, replay_vals)):
+            if not _vals_close(rv, pv, tol):
+                d = Divergence(
+                    cycle=i,
+                    ts=rts,
+                    key=key,
+                    real_val=rv,
+                    replay_val=pv,
+                    diff=_numeric_diff(rv, pv),
+                )
+                divergences.append(d)
+                if not show_all:
+                    found_first = True
+                    break
+            if found_first:
+                break
+
+    divergences.sort(key=lambda d: d.cycle)
+    return divergences, count_mismatches, missing_keys
+
+
+# ---------------------------------------------------------------------------
+# Output formatting
+# ---------------------------------------------------------------------------
+
+
+def _fmt_val(v: Value) -> str:
+    if isinstance(v, float):
+        return f"{v:.6g}"
+    if isinstance(v, list):
+        inner = ", ".join(f"{x:.4g}" if isinstance(x, float) else str(x) for x in v[:4])
+        suffix = ", ..." if len(v) > 4 else ""
+        return f"[{inner}{suffix}]"
+    return str(v)
+
+
+def _fmt_diff(d: float | None) -> str:
+    if d is None:
+        return "n/a"
+    if d == 0.0:
+        return "0"
+    return f"{d:.3e}"
+
+
+def _print_report(
+    divergences: list[Divergence],
+    count_mismatches: dict[str, tuple[int, int]],
+    missing_keys: list[str],
+    show_all: bool,
+    real_key_count: int,
+    replay_key_count: int,
+) -> None:
+    print(f"  Real keys: {real_key_count}  Replay keys: {replay_key_count}")
+
+    # Count mismatches
+    if count_mismatches:
+        print(f"\n=== Count mismatches ({len(count_mismatches)}) ===")
+        for key, (rc, pc) in sorted(count_mismatches.items()):
+            print(f"  {key:<60}  real={rc}  replay={pc}")
+    else:
+        print("\n=== Count mismatches: (none) ===")
+
+    # Divergences
+    label = (
+        "All divergences" if show_all else "First divergence per key (sorted by cycle)"
+    )
+    if divergences:
+        print(f"\n=== {label} ({len(divergences)}) ===")
+        key_w = min(60, max(len(d.key) for d in divergences) + 2)
+        val_w = 14
+        header = (
+            f"{'Cycle':>6}  {'Timestamp':>10}  "
+            f"{'Key':<{key_w}}  {'Real':>{val_w}}  {'Replay':>{val_w}}  {'Diff':>10}"
+        )
+        print(header)
+        print("-" * len(header))
+        for d in divergences:
+            print(
+                f"{d.cycle:>6}  {d.ts:>9.3f}s  "
+                f"{d.key:<{key_w}}  {_fmt_val(d.real_val):>{val_w}}  "
+                f"{_fmt_val(d.replay_val):>{val_w}}  {_fmt_diff(d.diff):>10}"
+            )
+    else:
+        print(f"\n=== {label}: (none) ===")
+
+    # Missing keys
+    if missing_keys:
+        print(f"\n=== Keys missing from ReplayOutputs ({len(missing_keys)}) ===")
+        for k in missing_keys:
+            print(f"  {k}")
+    else:
+        print("\n=== Keys missing from ReplayOutputs: (none) ===")
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+
+def _pick_wpilog() -> Path:
+    candidates = glob("pyLogs/*_sim.wpilog")
+    if not candidates:
+        # fall back to any wpilog
+        candidates = glob("pyLogs/*.wpilog")
+    if not candidates:
+        sys.exit("No .wpilog files found in pyLogs/")
+    return Path(max(candidates, key=lambda p: Path(p).stat().st_mtime))
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Find first divergence between /RealOutputs and /ReplayOutputs in a _sim.wpilog"
+    )
+    parser.add_argument(
+        "log", nargs="?", help="Path to _sim.wpilog (default: newest in pyLogs/)"
+    )
+    parser.add_argument("--config", metavar="FILE.toml", help="TOML config file")
+    parser.add_argument("--tol", type=float, help="Global tolerance override")
+    parser.add_argument(
+        "--show-all",
+        action="store_true",
+        help="Show all divergences (not just first per key)",
+    )
+    args = parser.parse_args()
+
+    config_path = Path(args.config) if args.config else None
+    cfg = _load_config(config_path)
+    if args.tol is not None:
+        cfg.tolerance = args.tol
+        cfg.tolerances = {}  # CLI tol wins over per-key overrides
+
+    log_path = Path(args.log) if args.log else _pick_wpilog()
+    if not log_path.exists():
+        sys.exit(f"File not found: {log_path}")
+
+    print(f"Reading {log_path} ...")
+    real, replay = _read_log(log_path, cfg)
+
+    divergences, count_mismatches, missing_keys = _compare(
+        real, replay, cfg, args.show_all
+    )
+    _print_report(
+        divergences,
+        count_mismatches,
+        missing_keys,
+        args.show_all,
+        len(real),
+        len(replay),
+    )
+
+
+if __name__ == "__main__":
+    main()

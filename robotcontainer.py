@@ -58,6 +58,13 @@ class RobotContainer:
         self.drivetrainSubsystem: DrivetrainSubsystem | None = None
         if ConfigSubsystem().useCasseroleSwerve():
             self.drivetrainSubsystem = DrivetrainSubsystemFactory()
+        if self.drivetrainSubsystem is not None:
+            from subsystems.state.robottopiosim import RobotTopIOSim
+
+            if isinstance(self.robotop.io, RobotTopIOSim):
+                self.robotop.io.setChassisSpeedSupplier(
+                    self.drivetrainSubsystem.casseroleDrivetrain.getRobotRelativeChassisSpeeds
+                )
         visionConsumers: list[Callable[[VisionObservation], None]] = []
         if ALLOW_ROBOT_STATE:
             visionConsumers.append(RobotState.addVisionMeasurement)
