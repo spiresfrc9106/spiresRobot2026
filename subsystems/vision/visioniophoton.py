@@ -2,10 +2,7 @@ from wpimath.geometry import Pose2d, Transform3d
 
 from subsystems.vision.visionio import (
     VisionSubsystemIO,
-    VisionSubsystemPoseObservation,
 )
-from constants.vision import ObservationType
-from util.convenientmath import pose3dFrom2d
 from wrappers.wrapperedPoseEstPhotonCamera import WrapperedPoseEstPhotonCamera
 
 

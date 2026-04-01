@@ -1,6 +1,6 @@
 from math import hypot, sin
 from typing import Callable
-from wpilib import RobotController, Timer
+from wpilib import Timer
 from wpimath.geometry import (
     Pose2d,
     Pose3d,

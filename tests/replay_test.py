@@ -9,9 +9,6 @@ Run:
 import math
 import os
 import shutil
-import pathlib
-import subprocess
-import sys
 from typing import Tuple
 
 import pytest
@@ -22,7 +19,6 @@ from pykit.wpilog.wpilogwriter import WPILOGWriter
 from tests.controllerTestPyKitReplay import PyKitReplayTestController
 from utils.singleton import _instances
 
-from robot import MyRobot
 
 # Keys whose values legitimately differ between real and replay
 _SKIP_PREFIXES = (
@@ -47,11 +43,11 @@ replayLogPath = os.path.join(
 @pytest.fixture()
 def forceRobotInReplay():
     constants.kRobotMode = constants.kRobotMode.REPLAY
-    print(f"-----------------------")
-    print(f"-----------------------")
+    print("-----------------------")
+    print("-----------------------")
     print(f"\n\n-----------------------Forcing replay mode LOG_PATH: {origLogPath}\n\n")
-    print(f"-----------------------")
-    print(f"-----------------------")
+    print("-----------------------")
+    print("-----------------------")
     constants.LOG_PATH = origLogPath
 
 

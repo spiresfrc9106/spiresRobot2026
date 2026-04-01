@@ -4,7 +4,6 @@ from typing import List
 from robotpy_apriltag import AprilTagFieldLayout, AprilTagField
 from wpimath.units import feetToMeters, degreesToRadians
 from wpimath.geometry import Pose2d, Transform3d, Pose3d
-from wpiutil.wpistruct import uint32
 
 from constants import kRobotUpdatePeriodS
 from constants.vision import ObservationType
@@ -18,7 +17,6 @@ from subsystems.vision.visionio import (
     VisionSubsystemPoseObservation,
     condenseTagsListToUint32,
 )
-from util.robotposeestimator import VisionObservation
 from utils.faults import Fault
 
 MAX_CAMERA_TARGETS = 4

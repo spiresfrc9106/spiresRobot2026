@@ -1,6 +1,5 @@
 from typing import List
 
-from wpilib import Timer
 from wpimath.geometry import Pose2d, Translation2d
 from drivetrain.controlStrategies.holonomicDriveController import (
     HolonomicDriveController,

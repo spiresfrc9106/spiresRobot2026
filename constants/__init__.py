@@ -29,7 +29,6 @@ import os
 
 from wpilib import RobotBase
 
-from pykit.wpilog.wpilogwriter import WPILOGWriter
 
 kRobotUpdatePeriodMs: int = 50
 kRobotUpdatePeriodS: float = kRobotUpdatePeriodMs / 1000
