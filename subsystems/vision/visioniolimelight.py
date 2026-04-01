@@ -5,11 +5,10 @@ from wpimath.geometry import Pose3d, Rotation2d, Rotation3d, Transform3d
 
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from subsystems.vision.visionio import (
-    ObservationType,
     VisionSubsystemIO,
     VisionSubsystemPoseObservation,
 )
-
+from constants.vision import ObservationType
 
 from constants.math import kRadiansPerDegree
 

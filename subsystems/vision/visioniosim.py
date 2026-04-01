@@ -12,7 +12,6 @@ from wpimath.geometry import (
 
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from subsystems.vision.visionio import (
-    ObservationType,
     VisionSubsystemIO,
     VisionSubsystemPoseObservation,
 )
@@ -22,6 +21,7 @@ from constants.vision import (
     kCameraFOVHorizontal,
     kSimulationVariation,
     kApriltagPositionDict,
+    ObservationType,
 )
 
 

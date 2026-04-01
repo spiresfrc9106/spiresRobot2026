@@ -1,3 +1,4 @@
+from enum import Enum
 from os import path
 from wpimath.geometry import Pose3d, Rotation2d, Rotation3d, Transform3d
 from robotpy_apriltag import AprilTagFieldLayout
@@ -367,3 +368,12 @@ kApriltagPositionDictAndyMark = {
 }
 kRedHubAprilTags = [2, 3, 4, 5, 8, 9, 10, 11]
 kBlueHubAprilTags = [18, 19, 20, 21, 24, 25, 26, 27]
+
+
+class ObservationType(Enum):
+    UNKNOWN = -1
+    MEGATAG_1 = 0
+    MEGATAG_2 = 1
+    PHOTONVISION = 2
+    PHOTON_MULTITAG = 3
+    PHOTON_SINGLETAG = 4

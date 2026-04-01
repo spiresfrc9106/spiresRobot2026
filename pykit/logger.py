@@ -2,7 +2,7 @@ from typing import Any, Optional
 import sys
 import threading
 
-from wpilib import RobotController
+from wpilib import RobotController, IterativeRobotBase
 from pykit.alertlogger import AlertLogger
 from pykit.autolog import AutoLogInputManager, AutoLogOutputManager
 from pykit.inputs.loggableds import LoggedDriverStation
@@ -251,7 +251,7 @@ class Logger:
         return int(RobotController.getFPGATime())
 
     @classmethod
-    def periodicBeforeUser(cls):
+    def periodicBeforeUser(cls) -> bool:
         """
         Called periodically before the user's robot code.
         This method updates the log table with new data, either from the replay source
@@ -274,33 +274,35 @@ class Logger:
                         )
                     else:
                         cls.end()
-                    raise SystemExit(0)
 
-            dsStart = RobotController.getFPGATime()
-            # In replay mode, simulate driver station inputs from log
-            if cls.isReplay():
-                LoggedDriverStation.loadFromTable(
-                    cls.entry.getSubTable("DriverStation")
-                )
-            dashboardInputStart = RobotController.getFPGATime()
+            if cls.running:
+                dsStart = RobotController.getFPGATime()
+                # In replay mode, simulate driver station inputs from log
+                if cls.isReplay():
+                    LoggedDriverStation.loadFromTable(
+                        cls.entry.getSubTable("DriverStation")
+                    )
+                dashboardInputStart = RobotController.getFPGATime()
 
-            # Update dashboard inputs (choosers, etc.)
-            for dashInput in cls.dashboardInputs:
-                dashInput.periodic()
+                # Update dashboard inputs (choosers, etc.)
+                for dashInput in cls.dashboardInputs:
+                    dashInput.periodic()
 
-            dashboardInputEnd = RobotController.getFPGATime()
+                dashboardInputEnd = RobotController.getFPGATime()
 
-            cls.recordOutput(
-                "Logger/EntryUpdateMS", (dsStart - entryUpdateStart) / 1000.0
-            )
-            if cls.isReplay():
                 cls.recordOutput(
-                    "Logger/DriverStationMS", (dashboardInputStart - dsStart) / 1000.0
+                    "Logger/EntryUpdateMS", (dsStart - entryUpdateStart) / 1000.0
                 )
-            cls.recordOutput(
-                "Logger/DashboardInputsMS",
-                (dashboardInputEnd - dashboardInputStart) / 1000.0,
-            )
+                if cls.isReplay():
+                    cls.recordOutput(
+                        "Logger/DriverStationMS", (dashboardInputStart - dsStart) / 1000.0
+                    )
+                cls.recordOutput(
+                    "Logger/DashboardInputsMS",
+                    (dashboardInputEnd - dashboardInputStart) / 1000.0,
+                )
+        stop = not cls.running
+        return stop
 
     @classmethod
     def periodicAfterUser(cls, userCodeLength: int, periodicBeforeLength: int):

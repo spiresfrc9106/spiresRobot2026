@@ -15,9 +15,11 @@ import sys
 from typing import Tuple
 
 import pytest
+import wpilib
 from wpiutil.log import DataLogReader
 import constants
 from pykit.wpilog.wpilogwriter import WPILOGWriter
+from tests.controllerTestPyKitReplay import PyKitReplayTestController
 from utils.singleton import _instances
 
 from robot import MyRobot
@@ -35,21 +37,27 @@ _SKIP_PREFIXES = (
 # /sol/ — logged by WrapperedPoseEstPhotonCamera which runs only in sim, not replay.
 _SKIP_SUBSTRINGS = ("/sol/",)
 
-origLogPath = ""
-replayLogPath = ""
+origLogName = "test_log_and_replay_step3.wpilog"
+origLogPath = os.path.join(WPILOGWriter.defaultPathSim, origLogName)
+replayLogPath = os.path.join(WPILOGWriter.defaultPathSim, "test_log_and_replay_step3_sim.wpilog")
 
 
 @pytest.fixture()
 def forceRobotInReplay():
     constants.kRobotMode = constants.kRobotMode.REPLAY
-    origLogName = "test_log_and_replay_step3.wpilog"
-    origLogPath = os.path.join(WPILOGWriter.defaultPathSim, origLogName)
     print(f"-----------------------")
     print(f"-----------------------")
     print(f"\n\n-----------------------Forcing replay mode LOG_PATH: {origLogPath}\n\n")
     print(f"-----------------------")
     print(f"-----------------------")
     constants.LOG_PATH = origLogPath
+
+@pytest.fixture(scope="function")
+def pykitReplayControl(reraise, robot: wpilib.RobotBase) -> PyKitReplayTestController:
+    """
+    A pytest fixture that provides control over your robot
+    """
+    return PyKitReplayTestController(reraise, robot)
 
 
 # @pytest.mark.dependency(name="test_log_and_replay_step1")
@@ -88,7 +96,8 @@ def test_step2():
 
 # @pytest.mark.dependency(depends=["test_log_and_replay_step1"])
 @pytest.mark.order(3)
-def test_log_and_replay_step3(forceRobotInReplay, control, robot):
+@pytest.mark.replay
+def test_log_and_replay_step3(forceRobotInReplay, pykitReplayControl, robot):
     # -----------------------------------------------------------------------
     # Phase 2: replay in a subprocess so REVLib/HAL device registries are fresh
     # -----------------------------------------------------------------------
@@ -98,10 +107,10 @@ def test_log_and_replay_step3(forceRobotInReplay, control, robot):
 
     # todo project_root = pathlib.Path(__file__).parent.parent
 
-    with control.run_robot():
-        control.step_timing(seconds=0.5, autonomous=True, enabled=False)
-        control.step_timing(seconds=15.0, autonomous=True, enabled=True)
-        control.step_timing(seconds=0.5, autonomous=True, enabled=False)
+    with pykitReplayControl.run_robot():
+        pykitReplayControl.step_timing(seconds=0.5, autonomous=True, enabled=False, assert_alive=False)
+        pykitReplayControl.step_timing(seconds=15.0, autonomous=True, enabled=True, assert_alive=False)
+        pykitReplayControl.step_timing(seconds=0.5, autonomous=True, enabled=False, assert_alive=False)
 
     assert os.path.exists(replayLogPath), f"Replay log not created: {replayLogPath}"
 

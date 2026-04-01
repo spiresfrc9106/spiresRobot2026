@@ -4,14 +4,21 @@ from typing import List
 from robotpy_apriltag import AprilTagFieldLayout, AprilTagField
 from wpimath.units import feetToMeters, degreesToRadians
 from wpimath.geometry import Pose2d, Transform3d, Pose3d
+from wpiutil.wpistruct import uint32
 
 from constants import kRobotUpdatePeriodS
+from constants.vision import ObservationType
 from pykit.logger import Logger
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from photonlibpy.targeting.photonTrackedTarget import PhotonTrackedTarget
 from photonlibpy.photonCamera import setVersionCheckEnabled
 from photonlibpy import PhotonPoseEstimator, PhotonCamera, EstimatedRobotPose
 
+from subsystems.vision.visionio import (
+    VisionSubsystemPoseObservation,
+    condenseTagsListToUint32,
+)
+from util.robotposeestimator import VisionObservation
 from utils.faults import Fault
 
 MAX_CAMERA_TARGETS = 4
@@ -27,7 +34,7 @@ _MAX_SINGLE_TAG_AMBIGUITY = 0.2
 _ROT_STD_DEV_SINGLE_TAG = degreesToRadians(99999.0)
 
 
-# Describes one on-field pose estimate from the acamera at a specific time.
+# Describes one on-field pose estimate from the camera at a specific time.
 @dataclass
 class CameraPoseObservation:
     time: float
@@ -36,6 +43,9 @@ class CameraPoseObservation:
     rotStdDev: float = degreesToRadians(
         99999.0
     )  # std dev of measurement, in units of radians
+    observationType: ObservationType = ObservationType.UNKNOWN
+    averageDistance_m: float = 0.0
+    nTags: int = 0
 
 
 EMPTY_TRANSFORM = Transform3d()
@@ -54,7 +64,7 @@ class WrapperedPoseEstPhotonCamera:
 
         self.disconFault = Fault(f"Camera {camName} not sending data")
         self.timeoutSec = 1.0
-        self.poseEstimates: list[CameraPoseObservation] = []
+        self.poseEstimates: list[VisionSubsystemPoseObservation] = []
         self.robotToCam = robotToCam
         self.lastLatency = 0.0
         self.updateDuration = 0.0
@@ -148,49 +158,57 @@ class WrapperedPoseEstPhotonCamera:
             camEstPose: EstimatedRobotPose | None = (
                 self.camPoseEst.estimateCoprocMultiTagPose(result)
             )
-            isMultiTag = camEstPose is not None
-            if camEstPose is None:
-                camEstPose = self.camPoseEst.estimateLowestAmbiguityPose(result)
-
-            xyStdDev = 1.0
-            rotStdDev = _ROT_STD_DEV_SINGLE_TAG
-
             if camEstPose is not None:
-                if isMultiTag:
-                    usedIds = set(result.multitagResult.fiducialIDsUsed)  # type: ignore[union-attr]
-                    usedTargets = [
-                        t
-                        for t in camEstPose.targetsUsed
-                        if t.getFiducialId() in usedIds
-                    ]
-                    nTags = max(len(usedTargets), 1)
-                    avgDist = (
-                        sum(
-                            t.getBestCameraToTarget().translation().norm()
-                            for t in usedTargets
-                        )
-                        / nTags
-                    )
-                    xyStdDev = _K_XY_MULTI * avgDist**2 / nTags
-                    rotStdDev = _K_ROT_MULTI * avgDist**2 / nTags
-                else:
-                    singleTarget = camEstPose.targetsUsed[0]
-                    if singleTarget.getPoseAmbiguity() > _MAX_SINGLE_TAG_AMBIGUITY:
-                        camEstPose = None
-                    else:
-                        dist = singleTarget.getBestCameraToTarget().translation().norm()
-                        xyStdDev = _K_XY_SINGLE * dist**2
-                        rotStdDev = _ROT_STD_DEV_SINGLE_TAG
+                usedTargets = camEstPose.targetsUsed
+                nTags = len(usedTargets)
+                sumDist_m = sum(
+                    t.getBestCameraToTarget().translation().norm() for t in usedTargets
+                )
+                avgDist_m = sumDist_m / nTags
 
-            if camEstPose is not None:
+                xyStdDev_m = _K_XY_MULTI * avgDist_m**2 / nTags
+                rotStdDev_rad = _K_ROT_MULTI * avgDist_m**2 / nTags
+                assert result.multitagResult is not None
                 self.poseEstimates.append(
-                    CameraPoseObservation(
-                        time=camEstPose.timestampSeconds,
-                        estFieldPose=camEstPose.estimatedPose.toPose2d(),
-                        xyStdDev=xyStdDev,
-                        rotStdDev=rotStdDev,
+                    VisionSubsystemPoseObservation(
+                        timestamp=camEstPose.timestampSeconds,
+                        pose=camEstPose.estimatedPose,
+                        ambiguity=0.0,
+                        tagCount=nTags,
+                        tagsList=condenseTagsListToUint32(
+                            result.multitagResult.fiducialIDsUsed
+                        ),
+                        avgTagDist_m=avgDist_m,
+                        observationType=ObservationType.PHOTON_MULTITAG.value,
+                        xyStdDev_m=xyStdDev_m,
+                        rotStdDev_rad=rotStdDev_rad,
                     )
                 )
+            else:
+                camEstPose = self.camPoseEst.estimateLowestAmbiguityPose(result)
+                if camEstPose is not None:
+                    singleTarget = camEstPose.targetsUsed[0]
+                    poseAmbiguity = singleTarget.getPoseAmbiguity()
+                    if poseAmbiguity <= _MAX_SINGLE_TAG_AMBIGUITY:
+                        avgDist_m = (
+                            singleTarget.getBestCameraToTarget().translation().norm()
+                        )
+                        xyStdDev_m = _K_XY_SINGLE * avgDist_m**2
+                        self.poseEstimates.append(
+                            VisionSubsystemPoseObservation(
+                                timestamp=camEstPose.timestampSeconds,
+                                pose=camEstPose.estimatedPose,
+                                ambiguity=0.0,
+                                tagCount=1,
+                                tagsList=condenseTagsListToUint32(
+                                    [singleTarget.getFiducialId()]
+                                ),
+                                avgTagDist_m=avgDist_m,
+                                observationType=ObservationType.PHOTON_MULTITAG.value,
+                                xyStdDev_m=xyStdDev_m,
+                                rotStdDev_rad=_ROT_STD_DEV_SINGLE_TAG,
+                            )
+                        )
 
         if logTargets:
             targets_found = i
@@ -221,22 +239,22 @@ class WrapperedPoseEstPhotonCamera:
                 Logger.recordOutput(f"{self.name}/target/{targets_found + i}/area", 0.0)
 
         posesFound = 0
-        for pose in self.poseEstimates[:MAX_CAMERA_SOLUTIONS]:
-            Logger.recordOutput(f"{self.name}/sol/{posesFound}/pose", pose.estFieldPose)
-            Logger.recordOutput(f"{self.name}/sol/{posesFound}/xyStdDev", pose.xyStdDev)
+        for vo in self.poseEstimates[:MAX_CAMERA_SOLUTIONS]:
+            Logger.recordOutput(f"{self.name}/sol/{posesFound}/pose", vo.pose)
+            Logger.recordOutput(f"{self.name}/sol/{posesFound}/xyStdDev", vo.xyStdDev_m)
             Logger.recordOutput(
-                f"{self.name}/sol/{posesFound}/rotStdDev", pose.rotStdDev
+                f"{self.name}/sol/{posesFound}/rotStdDev_rad", vo.rotStdDev_rad
             )
             posesFound += 1
         for i in range(MAX_CAMERA_SOLUTIONS - posesFound):
-            Logger.recordOutput(f"{self.name}/sol/{posesFound + i}/pose", Pose2d())
+            Logger.recordOutput(f"{self.name}/sol/{posesFound + i}/pose", Pose3d())
             Logger.recordOutput(f"{self.name}/sol/{posesFound}/xyStdDev", 0.0)
-            Logger.recordOutput(f"{self.name}/sol/{posesFound}/rotStdDev", 0.0)
+            Logger.recordOutput(f"{self.name}/sol/{posesFound}/rotStdDev_rad", 0.0)
 
         endTime = RobotTopSubsystem().getFPGATimestampS()
         self.updateDuration = (endTime - startTime) * 1000.0
 
-    def getPoseEstimates(self):
+    def getPoseEstimates(self) -> List[VisionSubsystemPoseObservation]:
         return self.poseEstimates
 
     def _toFieldPose(self, tgtPose, camToTarget):

@@ -11,6 +11,7 @@ from subsystems.vision.vision import CameraConfiguration
 from subsystems.vision.visionio import (
     VisionSubsystemIO,
     VisionSubsystemTurretedPoseObservation,
+    expandTagsUint32ToList,
 )
 
 from constants.vision import (
@@ -101,27 +102,21 @@ class VisionSubsystem(Subsystem):
                 if rejectPose:
                     continue
 
-                if observation.xyStdDev > 0.0:
+                if observation.xyStdDev_m > 0.0:
                     # Pre-computed stddevs from WrapperedPoseEstPhotonCamera — use directly
-                    linearStdDev = observation.xyStdDev
-                    angularStdDev = observation.rotStdDev
+                    linearStdDev = observation.xyStdDev_m
+                    angularStdDev = observation.rotStdDev_rad
                 else:
                     # Fallback: compute from distance/tagCount (limelight and other IO)
                     stdDevFactor = (
-                        pow(observation.averageTagDistance, 2.0) / observation.tagCount
+                        pow(observation.avgTagDist_m, 2.0) / observation.tagCount
                     )
                     linearStdDev = kXyStdDevCoeff * stdDevFactor
                     angularStdDev = kThetaStdDevCoeff * stdDevFactor
 
                 # here you can also factor in per-camera weighting
 
-                observedTags = []
-                tagsList = observation.tagsList
-                for tagId in range(32):
-                    if tagsList & (1 << tagId):
-                        observedTags.append(
-                            tagId + 1
-                        )  # need to add 1 since tag IDs are 1 indexed but our bitmask is 0 indexed
+                observedTags = expandTagsUint32ToList(observation.tagsList)
 
                 visionObs = VisionObservation(
                     observation.pose.toPose2d(),

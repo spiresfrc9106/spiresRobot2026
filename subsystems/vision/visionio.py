@@ -1,30 +1,45 @@
 from dataclasses import dataclass, field
-from enum import Enum
 from typing import List
+
+from constants.vision import ObservationType
 from pykit.autolog import autolog
 from wpimath.geometry import Pose3d, Transform3d
-from wpiutil.wpistruct import make_wpistruct, uint32
-
-
-class ObservationType(Enum):
-    MEGATAG_1 = 0
-    MEGATAG_2 = 1
-    PHOTONVISION = 2
+from wpiutil.wpistruct import uint32, make_wpistruct
 
 
 @make_wpistruct(name="visionobservation")
 @autolog
 @dataclass
 class VisionSubsystemPoseObservation:
-    timestamp: float = 0
+    timestamp: float = 0.0
     pose: Pose3d = field(default_factory=Pose3d)
-    ambiguity: float = 0
+    ambiguity: float = 0.0
     tagCount: int = 0
     tagsList: uint32 = uint32(0)
-    averageTagDistance: float = 0
+    avgTagDist_m: float = 0.0
     observationType: int = ObservationType.PHOTONVISION.value
-    xyStdDev: float = 0.0
-    rotStdDev: float = 0.0
+    xyStdDev_m: float = 0.0
+    rotStdDev_rad: float = 0.0
+
+
+def condenseTagsListToUint32(tagsAsList: List[int]) -> uint32:
+    idsCondensed = 0
+    # this is stored in a 32 bit unsigned integer, this is OK since only 32 tags exist on the field
+    for tagId in tagsAsList:
+        idsCondensed |= (
+            1 << tagId - 1
+        )  # condense the tag IDs into a single integer using bitwise OR. This allows us to store up to 32 tag IDs in a single integer, which is more efficient than storing a list of integers.
+    return uint32(idsCondensed)
+
+
+def expandTagsUint32ToList(tagsAsUint32: uint32) -> List[int]:
+    observedTags = []
+    for tagId in range(32):
+        if tagsAsUint32 & (1 << tagId):
+            observedTags.append(
+                tagId + 1
+            )  # need to add 1 since tag IDs are 1 indexed but our bitmask is 0 indexed
+    return observedTags
 
 
 @make_wpistruct(name="turretedobservation")

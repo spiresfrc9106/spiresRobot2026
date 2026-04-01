@@ -1,10 +1,10 @@
 from wpimath.geometry import Pose2d, Transform3d
 
 from subsystems.vision.visionio import (
-    ObservationType,
     VisionSubsystemIO,
     VisionSubsystemPoseObservation,
 )
+from constants.vision import ObservationType
 from util.convenientmath import pose3dFrom2d
 from wrappers.wrapperedPoseEstPhotonCamera import WrapperedPoseEstPhotonCamera
 
@@ -23,22 +23,6 @@ class VisionSubsystemIOPhotonVision(VisionSubsystemIO):
     def updateInputs(self, inputs: VisionSubsystemIO.VisionSubsystemIOInputs) -> None:
         self._wrapperedCam.update(Pose2d())
         inputs.connected = self._wrapperedCam.cam.isConnected()
-
-        poseObservations = []
-        for camObs in self._wrapperedCam.getPoseEstimates():
-            poseObservations.append(
-                VisionSubsystemPoseObservation(
-                    timestamp=camObs.time,
-                    pose=pose3dFrom2d(camObs.estFieldPose),
-                    ambiguity=0.0,
-                    tagCount=2,
-                    tagsList=0,
-                    averageTagDistance=0.0,
-                    observationType=ObservationType.PHOTONVISION.value,
-                    xyStdDev=camObs.xyStdDev,
-                    rotStdDev=camObs.rotStdDev,
-                )
-            )
-        inputs.poseObservations = poseObservations
+        inputs.poseObservations = self._wrapperedCam.getPoseEstimates()
         inputs.tagIds = []
         inputs.turretedObservations = []
