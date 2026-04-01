@@ -40,7 +40,7 @@ class PyKitReplayTestController:
 
             try:
                 robot.startCompetition()
-                #assert self._robot_finished
+                # assert self._robot_finished
             finally:
                 # always call endCompetition or python hangs
                 robot.endCompetition()
@@ -139,7 +139,7 @@ class PyKitReplayTestController:
         :returns: Number of seconds time was incremented
         """
 
-        #assert self.robot_is_alive, "did you call control.run_robot()?"
+        # assert self.robot_is_alive, "did you call control.run_robot()?"
 
         assert seconds > 0
 

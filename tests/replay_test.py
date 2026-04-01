@@ -39,7 +39,9 @@ _SKIP_SUBSTRINGS = ("/sol/",)
 
 origLogName = "test_log_and_replay_step3.wpilog"
 origLogPath = os.path.join(WPILOGWriter.defaultPathSim, origLogName)
-replayLogPath = os.path.join(WPILOGWriter.defaultPathSim, "test_log_and_replay_step3_sim.wpilog")
+replayLogPath = os.path.join(
+    WPILOGWriter.defaultPathSim, "test_log_and_replay_step3_sim.wpilog"
+)
 
 
 @pytest.fixture()
@@ -51,6 +53,7 @@ def forceRobotInReplay():
     print(f"-----------------------")
     print(f"-----------------------")
     constants.LOG_PATH = origLogPath
+
 
 @pytest.fixture(scope="function")
 def pykitReplayControl(reraise, robot: wpilib.RobotBase) -> PyKitReplayTestController:
@@ -108,9 +111,15 @@ def test_log_and_replay_step3(forceRobotInReplay, pykitReplayControl, robot):
     # todo project_root = pathlib.Path(__file__).parent.parent
 
     with pykitReplayControl.run_robot():
-        pykitReplayControl.step_timing(seconds=0.5, autonomous=True, enabled=False, assert_alive=False)
-        pykitReplayControl.step_timing(seconds=15.0, autonomous=True, enabled=True, assert_alive=False)
-        pykitReplayControl.step_timing(seconds=0.5, autonomous=True, enabled=False, assert_alive=False)
+        pykitReplayControl.step_timing(
+            seconds=0.5, autonomous=True, enabled=False, assert_alive=False
+        )
+        pykitReplayControl.step_timing(
+            seconds=15.0, autonomous=True, enabled=True, assert_alive=False
+        )
+        pykitReplayControl.step_timing(
+            seconds=0.5, autonomous=True, enabled=False, assert_alive=False
+        )
 
     assert os.path.exists(replayLogPath), f"Replay log not created: {replayLogPath}"
 

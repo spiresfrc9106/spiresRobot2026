@@ -12,6 +12,7 @@ def my_fixture():  # pylint: disable=invalid-name
     destroyAllSingletonInstances()
     assert noSingletonsAround()
 
+
 def pytest_addoption(parser):
     parser.addoption(
         "--runreplay", action="store_true", default=False, help="run replay tests"

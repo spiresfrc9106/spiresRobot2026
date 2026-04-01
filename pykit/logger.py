@@ -295,7 +295,8 @@ class Logger:
                 )
                 if cls.isReplay():
                     cls.recordOutput(
-                        "Logger/DriverStationMS", (dashboardInputStart - dsStart) / 1000.0
+                        "Logger/DriverStationMS",
+                        (dashboardInputStart - dsStart) / 1000.0,
                     )
                 cls.recordOutput(
                     "Logger/DashboardInputsMS",

@@ -105,7 +105,7 @@ class LoggedRobot(IterativeRobotBase):
             periodicBeforeStart = RobotController.getFPGATime()
             stop = Logger.periodicBeforeUser()
             if stop:
-                #self.endCompetition()
+                # self.endCompetition()
                 break
 
             # Execute user periodic code and measure timing
