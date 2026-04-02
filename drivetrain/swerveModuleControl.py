@@ -7,7 +7,6 @@ from wpimath.kinematics import SwerveModuleState
 from wpimath.kinematics import SwerveModulePosition
 from wpimath.geometry import Rotation2d
 from wpimath.filter import SlewRateLimiter
-from wpilib import TimedRobot
 
 import constants
 from constants import kRobotUpdatePeriodS
@@ -178,7 +177,10 @@ class SwerveModuleControl:
         # Read from the azimuth angle sensor (encoder)
         # self.azmthEnc.update() This is now being handled by PyKit moduleIO processing.
 
-        if TimedRobot.isReal():
+        if (
+            constants.kRobotMode == constants.RobotModes.REAL
+            or constants.kRobotMode == constants.RobotModes.REPLAY
+        ):
             # Real Robot. Use the actual sensors to get data about the module.
             # Update this module's actual state with measurements from the sensors
             self.actualState.angle = Rotation2d(self.azmthEnc.getAngleRad())
@@ -227,10 +229,9 @@ class SwerveModuleControl:
 
         self._prevMotorDesSpeed = motorDesSpd  # save for next loop
 
-        if (
-            TimedRobot.isSimulation()
-            and constants.kRobotMode != constants.RobotModes.REPLAY
-        ):
+        # Task, move movement of the azimuth motors to a flywheel model created
+        # by the drivetrainsubsystemfactory similar to the inoutsubsystem factory.
+        if constants.kRobotMode == constants.RobotModes.SIMULATION:
             # Simulation only (not replay). Do a very rough simulation of module behavior,
             # and populate sensor data for the next loop.
 

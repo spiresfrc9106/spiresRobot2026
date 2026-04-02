@@ -96,7 +96,11 @@ class DrivetrainPoseEstimator:
         self._curRawGyroAngle = Rotation2d(RobotTopSubsystem().inputs.gyroAngleRad)
 
         # Update the WPILib Pose Estimate
-        self._poseEst.update(self._curRawGyroAngle, curModulePositions)
+        self._poseEst.updateWithTime(
+            RobotTopSubsystem().getFPGATimestampS(),
+            self._curRawGyroAngle,
+            curModulePositions,
+        )
         self._curEstPose = self._poseEst.getEstimatedPosition()
         RobotTopSubsystem().setRobotPose(self._curEstPose)
 
