@@ -48,8 +48,9 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "SWERVE_WHEEL_DIAMETER_IN": 3.0,
                 "SWERVE_WHEEL_MAX_SPEED_RADPS": (4.0 / 4.5)
                 * WrapperedSparkMotor.NEO_CONFIGURED_FREESPEED_RADPS,
-                "WIDTH": 24.5,
-                "LENGTH": 22.5,
+                "AZMTH_GEAR_RATIO": 9424.0 / 203.0,
+                "WIDTH_IN": 24.5,
+                "LENGTH_IN": 22.5,
                 "MASS_LBS": 32,  # changed because coach jeremy lifted the robot and felt it was that
                 "WHEEL_P": 0.000_1,
                 "WHEEL_I": 0.0,
@@ -78,8 +79,9 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "SWERVE_WHEEL_DIAMETER_IN": 3.0,
                 "SWERVE_WHEEL_MAX_SPEED_RADPS": (4.0 / 4.5)
                 * WrapperedSparkMotor.VORTEX_CONFIGURED_FREESPEED_RADPS,
-                "WIDTH": 24.5,
-                "LENGTH": 22.5,
+                "AZMTH_GEAR_RATIO": 9424.0 / 203.0,
+                "WIDTH_IN": 24.5,
+                "LENGTH_IN": 22.5,
                 "MASS_LBS": 100.0,
                 "WHEEL_P": 0.000_03,  # was 0.000_03 - tried dialing down to try to get rid of translation jitter to 0.000_01
                 "WHEEL_I": 0.0,
@@ -108,8 +110,9 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "SWERVE_WHEEL_DIAMETER_IN": 3.0,
                 "SWERVE_WHEEL_MAX_SPEED_RADPS": (4.0 / 4.5)
                 * WrapperedSparkMotor.VORTEX_CONFIGURED_FREESPEED_RADPS,
-                "WIDTH": 24.5,
-                "LENGTH": 22.5,
+                "AZMTH_GEAR_RATIO": 9424.0 / 203.0,
+                "WIDTH_IN": 24.5,
+                "LENGTH_IN": 22.5,
                 "MASS_LBS": 60,
                 "WHEEL_P": 0.000_04,
                 "WHEEL_I": 0.0,
@@ -137,8 +140,9 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "SWERVE_WHEEL_GEAR_RATIO": 4.71,  # Base High
                 "SWERVE_WHEEL_DIAMETER_IN": 3.0,
                 "SWERVE_WHEEL_MAX_SPEED_RADPS": WrapperedSparkMotor.NEO_CONFIGURED_FREESPEED_RADPS,
-                "WIDTH": 24.5,
-                "LENGTH": 22.5,
+                "AZMTH_GEAR_RATIO": 9424.0 / 203.0,
+                "WIDTH_IN": 24.5,
+                "LENGTH_IN": 22.5,
                 "MASS_LBS": 60,
                 "WHEEL_P": 0.000_04,
                 "WHEEL_I": 0.0,
@@ -166,8 +170,9 @@ class DrivetrainDependentConstants(metaclass=Singleton):
                 "SWERVE_WHEEL_GEAR_RATIO": 4.71,  # Base High
                 "SWERVE_WHEEL_DIAMETER_IN": 3.0,
                 "SWERVE_WHEEL_MAX_SPEED_RADPS": WrapperedSparkMotor.NEO_CONFIGURED_FREESPEED_RADPS,
-                "WIDTH": 24.5,
-                "LENGTH": 22.5,
+                "AZMTH_GEAR_RATIO": 9424.0 / 203.0,
+                "WIDTH_IN": 24.5,
+                "LENGTH_IN": 22.5,
                 "MASS_LBS": 60,
                 "WHEEL_P": 0.000_04,
                 "WHEEL_I": 0.0,

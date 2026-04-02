@@ -72,7 +72,7 @@ uv run -- python -m robotpy deploy --skip-tests
 # Run tests
 .venv/bin/robotpy test
 # Run this test after: ".venv/bin/robotpy test" to test replay of a simulation
-.vevn/bin/robotpy test .\tests\replay_test.py::test_log_and_replay_step3 -- --runreplay
+.venv/bin/robotpy test .\tests\replay_test.py::test_log_and_replay_step3 -- --runreplay
 
 # -- Run tests - other useful permutations:
 .venv/bin/robotpy coverage test

@@ -395,7 +395,7 @@ class OperateFlywheelSimulation:
         # self.motorCtrl = self.wrapperedMotor.getCtrl() # TODO Clean this up
         self.sparkSim = self.wrapperedMotor.getSparkSim()
         self.plant = LinearSystemId.flywheelSystem(
-            self.gearBox, self.moi, self.gearRatio
+            self.gearBox, self.moi, 1.0 / self.gearRatio
         )  # TODO Investigate if gearRatio and moi and inertia make sense
         self.flywheelSim = FlywheelSim(
             self.plant, self.gearBox, measurementStdDevs=[0.01]
@@ -407,7 +407,7 @@ class OperateFlywheelSimulation:
         # Step 4: Use SparkMaxSim.iterate() to update the Spark MAX/Flex with simulated values
         self.sparkSim.iterate(
             radPerSec2RPM(self.flywheelSim.getAngularVelocity())
-            * self.gearRatio,  # Motor velocity in RPM
+            / self.gearRatio,  # Motor velocity in RPM
             RoboRioSim.getVInVoltage(),  # Simulated battery voltage
             kRobotUpdatePeriodS,
         )  # Time interval
@@ -436,24 +436,24 @@ class InOutSubsystemSimulation:
     ) -> None:
         self.groundWheelSim = OperateFlywheelSimulation(
             wrapperedMotor=groundMotor,
-            gearRatio=1 / InOutSubsystem.GROUND_GEAR_REDUCTION,
+            gearRatio=InOutSubsystem.GROUND_GEAR_REDUCTION,
             moi=0.005,
         )
         self.hopperWheelSim = OperateFlywheelSimulation(
             wrapperedMotor=hopperMotor,
-            gearRatio=1 / InOutSubsystem.HOPPER_GEAR_REDUCTION,
+            gearRatio=InOutSubsystem.HOPPER_GEAR_REDUCTION,
             moi=0.005,
         )
         self.flywheelWheelSim = OperateFlywheelSimulation(
             wrapperedMotor=flywheelMotor,
-            gearRatio=1 / InOutSubsystem.FLYWHEEL_GEAR_REDUCTION,
+            gearRatio=InOutSubsystem.FLYWHEEL_GEAR_REDUCTION,
             moi=0.01,
         )
         self.simulations: tuple[OperateFlywheelSimulation, ...]
         if IODC["HAS_AGITATOR"]:
             self.agitatorWheelSim = OperateFlywheelSimulation(
                 wrapperedMotor=agitatorMotor,
-                gearRatio=1 / InOutSubsystem.AGITATOR_GEAR_REDUCTION,
+                gearRatio=InOutSubsystem.AGITATOR_GEAR_REDUCTION,
                 moi=0.005,
             )
             self.simulations = (

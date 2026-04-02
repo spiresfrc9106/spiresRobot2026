@@ -40,12 +40,12 @@ class DrivetrainPhysical(metaclass=Singleton):
     c: ConfigSubsystem = field(default_factory=lambda: ConfigSubsystem())
     WHEEL_BASE_HALF_WIDTH_M: float = field(
         default_factory=lambda: inchesToMeters(
-            ConfigSubsystem().drivetrainDepConstants["WIDTH"] / 2.0
+            ConfigSubsystem().drivetrainDepConstants["WIDTH_IN"] / 2.0
         )
     )
     WHEEL_BASE_HALF_LENGTH_M: float = field(
         default_factory=lambda: inchesToMeters(
-            ConfigSubsystem().drivetrainDepConstants["LENGTH"] / 2.0
+            ConfigSubsystem().drivetrainDepConstants["LENGTH_IN"] / 2.0
         )
     )
 
@@ -80,10 +80,10 @@ class DrivetrainPhysical(metaclass=Singleton):
 
         # SDS MK4i Swerve Module Ratios
         # See https://www.swervedrivespecialties.com/products/mk4i-swerve-module?variant=39598777172081
-        WHEEL_GEAR_RATIO_L1 = 8.41  # noqa: F841
-        WHEEL_GEAR_RATIO_L2 = 6.75  # noqa: F841
-        WHEEL_GEAR_RATIO_L3 = 6.12  # noqa: F841 #TODO what is WHEEL_GEAR_RATIO_L3
-        AZMTH_GEAR_RATIO = 12.8  # noqa: F841 # TODO fix me up
+        # WHEEL_GEAR_RATIO_L1 = 8.41
+        # WHEEL_GEAR_RATIO_L2 = 6.75
+        # WHEEL_GEAR_RATIO_L3 = 6.12
+        self.AZMTH_GEAR_RATIO = self.c.drivetrainDepConstants["AZMTH_GEAR_RATIO"]
 
         ## CHANGE THIS DEPENDING ON WHICH MODULE GEAR RATIO IS INSTALLED
         if self.c.getRobotType() == RobotTypes.Main:
