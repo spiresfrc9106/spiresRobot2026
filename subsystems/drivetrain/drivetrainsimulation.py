@@ -25,12 +25,12 @@ class SwerveModuleSim:
         self.azmthSim = OperateFlywheelSimulation(
             wrapperedMotor=azmthMotor,
             gearRatio=azmthGearRatio,
-            moi=0.000_000_001,
+            moi=0.000_000_1,
         )
         self.wheelSim = OperateFlywheelSimulation(
             wrapperedMotor=wheelMotor,
             gearRatio=wheelGearRatio,
-            moi=0.000_000_025,
+            moi=0.000_025,
         )
         self.azmthEncoderIO = azmthEncoderIO
         self._azmthAngleRad: float = 0.0
