@@ -436,24 +436,24 @@ class InOutSubsystemSimulation:
     ) -> None:
         self.groundWheelSim = OperateFlywheelSimulation(
             wrapperedMotor=groundMotor,
-            gearRatio=1.0/InOutSubsystem.GROUND_GEAR_REDUCTION,
+            gearRatio=1.0 / InOutSubsystem.GROUND_GEAR_REDUCTION,
             moi=0.005,
         )
         self.hopperWheelSim = OperateFlywheelSimulation(
             wrapperedMotor=hopperMotor,
-            gearRatio=1.0/InOutSubsystem.HOPPER_GEAR_REDUCTION,
+            gearRatio=1.0 / InOutSubsystem.HOPPER_GEAR_REDUCTION,
             moi=0.005,
         )
         self.flywheelWheelSim = OperateFlywheelSimulation(
             wrapperedMotor=flywheelMotor,
-            gearRatio=1.0/InOutSubsystem.FLYWHEEL_GEAR_REDUCTION,
+            gearRatio=1.0 / InOutSubsystem.FLYWHEEL_GEAR_REDUCTION,
             moi=0.01,
         )
         self.simulations: tuple[OperateFlywheelSimulation, ...]
         if IODC["HAS_AGITATOR"]:
             self.agitatorWheelSim = OperateFlywheelSimulation(
                 wrapperedMotor=agitatorMotor,
-                gearRatio=1.0/InOutSubsystem.AGITATOR_GEAR_REDUCTION,
+                gearRatio=1.0 / InOutSubsystem.AGITATOR_GEAR_REDUCTION,
                 moi=0.005,
             )
             self.simulations = (
