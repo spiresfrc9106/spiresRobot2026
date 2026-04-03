@@ -14,7 +14,7 @@ from wpilib.simulation import FlywheelSim, RoboRioSim, BatterySim
 from wpimath.system import LinearSystem_1_1_1
 from wpimath.system.plant import DCMotor, LinearSystemId
 
-from constants import kRobotMode, RobotModes, kRobotUpdatePeriodS
+from constants import LoggerState, RobotModes, kRobotUpdatePeriodS
 from humanInterface.operatorInterface import (
     OperatorInterface,
     FlywheelCommand,
@@ -477,14 +477,14 @@ class InOutSubsystemSimulation:
 def inoutSubsystemFactory() -> InOutSubsystem | None:
     inout: Optional[InOutSubsystem] = None
     if HAS_INOUT:
-        match kRobotMode:
+        match LoggerState().kRobotMode:
             case RobotModes.REAL | RobotModes.SIMULATION:
                 groundMotorGearBox: Optional[DCMotor] = None
                 hopperMotorGearBox: Optional[DCMotor] = None
                 flywheelMotorGearBox: Optional[DCMotor] = None
                 agitatorMotorGearBox: Optional[DCMotor] = None
 
-                if kRobotMode == RobotModes.SIMULATION:
+                if LoggerState().kRobotMode == RobotModes.SIMULATION:
                     groundMotorGearBox = DCMotor.NEO(1)
                     hopperMotorGearBox = DCMotor.NEO(1)
                     flywheelMotorGearBox = DCMotor.neoVortex(1)
@@ -538,7 +538,7 @@ def inoutSubsystemFactory() -> InOutSubsystem | None:
                 )
 
                 inoutSim = None
-                if kRobotMode == RobotModes.SIMULATION:
+                if LoggerState().kRobotMode == RobotModes.SIMULATION:
                     inoutSim = InOutSubsystemSimulation(
                         groundMotor,
                         hopperMotor,
@@ -548,7 +548,7 @@ def inoutSubsystemFactory() -> InOutSubsystem | None:
             case _:
                 pass
 
-        match kRobotMode:
+        match LoggerState().kRobotMode:
             case RobotModes.REAL:
                 inout = InOutSubsystem(
                     io=InOutSubsystemIOReal(name="inoutIO"),
@@ -609,7 +609,7 @@ def inoutSubsystemFactory() -> InOutSubsystem | None:
                     agitatorModule_controller=NullController(),
                 )
 
-        match kRobotMode:
+        match LoggerState().kRobotMode:
             case RobotModes.SIMULATION:
                 assert groundMotorGearBox is not None
                 assert hopperMotorGearBox is not None

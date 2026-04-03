@@ -2,7 +2,7 @@ from typing import Callable, List, Optional, cast
 from commands2 import Subsystem
 from wpimath.geometry import Transform3d
 
-from constants import kRobotMode, RobotModes
+from constants import LoggerState, RobotModes
 from pykit.logger import Logger
 from subsystems.state.configsubsystem import ConfigSubsystem
 from subsystems.state.robottopsubsystem import RobotTopSubsystem
@@ -241,7 +241,7 @@ def VisionSubsystemFactory(
                 f"{cam} {t.X()} {t.Y()} {t.Z()} {t.rotation().X()} {t.rotation().Y()} {t.rotation().Z()}"
             )
 
-            match kRobotMode:
+            match LoggerState().kRobotMode:
                 case RobotModes.REAL:
                     io.append(
                         config.realCameraIO(

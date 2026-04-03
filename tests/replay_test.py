@@ -14,7 +14,7 @@ from typing import Tuple
 import pytest
 import wpilib
 from wpiutil.log import DataLogReader
-import constants
+from constants import LoggerState
 from pykit.wpilog.wpilogwriter import WPILOGWriter
 from tests.controllerTestPyKitReplay import PyKitReplayTestController
 from utils.singleton import _instances
@@ -42,13 +42,12 @@ replayLogPath = os.path.join(
 
 @pytest.fixture()
 def forceRobotInReplay():
-    constants.kRobotMode = constants.kRobotMode.REPLAY
+    LoggerState().logPath = origLogPath
     print("-----------------------")
     print("-----------------------")
     print(f"\n\n-----------------------Forcing replay mode LOG_PATH: {origLogPath}\n\n")
     print("-----------------------")
     print("-----------------------")
-    constants.LOG_PATH = origLogPath
 
 
 @pytest.fixture(scope="function")

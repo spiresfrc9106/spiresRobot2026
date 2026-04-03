@@ -29,6 +29,7 @@ import os
 
 from wpilib import RobotBase
 
+from utils.singleton import Singleton
 
 kRobotUpdatePeriodMs: int = 50
 kRobotUpdatePeriodS: float = kRobotUpdatePeriodMs / 1000
@@ -49,22 +50,33 @@ class RobotModes(Enum):
     REPLAY = 3
 
 
-LOG_PATH = (
-    os.environ["LOG_PATH"]
-    if "LOG_PATH" in os.environ and os.environ["LOG_PATH"] != ""
-    else None
-)
+class LoggerState(metaclass=Singleton):
+    def __init__(self):
+        self.logPath = (
+            os.environ["LOG_PATH"]
+            if "LOG_PATH" in os.environ and os.environ["LOG_PATH"] != ""
+            else None
+        )
 
-kSimMode = RobotModes.REPLAY if LOG_PATH is not None else RobotModes.SIMULATION
-kRobotMode = RobotModes.REAL if RobotBase.isReal() else kSimMode
+    @property
+    def logPath(self):
+        return self._logPath
 
+    @logPath.setter
+    def logPath(self, path):
+        self._logPath = path
+        self.update()
 
-"""
-origLogName = 'test_log_and_replay_step3.wpilog'
-origLogPath = os.path.join(WPILOGWriter.defaultPathSim, origLogName)
+    def update(self):
+        kSimMode = (
+            RobotModes.REPLAY if self._logPath is not None else RobotModes.SIMULATION
+        )
+        self._kRobotMode = RobotModes.REAL if RobotBase.isReal() else kSimMode
+        print(f"In LoggerState: pid={os.getpid()} kRobotMode={self.kRobotMode}")
 
-kRobotMode = RobotModes.REPLAY
-LOG_PATH = origLogPath
-"""
+    @property
+    def kRobotMode(self):
+        return self._kRobotMode
+
 
 kTuningMode: bool = False

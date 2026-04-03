@@ -4,12 +4,14 @@ from typing import Callable
 from wpimath.geometry import Transform3d, Pose3d, Rotation3d
 from wpimath.units import inchesToMeters
 
-from constants import kRobotMode, RobotModes
+from constants import LoggerState, RobotModes
 from subsystems.state.configio import RobotTypes
 from subsystems.vision.visionio import VisionSubsystemIO
 from subsystems.vision.visioniophoton import VisionSubsystemIOPhotonVision
 
-if kRobotMode == RobotModes.SIMULATION:  # required since opencv can't go on rio
+if (
+    LoggerState().kRobotMode == RobotModes.SIMULATION
+):  # required since opencv can't go on rio
     # pylint:disable-next=ungrouped-imports
     from subsystems.vision.visioniophotonsim import VisionSubsystemIOPhotonSim
 from utils.singleton import Singleton
@@ -68,7 +70,7 @@ kBackCenterCamConfiguration = CameraConfiguration(
     cameraName="back_center_cam",
     realCameraIO=VisionSubsystemIOPhotonVision,
     simCameraIO=VisionSubsystemIOPhotonSim
-    if kRobotMode == RobotModes.SIMULATION
+    if LoggerState().kRobotMode == RobotModes.SIMULATION
     else None,
     robotToCameraTransform=kRobotToBackCenterCamTransform,
 )
@@ -77,7 +79,7 @@ kBackHighCamConfiguration = CameraConfiguration(
     cameraName="back_high_cam",
     realCameraIO=VisionSubsystemIOPhotonVision,
     simCameraIO=VisionSubsystemIOPhotonSim
-    if kRobotMode == RobotModes.SIMULATION
+    if LoggerState().kRobotMode == RobotModes.SIMULATION
     else None,
     robotToCameraTransform=kRobotToBackHighCamTransform,
 )
@@ -86,7 +88,7 @@ kFrontLeftCamConfiguration = CameraConfiguration(
     cameraName="front_left_cam",
     realCameraIO=VisionSubsystemIOPhotonVision,
     simCameraIO=VisionSubsystemIOPhotonSim
-    if kRobotMode == RobotModes.SIMULATION
+    if LoggerState().kRobotMode == RobotModes.SIMULATION
     else None,
     robotToCameraTransform=kRobotToFrontLeftCamTransform,
 )
@@ -95,7 +97,7 @@ kFrontRightCamConfiguration = CameraConfiguration(
     cameraName="front_right_cam",
     realCameraIO=VisionSubsystemIOPhotonVision,
     simCameraIO=VisionSubsystemIOPhotonSim
-    if kRobotMode == RobotModes.SIMULATION
+    if LoggerState().kRobotMode == RobotModes.SIMULATION
     else None,
     robotToCameraTransform=kRobotToFrontRightCamTransform,
 )

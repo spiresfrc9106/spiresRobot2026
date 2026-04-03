@@ -1,15 +1,12 @@
 from collections.abc import Callable
 from typing import Optional
-from pykit.logger import Logger
 from wpimath.geometry import Pose2d, Pose3d, Transform3d
 from photonlibpy.simulation import SimCameraProperties, PhotonCameraSim, VisionSystemSim
 
-from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from subsystems.vision.visionio import VisionSubsystemIO
 from subsystems.vision.visioniophoton import VisionSubsystemIOPhotonVision
 
 from constants.vision import kApriltagFieldLayout
-from util.convenientmath import pose3dFrom2d
 
 
 class VisionSubsystemIOPhotonSim(VisionSubsystemIOPhotonVision):
@@ -55,15 +52,7 @@ class VisionSubsystemIOPhotonSim(VisionSubsystemIOPhotonVision):
         if self.isTurreted:
             assert VisionSubsystemIOPhotonSim.turretSim is not None
             VisionSubsystemIOPhotonSim.turretSim.update(self.poseSupplier())
-            turretPose = RobotTopSubsystem().getSimTurretPose()
-            camPose = turretPose + self._wrapperedCam.robotToCam
         else:
             assert VisionSubsystemIOPhotonSim.visionSim is not None
             VisionSubsystemIOPhotonSim.visionSim.update(self.poseSupplier())
-            robotPose = pose3dFrom2d(RobotTopSubsystem().getSimPose())
-            camPose = robotPose + self._wrapperedCam.robotToCam
         super().updateInputs(inputs)
-
-        Logger.recordOutput(
-            "VisionSim/Cam" + self._wrapperedCam.cam.getName() + "Pose", camPose
-        )

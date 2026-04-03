@@ -1,5 +1,4 @@
 import hal
-import wpilib.simulation
 from wpilib import (
     DSControlWord,
     IterativeRobotBase,
@@ -73,14 +72,14 @@ class LoggedRobot(IterativeRobotBase):
 
         while True:
             # Wait for next cycle using HAL notifier for precise timing
-            if not self.useTiming and self.isSimulation():
-                # Replay mode: step the HAL sim clock forward one period so C++
-                # WPILib code (e.g. SwerveDrive4PoseEstimator) sees correct dt.
-                # print(f"stepping {self.getPeriod()} useTiming={self.useTiming} isSimulation={self.isSimulation()} {RobotController.getFPGATime()}")
-                wpilib.simulation.stepTimingAsync(self.getPeriod())
-            else:
-                pass
-                # print(f"not stepping useTiming={self.useTiming} isSimulation={self.isSimulation()} {RobotController.getFPGATime()}")
+            # if not self.useTiming and self.isSimulation():
+            #    # Replay mode: step the HAL sim clock forward one period so C++
+            #    # WPILib code (e.g. SwerveDrive4PoseEstimator) sees correct dt.
+            #    # print(f"stepping {self.getPeriod()} useTiming={self.useTiming} isSimulation={self.isSimulation()} {RobotController.getFPGATime()}")
+            #    wpilib.simulation.stepTimingAsync(self.getPeriod())
+            # else:
+            #    pass
+            #    # print(f"not stepping useTiming={self.useTiming} isSimulation={self.isSimulation()} {RobotController.getFPGATime()}")
 
             if self.useTiming:
                 currentTime = RobotController.getFPGATime()
@@ -105,7 +104,6 @@ class LoggedRobot(IterativeRobotBase):
             periodicBeforeStart = RobotController.getFPGATime()
             stop = Logger.periodicBeforeUser()
             if stop:
-                # self.endCompetition()
                 break
 
             # Execute user periodic code and measure timing

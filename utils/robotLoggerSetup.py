@@ -2,7 +2,7 @@ import os
 
 import wpilib
 
-import constants
+from constants import LoggerState, RobotModes
 from pykit.logger import Logger
 from pykit.networktables.nt4Publisher import NT4Publisher
 from pykit.wpilog.wpilogwriter import WPILOGWriter
@@ -16,8 +16,11 @@ class RobotLoggerSetup:
         self._logWriters: list[WPILOGWriter] = []
         self._useTiming: bool = True
         Logger.recordMetadata("Robot", robotName)
-        match constants.kRobotMode:
-            case constants.RobotModes.REAL | constants.RobotModes.SIMULATION:
+        print(
+            f"Robot Logger Setup: {robotName}, pid={os.getpid()} LoggerState().kRobotMode={LoggerState().kRobotMode}"
+        )
+        match LoggerState().kRobotMode:
+            case RobotModes.REAL | RobotModes.SIMULATION:
                 deployConfig = wpilib.deployinfo.getDeployData()
                 if deployConfig is not None:
                     Logger.recordMetadata(
@@ -43,9 +46,9 @@ class RobotLoggerSetup:
                 writer = WPILOGWriter()
                 self._logWriters.append(writer)
                 Logger.addDataReciever(writer)
-            case constants.RobotModes.REPLAY:
-                self._useTiming = False
-                logPath = constants.LOG_PATH
+            case RobotModes.REPLAY:
+                self._useTiming = True
+                logPath = LoggerState().logPath
                 assert logPath is not None, "Log path not set"
                 logPath = os.path.abspath(logPath)
                 print(f"Starting log from {logPath}")

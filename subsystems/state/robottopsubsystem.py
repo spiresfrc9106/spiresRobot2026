@@ -163,7 +163,7 @@ class RobotTopSubsystem(Subsystem):
 
 def RobotTopSubsystemFactory() -> RobotTopSubsystem:
     # Deferred import to avoid circular dependency (configsubsystem imports from robottopio)
-    from constants import kRobotMode, RobotModes
+    from constants import LoggerState, RobotModes
     from subsystems.state.configsubsystem import ConfigSubsystem
     from wrappers.wrapperedGyro import (
         WrapperedAdis16470ImuSingleton,
@@ -176,7 +176,7 @@ def RobotTopSubsystemFactory() -> RobotTopSubsystem:
     rtdc = ConfigSubsystem().robotTopDepConstants
     gyroType: str = rtdc["GYRO"]
     gyro: WrapperedNavxSingleton | WrapperedAdis16470ImuSingleton | WrapperedNoGyro
-    if kRobotMode == RobotModes.REAL:
+    if LoggerState().kRobotMode == RobotModes.REAL:
         if gyroType == "NAVX":
             gyro = WrapperedNavxSingleton()
         elif gyroType == "ADIS16470_IMU":
@@ -187,7 +187,7 @@ def RobotTopSubsystemFactory() -> RobotTopSubsystem:
         gyro = WrapperedNoGyro()
 
     io: RobotTopIO
-    if kRobotMode == RobotModes.SIMULATION:
+    if LoggerState().kRobotMode == RobotModes.SIMULATION:
         from subsystems.state.robottopiosim import RobotTopIOSim
 
         io = RobotTopIOSim(gyro)

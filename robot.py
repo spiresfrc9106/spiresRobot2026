@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import sys
 
 from commands2.commandscheduler import CommandScheduler
@@ -7,6 +8,7 @@ from commands2.commandscheduler import CommandScheduler
 from pathplannerlib.commands import PathPlannerLogging
 import commands2
 
+from constants import LoggerState
 from pykit.loggedrobot import LoggedRobot
 from pykit.logger import Logger
 from utils.robotLoggerSetup import RobotLoggerSetup
@@ -41,9 +43,13 @@ class MyRobot(LoggedRobot):
     """
 
     def __init__(self):
+        print("MyRobot __init__")
         super().__init__()
         self.loggerSetup = RobotLoggerSetup(type(self).__name__)
         self.useTiming = self.loggerSetup.useTiming
+        print(
+            f"useTiming: {self.useTiming} pid={os.getpid()} LoggerState().kRobotMode={LoggerState().kRobotMode}"
+        )
 
         self.container = RobotContainer()
 

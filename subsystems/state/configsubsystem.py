@@ -8,7 +8,7 @@ from subsystems.state.robottopio import RobotTopDependentConstants
 from subsystems.intakeOuttake.inout import InOutDependentConstants
 from subsystems.vision.vision import VisionDependentConstants
 from utils.singleton import _instances
-from constants import kRobotMode
+from constants import LoggerState
 from util.logtracer import LogTracer
 
 
@@ -60,7 +60,9 @@ class ConfigSubsystem(Subsystem):
         self.inoutDepConstants = InOutDependentConstants().get(self._robotType)
         self.visionDepConstants = VisionDependentConstants().get(self._robotType)
         print(":::::::::::")
-        print(f"::::::::::: ConfigSubsystem: {kRobotMode} {self._robotType}")
+        print(
+            f"::::::::::: ConfigSubsystem: {LoggerState().kRobotMode} {self._robotType}"
+        )
         print(":::::::::::")
         self._initalized = True
 

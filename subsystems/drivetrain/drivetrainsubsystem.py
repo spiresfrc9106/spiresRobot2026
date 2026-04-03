@@ -18,7 +18,7 @@ from pykit.autolog import autologgable_output, autolog_output
 from pykit.logger import Logger
 
 
-from constants import kRobotMode, RobotModes
+from constants import LoggerState, RobotModes
 from subsystems.common.encodermodule import EncoderModule
 from subsystems.common.encodermoduleio import EncoderModuleIO
 from subsystems.common.encodermoduleiowrappered import EncoderModuleIOWrappered
@@ -294,7 +294,7 @@ def DrivetrainSubsystemFactory() -> DrivetrainSubsystem | None:
         # Gear boxes for simulation — only needed when SparkSim requires a motor model.
         wheelSimGearBox: Optional[DCMotor] = None
         azmthSimGearBox: Optional[DCMotor] = None
-        if kRobotMode == RobotModes.SIMULATION:
+        if LoggerState().kRobotMode == RobotModes.SIMULATION:
             # TODO should this be a separate GearBox for each swerve drive module?
             wheelSimGearBox = DCMotor.neoVortex(
                 1
@@ -303,7 +303,7 @@ def DrivetrainSubsystemFactory() -> DrivetrainSubsystem | None:
                 1
             )  # TODO make this come from drivetraindependentconstants
 
-        match kRobotMode:
+        match LoggerState().kRobotMode:
             case RobotModes.REAL | RobotModes.SIMULATION | RobotModes.REPLAY:
                 wrapperedMotorsAndEncoderSets = []
 
@@ -377,7 +377,7 @@ def DrivetrainSubsystemFactory() -> DrivetrainSubsystem | None:
         ] = []
         io: DrivetrainSubsystemIO = DrivetrainSubsystemIO()
         simulation: Optional[DrivetrainSimulation] = None
-        match kRobotMode:
+        match LoggerState().kRobotMode:
             case RobotModes.REAL:
                 io = DrivetrainSubsystemIOReal(name="drivetrainIO")
                 for (
