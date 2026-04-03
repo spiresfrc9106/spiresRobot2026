@@ -74,7 +74,7 @@ class VisionSubsystem(Subsystem):
             #    print(f"camera observations: {camera.poseObservations} {camera.turretedObservations}")
 
             for observation in camera.poseObservations:
-                rectPose = False
+                rejectPose = False
                 """
                 rejectPose = (
                     observation.tagCount == 0
