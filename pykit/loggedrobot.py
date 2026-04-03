@@ -115,7 +115,6 @@ class LoggedRobot(IterativeRobotBase):
             periodicBeforeStart = RobotController.getFPGATime()
             stop = Logger.periodicBeforeUser()
 
-            print(f"periodicBeforeUser: {stop} {periodicBeforeStart} {Logger.getTimestamp()}")
             # Execute user periodic code and measure timing
             userCodeStart = RobotController.getFPGATime()
             self._loopFunc()
