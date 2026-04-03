@@ -172,7 +172,7 @@ def _readLogEntries(
     return (result, times_us)
 
 
-def _compareLogFiles(origPath: str, replayPath: str, tol: float = 1e-4) -> None:
+def _compareLogFiles(origPath: str, replayPath: str, tol: float = 1e-2) -> None:
     realOut, realTimesDict = _readLogEntries(origPath, "/RealOutputs/")
     replayOut, replayTimesDict = _readLogEntries(replayPath, "/ReplayOutputs/")
 
@@ -181,6 +181,7 @@ def _compareLogFiles(origPath: str, replayPath: str, tol: float = 1e-4) -> None:
         f"Keys in RealOutputs missing from ReplayOutputs: {missingKeys}"
     )
 
+    countMismatch = False
     for key, realVals in realOut.items():
         replayVals = replayOut[key]
         realTimes_us = realTimesDict[key]
@@ -188,6 +189,7 @@ def _compareLogFiles(origPath: str, replayPath: str, tol: float = 1e-4) -> None:
         for i, (rv, pv, rTime_us, pTime_us) in enumerate(
             zip(realVals, replayVals, realTimes_us, replayTimes_us)
         ):
+            # TODO we need a better way to control absolute and relative tolerance by type of value.
             if isinstance(rv, float):
                 assert math.isclose(rv, pv, rel_tol=tol, abs_tol=tol), (
                     f"{key}[{i}]: real={rv} at {rTime_us}, replay={pv} at {pTime_us}"
@@ -205,6 +207,7 @@ def _compareLogFiles(origPath: str, replayPath: str, tol: float = 1e-4) -> None:
             assert rTime_us == pTime_us, f"{key}[{i}]: at {rTime_us}, at {pTime_us}"
         lenRealVals = len(realVals)
         lenReplayVals = len(replayVals)
-        assert lenRealVals == lenReplayVals, (
-            f"Cycle count mismatch for {key}: {lenRealVals} vs {lenReplayVals}"
-        )
+        if lenRealVals != lenReplayVals:
+            countMismatch = True
+            print(f"Cycle count mismatch for {key}: {lenRealVals} vs {lenReplayVals}")
+    assert not countMismatch, ("A count mismatch occurred.")

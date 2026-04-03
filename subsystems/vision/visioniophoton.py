@@ -21,5 +21,4 @@ class VisionSubsystemIOPhotonVision(VisionSubsystemIO):
         self._wrapperedCam.update(Pose2d())
         inputs.connected = self._wrapperedCam.cam.isConnected()
         inputs.poseObservations = self._wrapperedCam.getPoseEstimates()
-        inputs.tagIds = []
         inputs.turretedObservations = []

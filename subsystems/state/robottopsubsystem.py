@@ -87,11 +87,13 @@ class RobotTopSubsystem(Subsystem):
 
     def getFPGATimeUS(self) -> int:
         """The time of the current robot periodic loop in microseconds."""
-        return self.inputs.timeUSec
+        #return self.inputs.timeUSec
+        return Logger.getTimestamp()
 
     def getFPGATimestampS(self) -> float:
         """The time of the current robot periodic loop in seconds."""
-        return self.inputs.timeUSec / 1.0e6
+        #return self.inputs.timeUSec / 1.0e6
+        return Logger.getTimestamp() / 1.0e6
 
     def getRobotPose(self) -> Pose2d:
         return self.robotPose

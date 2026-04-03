@@ -257,6 +257,7 @@ class Logger:
         This method updates the log table with new data, either from the replay source
         or from the live robot hardware.
         """
+        stop = False
         cls.cycleCount += 1
         if cls.running:
             entryUpdateStart = RobotController.getFPGATime()
@@ -273,9 +274,10 @@ class Logger:
                             "[ERROR] This robot did not start properly, is the replay logfile from PyKit?"
                         )
                     else:
-                        cls.end()
+                        #cls.end()
+                        stop = True
 
-            if cls.running:
+            if True:
                 dsStart = RobotController.getFPGATime()
                 # In replay mode, simulate driver station inputs from log
                 if cls.isReplay():
@@ -302,7 +304,6 @@ class Logger:
                     "Logger/DashboardInputsMS",
                     (dashboardInputEnd - dashboardInputStart) / 1000.0,
                 )
-        stop = not cls.running
         return stop
 
     @classmethod

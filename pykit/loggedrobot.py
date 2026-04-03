@@ -58,17 +58,28 @@ class LoggedRobot(IterativeRobotBase):
         This method replaces the standard `IterativeRobotBase.startCompetition`
         to inject logging and precise timing control.
         """
+
+        Logger.startReciever()
+        startCompetitionTime = RobotController.getFPGATime()
+        Logger.periodicAfterUser(startCompetitionTime, 0)
+        stop = Logger.periodicBeforeUser()
+        if stop:
+            return
+        print(f"Before robotInit time={startCompetitionTime}")
         self.robotInit()
 
         if self.isSimulation():
+            afterRobotInitTime = RobotController.getFPGATime()
+            Logger.periodicAfterUser(afterRobotInitTime, 0)
+            stop = Logger.periodicBeforeUser()
+            if stop:
+                return
             self._simulationInit()
 
         self.initEnd = RobotController.getFPGATime()
         Logger.periodicAfterUser(self.initEnd, 0)
-        print("Robot startup complete!")
+        print(f"Robot startup complete! time={self.initEnd}")
         hal.observeUserProgramStarting()
-
-        Logger.startReciever()
 
         while True:
             # Wait for next cycle using HAL notifier for precise timing
@@ -103,9 +114,8 @@ class LoggedRobot(IterativeRobotBase):
             # Run logger pre-user code (load inputs from log or sensors)
             periodicBeforeStart = RobotController.getFPGATime()
             stop = Logger.periodicBeforeUser()
-            if stop:
-                break
 
+            print(f"periodicBeforeUser: {stop} {periodicBeforeStart} {Logger.getTimestamp()}")
             # Execute user periodic code and measure timing
             userCodeStart = RobotController.getFPGATime()
             self._loopFunc()
@@ -115,3 +125,6 @@ class LoggedRobot(IterativeRobotBase):
             Logger.periodicAfterUser(
                 userCodeEnd - userCodeStart, userCodeStart - periodicBeforeStart
             )
+            if stop:
+                Logger.end()
+                break

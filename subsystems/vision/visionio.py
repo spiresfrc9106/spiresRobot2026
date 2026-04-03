@@ -66,7 +66,6 @@ class VisionSubsystemIO:
         turretedObservations: list[VisionSubsystemTurretedPoseObservation] = field(
             default_factory=list
         )
-        tagIds: List[int] = field(default_factory=list)
 
     def updateInputs(self, inputs: VisionSubsystemIOInputs):
         pass

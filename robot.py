@@ -9,8 +9,10 @@ from pathplannerlib.commands import PathPlannerLogging
 import commands2
 
 from constants import LoggerState
+from pykit.autolog import autologgable_output
 from pykit.loggedrobot import LoggedRobot
 from pykit.logger import Logger
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from utils.robotLoggerSetup import RobotLoggerSetup
 
 import constants
@@ -28,12 +30,12 @@ from humanInterface.driverInterface import DriverInterface
 from humanInterface.ledControl import LEDControl
 from humanInterface.operatorInterface import OperatorInterface
 from utils.singleton import destroyAllSingletonInstances
-from wpilib import Timer
+from wpilib import Timer, RobotController
 import wpilib
 
 LoggedRobot.default_period = constants.kRobotUpdatePeriodS
 
-
+@autologgable_output
 class MyRobot(LoggedRobot):
     """
     Our default robot class, pass it to wpilib.run
@@ -45,13 +47,19 @@ class MyRobot(LoggedRobot):
     def __init__(self):
         print("MyRobot __init__")
         super().__init__()
+        print(f"Before RobotLoggerSetup() - now: {RobotController.getFPGATime()}, now2: {RobotTopSubsystem().getFPGATimeUS()}")
         self.loggerSetup = RobotLoggerSetup(type(self).__name__)
         self.useTiming = self.loggerSetup.useTiming
         print(
             f"useTiming: {self.useTiming} pid={os.getpid()} LoggerState().kRobotMode={LoggerState().kRobotMode}"
         )
+        Logger.recordOutput("forceLoggerToStartAtZero", RobotController.getFPGATime())
+        print(f"After RobotLoggerSetup() - now: {RobotController.getFPGATime()}, now2: {RobotTopSubsystem().getFPGATimeUS()}")
 
+        print(f"Before RobotContainer() - now: {RobotController.getFPGATime()}, now2: {RobotTopSubsystem().getFPGATimeUS()}")
         self.container = RobotContainer()
+        print(f"After RobotContainer() - now: {RobotController.getFPGATime()}, now2: {RobotTopSubsystem().getFPGATimeUS()}")
+
 
     #########################################################
     ## Common init/update for all modes
@@ -60,6 +68,7 @@ class MyRobot(LoggedRobot):
         This function is run when the robot is first started up and should be used for any
         initialization code.
         """
+        print(f"robotInit(self) - now: {RobotController.getFPGATime()}, now2: {RobotTopSubsystem().getFPGATimeUS()}")
         self.count = 0
         # print(f"{self.count} robotInit has run")
         # Since we're defining a bunch of new things here, tell pylint
@@ -126,12 +135,18 @@ class MyRobot(LoggedRobot):
         # self.addPeriodic(CalibrationWrangler().update, 0.5, 0.0)
         self.cw = CalibrationWrangler()
         # self.addPeriodic(FaultWrangler().update, 0.06, 0.0)
+        print(f"end robotInit(self) - now: {RobotController.getFPGATime()}, now2: {RobotTopSubsystem().getFPGATimeUS()}")
+
 
     def robotPeriodic(self) -> None:
         # print(f"{self.count} robotPeriodic")
 
         # if self.count == 10:
         #    gc.freeze()
+
+        if self.count <=2:
+            print(
+                f"robotPeriodic - now: {RobotController.getFPGATime()}, now2: {RobotTopSubsystem().getFPGATimeUS()}")
 
         LogTracer.resetOuter("RobotPeriodic")
         self.container.robotPeriodic()

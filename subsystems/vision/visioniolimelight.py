@@ -59,14 +59,13 @@ class VisionSubsystemIOLimelight(VisionSubsystemIO):
 
         NetworkTableInstance.getDefault().flush()  # inefficient on usage but good for LL
 
-        tagIds = []
         poseObservatios = []
 
         for sample in self.megatag1.readQueue():
             if len(sample.value) == 0:
                 continue
             for i in range(11, len(sample.value), 7):
-                tagIds.append(int(sample.value[i]))
+                #tagIds.append(int(sample.value[i]))
                 poseObservatios.append(
                     VisionSubsystemPoseObservation(
                         sample.time * 1e-6 - sample.value[6] * 1e-3,
@@ -83,7 +82,7 @@ class VisionSubsystemIOLimelight(VisionSubsystemIO):
             if len(sample.value) == 0:
                 continue
             for i in range(11, len(sample.value), 7):
-                tagIds.append(int(sample.value[i]))
+                #tagIds.append(int(sample.value[i]))
                 poseObservatios.append(
                     VisionSubsystemPoseObservation(
                         sample.time * 1e-6 - sample.value[6] * 1e-3,
@@ -97,7 +96,6 @@ class VisionSubsystemIOLimelight(VisionSubsystemIO):
                 )
 
         inputs.poseObservations = poseObservatios
-        inputs.tagIds = tagIds
 
     @staticmethod
     def parsePose(rawLLArray: list[float]):
