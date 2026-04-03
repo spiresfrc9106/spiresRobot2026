@@ -25,11 +25,11 @@ MAX_CAMERA_SOLUTIONS = 4
 # Std dev scaling: xyStdDev = K_XY * avg_dist^2 / n_tags (multi-tag)
 #                  xyStdDev = K_XY_SINGLE * dist^2       (single-tag)
 # Rotation: multi-tag uses K_ROT * avg_dist^2 / n_tags; single-tag trusts gyro (very large).
-_K_XY_MULTI = 0.05
+_K_XY_MULTI = 0.01
 _K_ROT_MULTI = 0.05
-_K_XY_SINGLE = 0.3
+_K_XY_SINGLE = 0.1
 _MAX_SINGLE_TAG_AMBIGUITY = 0.2
-_ROT_STD_DEV_SINGLE_TAG = degreesToRadians(99999.0)
+_ROT_STD_DEV_SINGLE_TAG = degreesToRadians(60.0)
 
 
 # Describes one on-field pose estimate from the camera at a specific time.
