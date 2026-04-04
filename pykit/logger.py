@@ -274,7 +274,7 @@ class Logger:
                             "[ERROR] This robot did not start properly, is the replay logfile from PyKit?"
                         )
                     else:
-                        #cls.end()
+                        # cls.end()
                         stop = True
 
             if True:

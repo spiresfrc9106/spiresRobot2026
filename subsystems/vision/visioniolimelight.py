@@ -65,7 +65,7 @@ class VisionSubsystemIOLimelight(VisionSubsystemIO):
             if len(sample.value) == 0:
                 continue
             for i in range(11, len(sample.value), 7):
-                #tagIds.append(int(sample.value[i]))
+                # tagIds.append(int(sample.value[i]))
                 poseObservatios.append(
                     VisionSubsystemPoseObservation(
                         sample.time * 1e-6 - sample.value[6] * 1e-3,
@@ -82,7 +82,7 @@ class VisionSubsystemIOLimelight(VisionSubsystemIO):
             if len(sample.value) == 0:
                 continue
             for i in range(11, len(sample.value), 7):
-                #tagIds.append(int(sample.value[i]))
+                # tagIds.append(int(sample.value[i]))
                 poseObservatios.append(
                     VisionSubsystemPoseObservation(
                         sample.time * 1e-6 - sample.value[6] * 1e-3,

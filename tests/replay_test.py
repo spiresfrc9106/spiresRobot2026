@@ -210,4 +210,4 @@ def _compareLogFiles(origPath: str, replayPath: str, tol: float = 1e-2) -> None:
         if lenRealVals != lenReplayVals:
             countMismatch = True
             print(f"Cycle count mismatch for {key}: {lenRealVals} vs {lenReplayVals}")
-    assert not countMismatch, ("A count mismatch occurred.")
+    assert not countMismatch, "A count mismatch occurred."

@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional, cast
+from typing import Callable, List, Optional, cast, Any
 from commands2 import Subsystem
 from wpimath.geometry import Transform3d
 
@@ -51,7 +51,7 @@ class VisionSubsystem(Subsystem):
             LogTracer.record(f"Camera{idx} UpdateInputs")
         LogTracer.record("All Cameras UpdateInputs")
 
-        allTagPoses = []
+        allTagPoses: List[Any] = []
         allRobotPoses = []
         allRobotPosesAccepted = []
         allRobotPosesRejected = []
@@ -206,7 +206,9 @@ class VisionSubsystem(Subsystem):
         LogTracer.record("All Cameras ProcessObservations")
 
         Logger.recordOutput("Vision/Summary/TagPose", allTagPoses)
-        Logger.recordOutput("Vision/Summary/RobotPoses", allRobotPoses) # Problems: In simulation replay this field differs
+        Logger.recordOutput(
+            "Vision/Summary/RobotPoses", allRobotPoses
+        )  # Problems: In simulation replay this field differs
         # The convert to csv tool and find differences tool does not seem to handle this list of poses.
         # Perhaps the check for errors part of the test does not look at lists of poses.
         Logger.recordOutput("Vision/Summary/RobotPosesRejected", allRobotPosesRejected)

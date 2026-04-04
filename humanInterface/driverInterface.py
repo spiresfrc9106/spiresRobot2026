@@ -104,7 +104,9 @@ class DriverInterface(metaclass=Singleton):
             initialValue=initialValueY,
             dtSeconds=kRobotUpdatePeriodS,
         )
-        print(f"DriverInterface newTranslateSlewRateLimiter - now: {RobotController.getFPGATime()}, now2: {RobotTopSubsystem().getFPGATimeUS()}")
+        print(
+            f"DriverInterface newTranslateSlewRateLimiter - now: {RobotController.getFPGATime()}, now2: {RobotTopSubsystem().getFPGATimeUS()}"
+        )
         Logger.recordOutput("di/translateAccelFactor", self.translateAccelFactor)
 
     def newRotateSlewRateLimiter(self, initialValue: float) -> None:
@@ -115,7 +117,9 @@ class DriverInterface(metaclass=Singleton):
             initialValue=initialValue,
             dtSeconds=kRobotUpdatePeriodS,
         )
-        print(f"DriverInterface newRotateSlewRateLimiter - now: {RobotController.getFPGATime()}, now2: {RobotTopSubsystem().getFPGATimeUS()}")
+        print(
+            f"DriverInterface newRotateSlewRateLimiter - now: {RobotController.getFPGATime()}, now2: {RobotTopSubsystem().getFPGATimeUS()}"
+        )
         Logger.recordOutput("di/rotateAccelFactor", self.rotateAccelFactor)
 
     @autolog_output(key="di/velXCmd_mps")
