@@ -5,7 +5,6 @@ if TYPE_CHECKING:
 
 from commands2 import Command, Subsystem, cmd
 from wpilib import XboxController
-from wpimath.geometry import Rotation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 
 from drivetrain.drivetrainCommand import DrivetrainCommand
@@ -123,16 +122,10 @@ class DrivetrainSubsystem(Subsystem):
     def initialize(self):
         self.casseroleDrivetrain.setManualCmd(self.casseroleDrivetrain.DO_NOTHING_CMD)
 
-    def getRawRotation(self) -> Rotation2d:
-        return self.casseroleDrivetrain.getRawRotation()
-
     @autolog_output(key="Robot/velocity")
     def getAngularVelocity(self) -> float:
         """radians per sec"""
         return RobotTopSubsystem().inputs.gyroYawRateRadPerSec
-
-    def getFieldRelativeChassisSpeeds(self) -> ChassisSpeeds:
-        return self.casseroleDrivetrain.getFieldRelativeChassisSpeeds()
 
     def getRobotRelativeChassisSpeeds(self) -> ChassisSpeeds:
         return self.casseroleDrivetrain.getRobotRelativeChassisSpeeds()

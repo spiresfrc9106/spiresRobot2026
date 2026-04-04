@@ -214,6 +214,7 @@ class MyRobot(LoggedRobot):
         """This function is called periodically when in teleop"""
         # print(f"{self.count} teleopPeriodic")
 
+        # TODO move this to the robotcontainer
         if self.dInt.getGyroResetCmd():
             if self.container.drivetrainSubsystem is not None:
                 self.container.drivetrainSubsystem.casseroleDrivetrain.resetGyro()

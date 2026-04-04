@@ -215,29 +215,11 @@ class DrivetrainControl:
             tuple(mod.getActualState() for mod in self.modules),
         )
 
-    def getRawRotation(self) -> Rotation2d:
-        return self.poseEst.getRealOrSimRawGyroAngle()
-
     def getRobotRelativeChassisSpeeds(self) -> ChassisSpeeds:
         robotRelativeSpeeds: ChassisSpeeds = self.kinematics.toChassisSpeeds(
             self.getModuleStates()
         )
         return robotRelativeSpeeds
-
-    def getFieldRelativeChassisSpeeds(self) -> ChassisSpeeds:
-        robotRelativeSpeeds: ChassisSpeeds = self.getRobotRelativeChassisSpeeds()
-        # getPose() returns a Pose2d, which has a rotation() method to get the Rotation2d
-        currentAngle: Rotation2d = self.poseEst.getCurEstPose().rotation()
-
-        # Convert robot-relative speeds to field-relative speeds
-        fieldRelativeSpeeds: ChassisSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
-            robotRelativeSpeeds.vx,
-            robotRelativeSpeeds.vy,
-            robotRelativeSpeeds.omega,
-            currentAngle,
-        )
-
-        return fieldRelativeSpeeds
 
     def resetGyro(self):
         # Update pose estimator to think we're at the same translation,

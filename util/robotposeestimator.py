@@ -40,7 +40,7 @@ class VisionObservation:
         self,
         visionPose: Pose2d,
         timestamp: float,
-        std: list[float],
+        std: tuple[float, float, float],
         tagsUsed: list[int],
     ) -> None:
         assert len(std) == 3
@@ -59,7 +59,7 @@ class TurretedVisionObservation:
         self,
         fieldToTurretTransform: Transform3d,
         timestamp: float,
-        std: list[float],
+        std: tuple[float, float, float],
         tagsUsed: list[int],
     ) -> None:
         assert len(std) == 3

@@ -1,6 +1,6 @@
 from typing import Tuple
 from wpimath.estimator import SwerveDrive4PoseEstimator
-from wpimath.geometry import Pose2d, Rotation2d, Translation2d
+from wpimath.geometry import Pose2d, Rotation2d
 
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from drivetrain.poseEstimation.drivetrainPoseTelemetry import DrivetrainPoseTelemetry
@@ -38,21 +38,16 @@ class DrivetrainPoseEstimator:
         initialModulePositions: PosTupleType,
     ):
 
+        self.robotTopSubsystem = RobotTopSubsystem()
         # Represents our current best-guess as to our location on the field.
         self._curEstPose = Pose2d()
-
-        # Gyroscope angle is always read from RobotTopSubsystem().inputs (logged/replay-safe).
-        # In simulation, RobotTopIOSim integrates chassis speeds to produce this value.
-        self._curRawGyroAngle = Rotation2d()
-
-        self._useAprilTags = True
 
         # The kalman filter to fuse all sources of information together into a single
         # best-estimate of the pose of the field
         self.kinematics = DrivetrainPhysical().kinematics
         self._poseEst = SwerveDrive4PoseEstimator(
             self.kinematics,
-            self._curRawGyroAngle,
+            Rotation2d(),
             initialModulePositions,
             self._curEstPose,
         )
@@ -73,15 +68,14 @@ class DrivetrainPoseEstimator:
             knownPose (Pose2d): The pose we know we're at
         """
         # Reset the simulated gyro origin (no-op on real hardware / replay).
-        RobotTopSubsystem().resetSimGyro(knownPose)
-        self._curRawGyroAngle = knownPose.rotation()
+        self.robotTopSubsystem.resetSimGyro(knownPose)
 
         self._poseEst.resetPosition(
-            self._curRawGyroAngle,
+            self.robotTopSubsystem.inputs.gyroAngleRotation,
             self._lastModulePositions,
             knownPose,
         )
-        RobotTopSubsystem().setRobotPose(self._poseEst.getEstimatedPosition())
+        self.robotTopSubsystem.resetRobotPose(self._poseEst.getEstimatedPosition())
 
     def update(self, curModulePositions: PosTupleType, curModuleSpeeds: StateTupleType):
         """Periodic update, call this every 20ms.
@@ -91,25 +85,14 @@ class DrivetrainPoseEstimator:
             and wheel positions as read in from swerve module sensors
         """
 
-        # Read the gyro angle from RobotTopSubsystem inputs (logged/replay-safe).
-        # In simulation, RobotTopIOSim writes the simulated gyro angle here each cycle.
-        self._curRawGyroAngle = Rotation2d(RobotTopSubsystem().inputs.gyroAngleRad)
-
         # Update the WPILib Pose Estimate
         self._poseEst.updateWithTime(
-            RobotTopSubsystem().getFPGATimestampS(),
-            self._curRawGyroAngle,
+            self.robotTopSubsystem.getFPGATimestampS(),
+            self.robotTopSubsystem.inputs.gyroAngleRotation,
             curModulePositions,
         )
         self._curEstPose = self._poseEst.getEstimatedPosition()
-        RobotTopSubsystem().setRobotPose(self._curEstPose)
-
-        """# make sure we're not inside the hub somewhow #2025 code -- so old code that should be updated
-        startPoseEst = self._curEstPose
-        self._curEstPose = self._adjustOutsideReef(self._curEstPose, blueReefLocation) #2025 code
-        self._curEstPose = self._adjustOutsideReef(self._curEstPose, redReefLocation)
-        if(startPoseEst != self._curEstPose):
-            self._poseEst.resetTranslation(self._curEstPose.translation())"""
+        self.robotTopSubsystem.setRobotPose(self._curEstPose)
 
         # Record the estimate to telemetry/logging-
         self._telemetry.update(self._curEstPose, [x.angle for x in curModulePositions])
@@ -126,38 +109,9 @@ class DrivetrainPoseEstimator:
 
     def addVisionObservation(self, obs: VisionObservation) -> None:
         """Accept a vision observation from VisionSubsystem and feed it to the pose estimator."""
-        if not self._useAprilTags:
-            return
         self._poseEst.addVisionMeasurement(
             obs.visionPose,
             obs.timestamp,
-            (obs.std[0], obs.std[1], obs.std[2]),
+            obs.std,
         )
         self._telemetry.addVisionObservation(obs)
-
-    def setUseAprilTags(self, use: bool):
-        """
-        Enables or disables pose estimate correction based on apriltag readings.
-        Useful if the robot is known to be doing something (like tilting) where
-        the pose estimate will go inaccurate
-        """
-        self._useAprilTags = use
-
-    def getRealOrSimRawGyroAngle(self) -> Rotation2d:
-        return self._curRawGyroAngle
-
-    def _adjustOutsideReef(self, poseIn: Pose2d, reefTrans: Translation2d) -> Pose2d:
-        # TODO-rms was:if (poseIn.translation().distance(reefTrans) < SCORE_DIST_FROM_REEF_CENTER):
-        if False:
-            # We predicted we're inside the reef. Not ok, so let's project back outside the reef.
-
-            # Get a unit vector in the direction of the center of the reef to our pose
-            # reefToPoseUnit = poseIn.translation() - reefTrans
-            # reefToPoseUnit /= reefToPoseUnit.norm()
-
-            # retPose = Pose2d(reefToPoseUnit * SCORE_DIST_FROM_REEF_CENTER + reefTrans, poseIn.rotation())
-            # return retPose
-            return poseIn
-        else:
-            # We're outside the reef so that's cool
-            return poseIn

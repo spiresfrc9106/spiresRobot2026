@@ -118,7 +118,7 @@ class VisionSubsystem(Subsystem):
                 visionObs = VisionObservation(
                     observation.pose.toPose2d(),
                     observation.timestamp,
-                    [linearStdDev, linearStdDev, angularStdDev],
+                    (linearStdDev, linearStdDev, angularStdDev),
                     observedTags,
                 )
                 for consumer in self.consumers:
@@ -174,7 +174,7 @@ class VisionSubsystem(Subsystem):
                     TurretedVisionObservation(
                         tObsTyped.fieldToTurret,
                         tObsTyped.timestamp,
-                        [linearStdDev, linearStdDev, angularStdDev],
+                        (linearStdDev, linearStdDev, angularStdDev),
                         observedTags,
                     )
                 )

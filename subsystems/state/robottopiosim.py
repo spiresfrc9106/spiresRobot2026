@@ -12,7 +12,7 @@ class RobotTopIOSim(RobotTopIO):
     """Simulation variant of RobotTopIO.
 
     Integrates chassis speeds each cycle to produce a simulated gyro angle that is
-    written into inputs.gyroAngleRad so it flows through the IO logging layer and is
+    written into inputs.gyroAngleRotation so it flows through the IO logging layer and is
     replayable.
     """
 
@@ -47,6 +47,6 @@ class RobotTopIOSim(RobotTopIO):
         )
 
         noise = Rotation2d.fromDegrees(random.uniform(-0.0, 0.0))
-        inputs.gyroAngleRad = (self._simPose.rotation() + noise).radians()
+        inputs.gyroAngleRotation = self._simPose.rotation() + noise
         inputs.gyroConnected = True
         inputs.gyroYawRateRadPerSec = spds.omega
