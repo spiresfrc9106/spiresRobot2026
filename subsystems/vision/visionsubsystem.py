@@ -11,7 +11,6 @@ from subsystems.vision.vision import CameraConfiguration
 from subsystems.vision.visionio import (
     VisionSubsystemIO,
     VisionSubsystemTurretedPoseObservation,
-    expandTagsUint32ToList,
 )
 
 from constants.vision import (
@@ -113,13 +112,13 @@ class VisionSubsystem(Subsystem):
 
                 # here you can also factor in per-camera weighting
 
-                observedTags = expandTagsUint32ToList(observation.tagsList)
+                # observedTags = expandTagsUint32ToList(observation.tagsList)
 
                 visionObs = VisionObservation(
                     observation.pose.toPose2d(),
                     observation.timestamp,
                     (linearStdDev, linearStdDev, angularStdDev),
-                    observedTags,
+                    # observedTags,
                 )
                 for consumer in self.consumers:
                     consumer(visionObs)
@@ -163,19 +162,15 @@ class VisionSubsystem(Subsystem):
                 linearStdDev = kXyStdDevCoeff * stdDevFactor
                 angularStdDev = kThetaStdDevCoeff * stdDevFactor
                 # here you can also factor in per-camera weighting
-                observedTags = []
-                tagsList = tObsTyped.tagsList
-                # extract tag list from bit masks
-                for tagId in range(32):
-                    if tagsList & (1 << tagId):
-                        observedTags.append(tagId + 1)
+
+                # observedTags = expandTagsUint32ToList(tObsTyped.tagsList)
 
                 self.turretedConsumer(
                     TurretedVisionObservation(
                         tObsTyped.fieldToTurret,
                         tObsTyped.timestamp,
                         (linearStdDev, linearStdDev, angularStdDev),
-                        observedTags,
+                        # observedTags,
                     )
                 )
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+#import gc
 import os
 import sys
 
@@ -23,8 +23,6 @@ from utils.calibration import CalibrationWrangler
 from util.logtracer import LogTracer
 
 from testingMotors.motorCtrl import motorDepConstants, MotorControl
-
-# from drivetrain.controlStrategies.trajectory import Trajectory
 
 from humanInterface.driverInterface import DriverInterface
 from humanInterface.ledControl import LEDControl
@@ -154,6 +152,7 @@ class MyRobot(LoggedRobot):
 
         # if self.count == 10:
         #    gc.freeze()
+        # gc.freeze()
 
         if self.count <= 2:
             print(

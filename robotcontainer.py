@@ -28,7 +28,7 @@ from subsystems.state.robottopsubsystem import RobotTopSubsystemFactory
 from subsystems.vision.visionsubsystem import VisionSubsystem, VisionSubsystemFactory
 from util.robotposeestimator import VisionObservation
 from utils.allianceTransformUtils import onRed
-from utils.units import deg2Rad, in2m
+from utils.units import deg2Rad, in2m, m2in
 
 
 class RobotContainer:
@@ -237,8 +237,8 @@ class RobotContainer:
     def setDefaultStartpose(self) -> None:
         if self.drivetrainSubsystem is not None:
             if not self.autoHasRun:
-                robotStartXIn = 40.0
-                robotStartYIn = 80.0
+                robotStartXIn = m2in(2.5)
+                robotStartYIn = kFieldWidthIn / 2
                 if onRed():
                     startPose = Pose2d(
                         in2m(kFieldLengthIn - robotStartXIn),

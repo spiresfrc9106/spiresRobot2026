@@ -41,13 +41,13 @@ class VisionObservation:
         visionPose: Pose2d,
         timestamp: float,
         std: tuple[float, float, float],
-        tagsUsed: list[int],
+        # tagsUsed: list[int],
     ) -> None:
         assert len(std) == 3
         self.visionPose = visionPose
         self.timestamp = timestamp
         self.std = std
-        self.tagsUsed = tagsUsed
+        # self.tagsUsed = tagsUsed
 
 
 class TurretedVisionObservation:
@@ -60,13 +60,13 @@ class TurretedVisionObservation:
         fieldToTurretTransform: Transform3d,
         timestamp: float,
         std: tuple[float, float, float],
-        tagsUsed: list[int],
+        # tagsUsed: list[int],
     ) -> None:
         assert len(std) == 3
         self.fieldToTurretTransform = fieldToTurretTransform
         self.timestamp = timestamp
         self.std = std
-        self.tagsUsed = tagsUsed
+        # self.tagsUsed = tagsUsed
 
 
 class TurretObservation:

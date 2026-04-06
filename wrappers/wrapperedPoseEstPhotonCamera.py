@@ -236,18 +236,22 @@ class WrapperedPoseEstPhotonCamera:
                 )
                 Logger.recordOutput(f"{self.name}/target/{targets_found + i}/area", 0.0)
 
-        posesFound = 0
-        for vo in self.poseEstimates[:MAX_CAMERA_SOLUTIONS]:
-            Logger.recordOutput(f"{self.name}/sol/{posesFound}/pose", vo.pose)
-            Logger.recordOutput(f"{self.name}/sol/{posesFound}/xyStdDev", vo.xyStdDev_m)
-            Logger.recordOutput(
-                f"{self.name}/sol/{posesFound}/rotStdDev_rad", vo.rotStdDev_rad
-            )
-            posesFound += 1
-        for i in range(MAX_CAMERA_SOLUTIONS - posesFound):
-            Logger.recordOutput(f"{self.name}/sol/{posesFound + i}/pose", Pose3d())
-            Logger.recordOutput(f"{self.name}/sol/{posesFound}/xyStdDev", 0.0)
-            Logger.recordOutput(f"{self.name}/sol/{posesFound}/rotStdDev_rad", 0.0)
+        logSolutions = False
+        if logSolutions:
+            posesFound = 0
+            for vo in self.poseEstimates[:MAX_CAMERA_SOLUTIONS]:
+                Logger.recordOutput(f"{self.name}/sol/{posesFound}/pose", vo.pose)
+                Logger.recordOutput(
+                    f"{self.name}/sol/{posesFound}/xyStdDev", vo.xyStdDev_m
+                )
+                Logger.recordOutput(
+                    f"{self.name}/sol/{posesFound}/rotStdDev_rad", vo.rotStdDev_rad
+                )
+                posesFound += 1
+            for i in range(MAX_CAMERA_SOLUTIONS - posesFound):
+                Logger.recordOutput(f"{self.name}/sol/{posesFound + i}/pose", Pose3d())
+                Logger.recordOutput(f"{self.name}/sol/{posesFound}/xyStdDev", 0.0)
+                Logger.recordOutput(f"{self.name}/sol/{posesFound}/rotStdDev_rad", 0.0)
 
         endTime = RobotTopSubsystem().getFPGATimestampS()
         self.updateDuration = (endTime - startTime) * 1000.0
