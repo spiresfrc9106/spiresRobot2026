@@ -4,10 +4,10 @@ from typing import List
 from constants.vision import ObservationType
 from pykit.autolog import autolog
 from wpimath.geometry import Pose3d, Transform3d
-from wpiutil.wpistruct import uint64, make_wpistruct
+from wpiutil.wpistruct import uint32, make_wpistruct
 
 
-tagsIntType = uint64
+tagsIntType = uint32
 
 
 @make_wpistruct(name="visionobservation")
