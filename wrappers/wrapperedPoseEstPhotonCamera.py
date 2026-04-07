@@ -100,9 +100,9 @@ class WrapperedPoseEstPhotonCamera:
             and RobotTopSubsystem().getFPGATimestampS() - result.getTimestampSeconds()
             < 2.0 * kRobotUpdatePeriodS
         ):
-            targets: List[PhotonTrackedTarget] = result.getTargets()
 
             if logTargets:
+                targets: List[PhotonTrackedTarget] = result.getTargets()
                 for target in targets[:MAX_CAMERA_TARGETS]:
                     id = target.getFiducialId()
                     poseAmbiguity = target.getPoseAmbiguity()
@@ -184,10 +184,23 @@ class WrapperedPoseEstPhotonCamera:
                 )
             else:
                 camEstPose = self.camPoseEst.estimateLowestAmbiguityPose(result)
-                if camEstPose is not None:
+                if camEstPose is not None and abs(camEstPose.estimatedPose.z) < 0.5:
                     singleTarget = camEstPose.targetsUsed[0]
                     poseAmbiguity = singleTarget.getPoseAmbiguity()
-                    if poseAmbiguity <= _MAX_SINGLE_TAG_AMBIGUITY:
+                    if True: #if poseAmbiguity <= _MAX_SINGLE_TAG_AMBIGUITY:
+                        """
+                        targetPosition = self.camPoseEst._fieldTags.getTagPose(singleTarget.getFiducialId())
+                        altCamEstPose = EstimatedRobotPose(
+                            targetPosition.transformBy(
+                            singleTarget.getBestCameraToTarget().inverse()
+                            ).transformBy(self.robotToCam.inverse()),
+                            result.getTimestampSeconds(),
+                            result.targets,
+                        )
+                        if abs(camEstPose.estimatedPose.z) > 0.5 and abs(altCamEstPose.estimatedPose.z) < abs(camEstPose.estimatedPose.z):
+                            camEstPose = altCamEstPose
+                        """
+
                         avgDist_m = (
                             singleTarget.getBestCameraToTarget().translation().norm()
                         )
@@ -196,13 +209,13 @@ class WrapperedPoseEstPhotonCamera:
                             VisionSubsystemPoseObservation(
                                 timestamp=camEstPose.timestampSeconds,
                                 pose=camEstPose.estimatedPose,
-                                ambiguity=0.0,
+                                ambiguity=poseAmbiguity,
                                 tagCount=1,
                                 tagsList=condenseTagsListToUint32(
                                     [singleTarget.getFiducialId()]
                                 ),
                                 avgTagDist_m=avgDist_m,
-                                observationType=ObservationType.PHOTON_MULTITAG.value,
+                                observationType=ObservationType.PHOTON_SINGLETAG.value,
                                 xyStdDev_m=xyStdDev_m,
                                 rotStdDev_rad=_ROT_STD_DEV_SINGLE_TAG,
                             )
