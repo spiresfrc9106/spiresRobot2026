@@ -52,15 +52,13 @@ class DrivetrainPoseEstimator:
             self._curEstPose,
         )
 
-        self._lastModulePositions = initialModulePositions
-
         # Logging and Telemetry
         self._telemetry = DrivetrainPoseTelemetry()
         self.limelightPoseOfTarget = None
 
         self.lastCamEstRobotPos = Pose2d()
 
-    def setKnownPose(self, knownPose: Pose2d):
+    def setKnownPose(self, knownPose: Pose2d, modulePositions: PosTupleType):
         """Reset the robot's estimated pose to some specific position. This is useful if we know with certanty
         we are at some specific spot (Ex: start of autonomous)
 
@@ -70,14 +68,17 @@ class DrivetrainPoseEstimator:
         # Reset the simulated gyro origin (no-op on real hardware / replay).
         self.robotTopSubsystem.resetSimGyro(knownPose)
 
-        self._poseEst.resetPosition(
+        self._poseEst = SwerveDrive4PoseEstimator(
+            self.kinematics,
             self.robotTopSubsystem.inputs.gyroAngleRotation,
-            self._lastModulePositions,
+            modulePositions,
             knownPose,
         )
+
+        self.update(modulePositions)
         self.robotTopSubsystem.resetRobotPose(self._poseEst.getEstimatedPosition())
 
-    def update(self, curModulePositions: PosTupleType, curModuleSpeeds: StateTupleType):
+    def update(self, curModulePositions: PosTupleType):
         """Periodic update, call this every 20ms.
 
         Args:
@@ -96,9 +97,6 @@ class DrivetrainPoseEstimator:
 
         # Record the estimate to telemetry/logging-
         self._telemetry.update(self._curEstPose, [x.angle for x in curModulePositions])
-
-        # Remember the module positions for next loop
-        self._lastModulePositions = curModulePositions
 
     def getCurEstPose(self) -> Pose2d:
         """

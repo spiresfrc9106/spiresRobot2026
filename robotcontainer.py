@@ -258,7 +258,7 @@ class RobotContainer:
     def resetPose(self, pose: Pose2d) -> None:
         print(f"resetPose: {pose}")
         if self.drivetrainSubsystem is not None:
-            self.drivetrainSubsystem.casseroleDrivetrain.poseEst.setKnownPose(pose)
+            self.drivetrainSubsystem.casseroleDrivetrain.setKnownPose(pose)
         else:
             self.robotop.resetRobotPose(pose)
 

@@ -35,7 +35,6 @@ class DrivetrainDependentConstants(metaclass=Singleton):
         self.useCasseroleSwerve = True
         self.useWestwoodSwerve = False
         self.cameraDepConstants = CameraDependentConstants()
-        print(f"DrivetrainDependentConstants __init__ self={id(self)}")
 
     def getDivetrainConstants(self, robotType: RobotTypes):
         drivetrainConstants = {

@@ -209,7 +209,6 @@ class Logger:
         """Stops the logger and all data receivers, and performs necessary cleanup."""
         if cls.running:
             cls.running = False
-            print("Logger ended")
 
             # Restore console if we wrapped it
             if cls._console_wrapped:
@@ -235,6 +234,7 @@ class Logger:
             RobotController.setTimeSource(RobotController.getFPGATime)
             for reciever in cls.dataRecievers:
                 reciever.end()
+            print("Logger end")
 
     @classmethod
     def getTimestamp(cls) -> int:
@@ -245,10 +245,7 @@ class Logger:
 
         :return: The current timestamp in microseconds.
         """
-        if cls.isReplay():
-            return cls.entry.getTimestamp()
-        # RobotController.getFPGATime may be untyped; ensure int
-        return int(RobotController.getFPGATime())
+        return cls.entry.getTimestamp()
 
     @classmethod
     def periodicBeforeUser(cls) -> bool:
@@ -273,37 +270,34 @@ class Logger:
                         print(
                             "[ERROR] This robot did not start properly, is the replay logfile from PyKit?"
                         )
-                    else:
-                        # cls.end()
-                        stop = True
+                    stop = True
 
-            if True:
-                dsStart = RobotController.getFPGATime()
-                # In replay mode, simulate driver station inputs from log
-                if cls.isReplay():
-                    LoggedDriverStation.loadFromTable(
-                        cls.entry.getSubTable("DriverStation")
-                    )
-                dashboardInputStart = RobotController.getFPGATime()
-
-                # Update dashboard inputs (choosers, etc.)
-                for dashInput in cls.dashboardInputs:
-                    dashInput.periodic()
-
-                dashboardInputEnd = RobotController.getFPGATime()
-
-                cls.recordOutput(
-                    "Logger/EntryUpdateMS", (dsStart - entryUpdateStart) / 1000.0
+            dsStart = RobotController.getFPGATime()
+            # In replay mode, simulate driver station inputs from log
+            if cls.isReplay():
+                LoggedDriverStation.loadFromTable(
+                    cls.entry.getSubTable("DriverStation")
                 )
-                if cls.isReplay():
-                    cls.recordOutput(
-                        "Logger/DriverStationMS",
-                        (dashboardInputStart - dsStart) / 1000.0,
-                    )
+            dashboardInputStart = RobotController.getFPGATime()
+
+            # Update dashboard inputs (choosers, etc.)
+            for dashInput in cls.dashboardInputs:
+                dashInput.periodic()
+
+            dashboardInputEnd = RobotController.getFPGATime()
+
+            cls.recordOutput(
+                "Logger/EntryUpdateMS", (dsStart - entryUpdateStart) / 1000.0
+            )
+            if cls.isReplay():
                 cls.recordOutput(
-                    "Logger/DashboardInputsMS",
-                    (dashboardInputEnd - dashboardInputStart) / 1000.0,
+                    "Logger/DriverStationMS",
+                    (dashboardInputStart - dsStart) / 1000.0,
                 )
+            cls.recordOutput(
+                "Logger/DashboardInputsMS",
+                (dashboardInputEnd - dashboardInputStart) / 1000.0,
+            )
         return stop
 
     @classmethod

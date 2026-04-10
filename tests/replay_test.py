@@ -60,7 +60,7 @@ def pykitReplayControl(reraise, robot: wpilib.RobotBase) -> PyKitReplayTestContr
 
 # @pytest.mark.dependency(name="test_log_and_replay_step1")
 @pytest.mark.order(1)
-def test_log_and_replay_step1(control, robot):
+def test_log_and_replay_step1(pykitReplayControl, robot):
     # -----------------------------------------------------------------------
     # Phase 1: sim run
     # -----------------------------------------------------------------------
@@ -70,19 +70,19 @@ def test_log_and_replay_step1(control, robot):
         "C-c_backup", "C-c_backup"
     )
 
-    with control.run_robot():
-        control.step_timing(seconds=0.5, autonomous=True, enabled=False)
-        control.step_timing(seconds=15.0, autonomous=True, enabled=True)
-        control.step_timing(seconds=0.5, autonomous=True, enabled=False)
+    with pykitReplayControl.run_robot():
+        pykitReplayControl.step_timing(seconds=0.5, autonomous=True, enabled=False)
+        pykitReplayControl.step_timing(seconds=15.0, autonomous=True, enabled=True)
+        pykitReplayControl.step_timing(seconds=0.5, autonomous=True, enabled=False)
         global origLogPath
         origLogPath = robot.loggerSetup.logFiles[0]
 
-        originalDir = os.path.dirname(origLogPath)  # r'c:\temp'
-        newName = "test_log_and_replay_step3.wpilog"
-        newPath = os.path.join(originalDir, newName)
-        shutil.copyfile(origLogPath, newPath)
-        global replayLogPath
-        replayLogPath = origLogPath[:-7] + "_sim.wpilog"
+    originalDir = os.path.dirname(origLogPath)  # r'c:\temp'
+    newName = "test_log_and_replay_step3.wpilog"
+    newPath = os.path.join(originalDir, newName)
+    shutil.copyfile(origLogPath, newPath)
+    global replayLogPath
+    replayLogPath = origLogPath[:-7] + "_sim.wpilog"
 
     assert os.path.exists(origLogPath), f"Log file not created: {origLogPath}"
 

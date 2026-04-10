@@ -54,6 +54,11 @@ class DrivetrainControl:
 
         self._updateAllCals()
 
+    def setKnownPose(self, newPose: Pose2d) -> None:
+        for mod in self.modules:
+            mod.updateActualStateAndPosition()
+        self.poseEst.setKnownPose(newPose, self.getModulePositions())
+
     def setManualCmd(self, cmd: DrivetrainCommand):
         """Send xyzzy to the robot for motion relative to the field
 
@@ -144,7 +149,7 @@ class DrivetrainControl:
             module.update()
 
         # Update the estimate of our pose
-        self.poseEst.update(self.getModulePositions(), self.getModuleStates())
+        self.poseEst.update(self.getModulePositions())
 
         # Update calibration values if they've changed
         if self.gainsSwerveModule.hasChanged():
@@ -229,7 +234,7 @@ class DrivetrainControl:
             Rotation2d.fromDegrees(180.0) if (onRed()) else Rotation2d.fromDegrees(0.0)
         )
         newPose = Pose2d(curTranslation, newGyroRotation)
-        self.poseEst.setKnownPose(newPose)
+        self.setKnownPose(newPose)
 
     def getCurEstPose(self) -> Pose2d:
         # Return the current best-guess at our pose on the field.

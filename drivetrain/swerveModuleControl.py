@@ -81,7 +81,7 @@ class SwerveModuleControl:
         self.actualState = SwerveModuleState()
         self.actualPosition = SwerveModulePosition()
 
-        self.azmthCtrl = PIDController(0, 0, 0)
+        self.azmthCtrl = PIDController(0, 0, 0, period=kRobotUpdatePeriodS)
         self.azmthCtrl.enableContinuousInput(-180.0, 180.0)
         self.azmthVoltage = 0.0
 
@@ -166,12 +166,7 @@ class SwerveModuleControl:
         else:
             return 0
 
-    def update(self):
-        """Main update function, call every 40ms"""
-
-        # Read from the azimuth angle sensor (encoder)
-        # self.azmthEnc.update() This is now being handled by PyKit moduleIO processing.
-
+    def updateActualStateAndPosition(self):
         # Update this module's actual state with measurements from the sensors (or IO layer in sim).
         self.actualState.angle = Rotation2d(self.azmthEnc.getAngleRad())
         self.actualState.speed = self.dtMotorRotToLinear(
@@ -181,6 +176,10 @@ class SwerveModuleControl:
             self.wheelMotor.getMotorPositionRad()
         )
         self.actualPosition.angle = self.actualState.angle
+
+    def update(self):
+        """Main update function, call every robot period"""
+        self.updateActualStateAndPosition()
 
         # Optimize our incoming swerve command to minimize motion
         self.optimizedDesiredState = self.desiredState

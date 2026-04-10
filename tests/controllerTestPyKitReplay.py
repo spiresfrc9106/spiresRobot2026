@@ -1,5 +1,7 @@
 import contextlib
 import typing
+
+import hal
 import wpilib
 import threading
 import pytest
@@ -79,7 +81,9 @@ class PyKitReplayTestController:
             yield
         finally:
             self._robot_finished = True
-            robot.endCompetition()
+            # robot.endCompetition()
+            hal.stopNotifier(robot.notifier)
+            hal.cleanNotifier(robot.notifier)
 
             if isinstance(self._reraise.exception, RuntimeError):
                 if str(self._reraise.exception).startswith(

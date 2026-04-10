@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from pykit.autolog import autolog
 
-from wpilib import RobotController
 from wpimath.geometry import Pose2d, Rotation2d
 
 from subsystems.state.configio import RobotTypes
@@ -30,7 +29,6 @@ class RobotTopIO:
     class RobotTopIOInputs:
         """Hold I/O data for the robot high-level state subsystem."""
 
-        timeUSec: int = 0
         gyroAngleRotation: Rotation2d = field(default_factory=lambda: Rotation2d())
         gyroConnected: bool = False
         gyroYawRateRadPerSec: float = 0.0
@@ -48,7 +46,6 @@ class RobotTopIO:
         Args:
             inputs (RobotTopIOInputs): The robot high-level state I/O inputs to update.
         """
-        inputs.timeUSec = RobotController.getFPGATime()
         if self.gyro is not None:
             inputs.gyroAngleRotation = self.gyro.getGyroAngleRotation2d()
             inputs.gyroConnected = self.gyro.isConnected()

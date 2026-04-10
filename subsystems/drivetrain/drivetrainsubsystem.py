@@ -5,7 +5,7 @@ if TYPE_CHECKING:
 
 from commands2 import Command, Subsystem, cmd
 from wpilib import XboxController
-from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
+from wpimath.kinematics import ChassisSpeeds
 
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.drivetrainControl import DrivetrainControl
@@ -129,16 +129,6 @@ class DrivetrainSubsystem(Subsystem):
 
     def getRobotRelativeChassisSpeeds(self) -> ChassisSpeeds:
         return self.casseroleDrivetrain.getRobotRelativeChassisSpeeds()
-
-    def getModulePositions(
-        self,
-    ) -> Tuple[
-        SwerveModulePosition,
-        SwerveModulePosition,
-        SwerveModulePosition,
-        SwerveModulePosition,
-    ]:
-        return self.casseroleDrivetrain.getModulePositions()
 
     def sysIdMotorModulePreInit(self) -> None:
         self.initialize()

@@ -11,13 +11,13 @@ Usage:
     python tools/find_replay_divergence.py --show-all             # all divergences, not just first
 
 Config (tools/replay_divergence.toml loaded automatically if present):
-    tolerance = 1e-4
+    rel_tolerance = 1e-4
 
     skip_prefixes = ["Logger/", "LoggedRobot/", "SystemStats/", "Console", "LogTracer/"]
     skip_substrings = ["/sol/"]
     watch_keys = []   # if non-empty, only diff keys matching any substring here
 
-    [tolerances]
+    [rel_tolerances]
     "Robot/top/distanceToHubIn" = 1e-3   # per-key override (first substring match wins)
 """
 
@@ -46,7 +46,9 @@ _DEFAULT_SKIP_PREFIXES: list[str] = [
     "LogTracer/",
 ]
 _DEFAULT_SKIP_SUBSTRINGS: list[str] = ["/sol/"]
-_DEFAULT_TOL: float = 1e-4
+_DEFAULT_REL_TOL: float = 1e-10
+
+_ABS_TOL = 1e-10
 
 
 # ---------------------------------------------------------------------------
@@ -56,7 +58,7 @@ _DEFAULT_TOL: float = 1e-4
 
 @dataclass
 class Config:
-    tolerance: float = _DEFAULT_TOL
+    rel_tolerance: float = _DEFAULT_REL_TOL
     skip_prefixes: list[str] = field(
         default_factory=lambda: list(_DEFAULT_SKIP_PREFIXES)
     )
@@ -64,7 +66,7 @@ class Config:
         default_factory=lambda: list(_DEFAULT_SKIP_SUBSTRINGS)
     )
     watch_keys: list[str] = field(default_factory=list)
-    tolerances: dict[str, float] = field(default_factory=dict)
+    rel_tolerances: dict[str, float] = field(default_factory=dict)
 
 
 def _load_config(path: Path | None) -> Config:
@@ -77,24 +79,26 @@ def _load_config(path: Path | None) -> Config:
             return cfg
     with open(path, "rb") as f:
         data = tomllib.load(f)
-    if "tolerance" in data:
-        cfg.tolerance = float(data["tolerance"])
+    if "rel_tolerance" in data:
+        cfg.rel_tolerance = float(data["rel_tolerance"])
     if "skip_prefixes" in data:
         cfg.skip_prefixes = [str(s) for s in data["skip_prefixes"]]
     if "skip_substrings" in data:
         cfg.skip_substrings = [str(s) for s in data["skip_substrings"]]
     if "watch_keys" in data:
         cfg.watch_keys = [str(s) for s in data["watch_keys"]]
-    if "tolerances" in data:
-        cfg.tolerances = {str(k): float(v) for k, v in data["tolerances"].items()}
+    if "rel_tolerances" in data:
+        cfg.rel_tolerances = {
+            str(k): float(v) for k, v in data["rel_tolerances"].items()
+        }
     return cfg
 
 
 def _tol_for_key(key: str, cfg: Config) -> float:
-    for pattern, tol in cfg.tolerances.items():
+    for pattern, tol in cfg.rel_tolerances.items():
         if pattern in key:
             return tol
-    return cfg.tolerance
+    return cfg.rel_tolerance
 
 
 # ---------------------------------------------------------------------------
@@ -191,12 +195,12 @@ class Divergence:
 
 def _vals_close(rv: Value, pv: Value, tol: float) -> bool:
     if isinstance(rv, float) and isinstance(pv, float):
-        return math.isclose(rv, pv, rel_tol=tol, abs_tol=tol)
+        return math.isclose(rv, pv, rel_tol=tol, abs_tol=_ABS_TOL)
     if isinstance(rv, list) and isinstance(pv, list):
         if len(rv) != len(pv):
             return False
         return all(
-            math.isclose(float(a), float(b), rel_tol=tol, abs_tol=tol)
+            math.isclose(float(a), float(b), rel_tol=tol, abs_tol=_ABS_TOL)
             if isinstance(a, float) and isinstance(b, float)
             else a == b
             for a, b in zip(rv, pv)
@@ -233,6 +237,7 @@ def _compare(
             continue
         real_vals = real[key]
         replay_vals = replay[key]
+        print(f"Comparing {key}... {len(real_vals)} {len(replay_vals)}")
         if len(real_vals) != len(replay_vals):
             count_mismatches[key] = (len(real_vals), len(replay_vals))
         tol = _tol_for_key(key, cfg)
@@ -354,7 +359,7 @@ def main() -> None:
         "log", nargs="?", help="Path to _sim.wpilog (default: newest in pyLogs/)"
     )
     parser.add_argument("--config", metavar="FILE.toml", help="TOML config file")
-    parser.add_argument("--tol", type=float, help="Global tolerance override")
+    parser.add_argument("--reltol", type=float, help="Global rel_tolerance override")
     parser.add_argument(
         "--show-all",
         action="store_true",
@@ -364,9 +369,9 @@ def main() -> None:
 
     config_path = Path(args.config) if args.config else None
     cfg = _load_config(config_path)
-    if args.tol is not None:
-        cfg.tolerance = args.tol
-        cfg.tolerances = {}  # CLI tol wins over per-key overrides
+    if args.reltol is not None:
+        cfg.rel_tolerance = args.relcol
+        cfg.rel_tolerances = {}  # CLI tol wins over per-key overrides
 
     log_path = Path(args.log) if args.log else _pick_wpilog()
     if not log_path.exists():

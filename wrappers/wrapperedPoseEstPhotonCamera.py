@@ -100,7 +100,6 @@ class WrapperedPoseEstPhotonCamera:
             and RobotTopSubsystem().getFPGATimestampS() - result.getTimestampSeconds()
             < 2.0 * kRobotUpdatePeriodS
         ):
-
             if logTargets:
                 targets: List[PhotonTrackedTarget] = result.getTargets()
                 for target in targets[:MAX_CAMERA_TARGETS]:
@@ -187,7 +186,7 @@ class WrapperedPoseEstPhotonCamera:
                 if camEstPose is not None and abs(camEstPose.estimatedPose.z) < 0.5:
                     singleTarget = camEstPose.targetsUsed[0]
                     poseAmbiguity = singleTarget.getPoseAmbiguity()
-                    if True: #if poseAmbiguity <= _MAX_SINGLE_TAG_AMBIGUITY:
+                    if True:  # if poseAmbiguity <= _MAX_SINGLE_TAG_AMBIGUITY:
                         """
                         targetPosition = self.camPoseEst._fieldTags.getTagPose(singleTarget.getFiducialId())
                         altCamEstPose = EstimatedRobotPose(

@@ -47,7 +47,7 @@ class RobotLoggerSetup:
                 self._logWriters.append(writer)
                 Logger.addDataReciever(writer)
             case RobotModes.REPLAY:
-                self._useTiming = True
+                self._useTiming = False
                 logPath = LoggerState().logPath
                 assert logPath is not None, "Log path not set"
                 logPath = os.path.abspath(logPath)

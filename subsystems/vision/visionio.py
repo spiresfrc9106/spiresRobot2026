@@ -4,7 +4,7 @@ from typing import List
 from constants.vision import ObservationType
 from pykit.autolog import autolog
 from wpimath.geometry import Pose3d, Transform3d
-from wpiutil.wpistruct import uint32, make_wpistruct
+from wpiutil.wpistruct import double, uint32, make_wpistruct
 
 
 tagsIntType = uint32
@@ -14,15 +14,15 @@ tagsIntType = uint32
 @autolog
 @dataclass
 class VisionSubsystemPoseObservation:
-    timestamp: float = 0.0
+    timestamp: double = 0.0
     pose: Pose3d = field(default_factory=Pose3d)
     ambiguity: float = 0.0
     tagCount: int = 0
     tagsList: tagsIntType = tagsIntType(0)
-    avgTagDist_m: float = 0.0
+    avgTagDist_m: double = 0.0
     observationType: int = ObservationType.PHOTONVISION.value
-    xyStdDev_m: float = 0.0
-    rotStdDev_rad: float = 0.0
+    xyStdDev_m: double = 0.0
+    rotStdDev_rad: double = 0.0
 
 
 def condenseTagsListToUint32(tagsAsList: List[int]) -> tagsIntType:

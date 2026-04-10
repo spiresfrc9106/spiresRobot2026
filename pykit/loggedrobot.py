@@ -64,16 +64,11 @@ class LoggedRobot(IterativeRobotBase):
         Logger.periodicAfterUser(startCompetitionTime, 0)
         stop = Logger.periodicBeforeUser()
         if stop:
+            Logger.end()
             return
-        print(f"Before robotInit time={startCompetitionTime}")
         self.robotInit()
 
         if self.isSimulation():
-            afterRobotInitTime = RobotController.getFPGATime()
-            Logger.periodicAfterUser(afterRobotInitTime, 0)
-            stop = Logger.periodicBeforeUser()
-            if stop:
-                return
             self._simulationInit()
 
         self.initEnd = RobotController.getFPGATime()
@@ -125,5 +120,6 @@ class LoggedRobot(IterativeRobotBase):
                 userCodeEnd - userCodeStart, userCodeStart - periodicBeforeStart
             )
             if stop:
-                Logger.end()
                 break
+
+        Logger.end()
