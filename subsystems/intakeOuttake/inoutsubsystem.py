@@ -54,35 +54,8 @@ class InOutState(Enum):
     kShooting = 3
 
 
-IODC = ConfigSubsystem().inoutDepConstants
-HAS_INOUT = IODC["HAS_INOUT"]
-
-
 @autologgable_output
 class InOutSubsystem(Subsystem):
-    GROUND_GEAR_REDUCTION = IODC["GROUND_GEAR_REDUCTION"] if HAS_INOUT else 1.0
-    GROUND_WHEEL_DIAMETER_INCHES = (
-        IODC["GROUND_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
-    )
-    GROUND_WHEEL_RADIUS_INCHES = (
-        GROUND_WHEEL_DIAMETER_INCHES / 2.0 if HAS_INOUT else 1.0
-    )
-    HOPPER_GEAR_REDUCTION = IODC["HOPPER_GEAR_REDUCTION"] if HAS_INOUT else 1.0
-    HOPPER_WHEEL_DIAMETER_INCHES = (
-        IODC["HOPPER_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
-    )
-    HOPPER_WHEEL_RADIUS_INCHES = (
-        HOPPER_WHEEL_DIAMETER_INCHES / 2.0 if HAS_INOUT else 1.0
-    )
-    FLYWHEEL_GEAR_REDUCTION = IODC["FLYWHEEL_GEAR_REDUCTION"] if HAS_INOUT else 1.0
-    FLYWHEEL_WHEEL_DIAMETER_INCHES = (
-        IODC["FLYWHEEL_WHEEL_DIAMETER_INCHES"] if HAS_INOUT else 1.0
-    )
-    FLYWHEEL_WHEEL_RADIUS_INCHES = (
-        FLYWHEEL_WHEEL_DIAMETER_INCHES / 2.0 if HAS_INOUT else 1.0
-    )
-    AGITATOR_GEAR_REDUCTION = IODC["AGITATOR_GEAR_REDUCTION"] if HAS_INOUT else 1.0
-
     def __init__(
         self,
         io: InOutSubsystemIO,
@@ -101,6 +74,19 @@ class InOutSubsystem(Subsystem):
         self.setName(self.name)
         self.io = io
         self.inputs = InOutSubsystemIO.InOutSubsystemIOInputs()
+
+        IODC = ConfigSubsystem().inoutDepConstants
+        self.GROUND_GEAR_REDUCTION = IODC["GROUND_GEAR_REDUCTION"]
+        GROUND_WHEEL_DIAMETER_INCHES = IODC["GROUND_WHEEL_DIAMETER_INCHES"]
+        self.GROUND_WHEEL_RADIUS_INCHES = GROUND_WHEEL_DIAMETER_INCHES / 2.0
+        self.HOPPER_GEAR_REDUCTION = IODC["HOPPER_GEAR_REDUCTION"]
+        HOPPER_WHEEL_DIAMETER_INCHES = IODC["HOPPER_WHEEL_DIAMETER_INCHES"]
+        self.HOPPER_WHEEL_RADIUS_INCHES = HOPPER_WHEEL_DIAMETER_INCHES
+        self.FLYWHEEL_GEAR_REDUCTION = IODC["FLYWHEEL_GEAR_REDUCTION"]
+        FLYWHEEL_WHEEL_DIAMETER_INCHES = IODC["FLYWHEEL_WHEEL_DIAMETER_INCHES"]
+        self.FLYWHEEL_WHEEL_RADIUS_INCHES = FLYWHEEL_WHEEL_DIAMETER_INCHES / 2.0
+        self.AGITATOR_GEAR_REDUCTION = IODC["AGITATOR_GEAR_REDUCTION"]
+
         self.groundModule = MotorModule(
             name="groundModule", io=groundModule_io, controller=groundModule_controller
         )
@@ -267,39 +253,59 @@ class InOutSubsystem(Subsystem):
     def setFlywheelState(self, flywheelState: FlywheelState):
         self.flywheelState = flywheelState
 
-    @classmethod
-    def groundRadPerSToInPerS(cls, radiansPerS: float) -> float:
-        return radiansPerS * cls.GROUND_WHEEL_RADIUS_INCHES * cls.GROUND_GEAR_REDUCTION
+    def groundRadPerSToInPerS(self, radiansPerS: float) -> float:
+        return (
+            radiansPerS * self.GROUND_WHEEL_RADIUS_INCHES * self.GROUND_GEAR_REDUCTION
+        )
 
     @classmethod
     def groundInPerSToRadPerS(cls, inPerS: float) -> float:
-        return inPerS / (cls.GROUND_WHEEL_RADIUS_INCHES * cls.GROUND_GEAR_REDUCTION)
+        # todo speed this up.
+        IODC = ConfigSubsystem().inoutDepConstants
+        GROUND_GEAR_REDUCTION = IODC["GROUND_GEAR_REDUCTION"]
+        GROUND_WHEEL_DIAMETER_INCHES = IODC["GROUND_WHEEL_DIAMETER_INCHES"]
+        GROUND_WHEEL_RADIUS_INCHES = GROUND_WHEEL_DIAMETER_INCHES / 2.0
+        return inPerS / (GROUND_WHEEL_RADIUS_INCHES * GROUND_GEAR_REDUCTION)
 
-    @classmethod
-    def hopperRadPerSToInPerS(cls, radiansPerS: float) -> float:
-        return radiansPerS * cls.HOPPER_WHEEL_RADIUS_INCHES * cls.HOPPER_GEAR_REDUCTION
+    def hopperRadPerSToInPerS(self, radiansPerS: float) -> float:
+        return (
+            radiansPerS * self.HOPPER_WHEEL_RADIUS_INCHES * self.HOPPER_GEAR_REDUCTION
+        )
 
     @classmethod
     def hopperInPerSToRadPerS(cls, inPerS: float) -> float:
-        return inPerS / (cls.HOPPER_WHEEL_RADIUS_INCHES * cls.HOPPER_GEAR_REDUCTION)
+        # todo speed this up.
+        IODC = ConfigSubsystem().inoutDepConstants
+        HOPPER_GEAR_REDUCTION = IODC["HOPPER_GEAR_REDUCTION"]
+        HOPPER_WHEEL_DIAMETER_INCHES = IODC["HOPPER_WHEEL_DIAMETER_INCHES"]
+        HOPPER_WHEEL_RADIUS_INCHES = HOPPER_WHEEL_DIAMETER_INCHES
+        return inPerS / (HOPPER_WHEEL_RADIUS_INCHES * HOPPER_GEAR_REDUCTION)
 
-    @classmethod
-    def flywheelRadPerSToInPerS(cls, radiansPerS: float) -> float:
+    def flywheelRadPerSToInPerS(self, radiansPerS: float) -> float:
         return (
-            radiansPerS * cls.FLYWHEEL_WHEEL_RADIUS_INCHES * cls.FLYWHEEL_GEAR_REDUCTION
+            radiansPerS
+            * self.FLYWHEEL_WHEEL_RADIUS_INCHES
+            * self.FLYWHEEL_GEAR_REDUCTION
         )
 
     @classmethod
     def flywheelInPerSToRadPerS(cls, inPerS: float) -> float:
-        return inPerS / (cls.FLYWHEEL_WHEEL_RADIUS_INCHES * cls.FLYWHEEL_GEAR_REDUCTION)
+        # todo speed this up.
+        IODC = ConfigSubsystem().inoutDepConstants
+        FLYWHEEL_GEAR_REDUCTION = IODC["FLYWHEEL_GEAR_REDUCTION"]
+        FLYWHEEL_WHEEL_DIAMETER_INCHES = IODC["FLYWHEEL_WHEEL_DIAMETER_INCHES"]
+        FLYWHEEL_WHEEL_RADIUS_INCHES = FLYWHEEL_WHEEL_DIAMETER_INCHES / 2.0
+        return inPerS / (FLYWHEEL_WHEEL_RADIUS_INCHES * FLYWHEEL_GEAR_REDUCTION)
 
-    @classmethod
-    def agitatorRadPerSToHz(cls, radiansPerS: float) -> float:
-        return radiansPerS * cls.AGITATOR_GEAR_REDUCTION / (2.0 * math.pi)
+    def agitatorRadPerSToHz(self, radiansPerS: float) -> float:
+        return radiansPerS * self.AGITATOR_GEAR_REDUCTION / (2.0 * math.pi)
 
     @classmethod
     def agitatorHzToRadPerS(cls, hz: float) -> float:
-        return hz * 2.0 * math.pi / cls.AGITATOR_GEAR_REDUCTION
+        # todo speed this up.
+        IODC = ConfigSubsystem().inoutDepConstants
+        AGITATOR_GEAR_REDUCTION = IODC["AGITATOR_GEAR_REDUCTION"]
+        return hz * 2.0 * math.pi / AGITATOR_GEAR_REDUCTION
 
     def makeCommandFeedForwardCharacterizationGroundMotor(self) -> Command:
         return self.sysIdMotorModule.feedForwardCharacterization(self.groundModule)
@@ -434,26 +440,27 @@ class InOutSubsystemSimulation:
         flywheelMotor: WrapperedMotorSuper,
         agitatorMotor: WrapperedMotorSuper,
     ) -> None:
+        IODC = ConfigSubsystem().inoutDepConstants
         self.groundWheelSim = OperateFlywheelSimulation(
             wrapperedMotor=groundMotor,
-            gearRatio=1.0 / InOutSubsystem.GROUND_GEAR_REDUCTION,
+            gearRatio=1.0 / IODC["GROUND_GEAR_REDUCTION"],
             moi=0.005,
         )
         self.hopperWheelSim = OperateFlywheelSimulation(
             wrapperedMotor=hopperMotor,
-            gearRatio=1.0 / InOutSubsystem.HOPPER_GEAR_REDUCTION,
+            gearRatio=1.0 / IODC["HOPPER_GEAR_REDUCTION"],
             moi=0.005,
         )
         self.flywheelWheelSim = OperateFlywheelSimulation(
             wrapperedMotor=flywheelMotor,
-            gearRatio=1.0 / InOutSubsystem.FLYWHEEL_GEAR_REDUCTION,
+            gearRatio=1.0 / IODC["FLYWHEEL_GEAR_REDUCTION"],
             moi=0.01,
         )
         self.simulations: tuple[OperateFlywheelSimulation, ...]
         if IODC["HAS_AGITATOR"]:
             self.agitatorWheelSim = OperateFlywheelSimulation(
                 wrapperedMotor=agitatorMotor,
-                gearRatio=1.0 / InOutSubsystem.AGITATOR_GEAR_REDUCTION,
+                gearRatio=1.0 / IODC["AGITATOR_GEAR_REDUCTION"],
                 moi=0.005,
             )
             self.simulations = (
@@ -476,6 +483,8 @@ class InOutSubsystemSimulation:
 
 def inoutSubsystemFactory() -> InOutSubsystem | None:
     inout: Optional[InOutSubsystem] = None
+    IODC = ConfigSubsystem().inoutDepConstants
+    HAS_INOUT = IODC["HAS_INOUT"]
     if HAS_INOUT:
         match LoggerState().kRobotMode:
             case RobotModes.REAL | RobotModes.SIMULATION:

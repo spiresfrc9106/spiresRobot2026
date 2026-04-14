@@ -1,4 +1,4 @@
-from subsystems.state.configio import RobotTypes
+from constants import RobotTypes
 from utils.singleton import Singleton
 from utils.units import deg2Rad
 from wrappers.wrapperedSparkFlex import WrapperedSparkFlex

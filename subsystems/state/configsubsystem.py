@@ -1,15 +1,14 @@
 from typing_extensions import Self
 from commands2 import Subsystem
-from pykit.logger import Logger
 from pykit.autolog import autologgable_output
 
-from subsystems.state.configio import ConfigIO, RobotTypes
+from constants import RobotTypes
 from subsystems.state.robottopio import RobotTopDependentConstants
 from subsystems.intakeOuttake.inout import InOutDependentConstants
 from subsystems.vision.vision import VisionDependentConstants
+from utils.robotLoggerSetup import RobotLoggerSetup
 from utils.singleton import _instances
 from constants import LoggerState
-from util.logtracer import LogTracer
 
 
 # pylint: disable-next=too-many-instance-attributes
@@ -18,6 +17,8 @@ class ConfigSubsystem(Subsystem):
     """
     A singleton class that records the robot's configuration.
     """
+
+    ## todo make this a normal singleton and not a subsystem.
 
     _initalized = False
 
@@ -35,16 +36,9 @@ class ConfigSubsystem(Subsystem):
     def __init__(self) -> None:
         if self._initalized:
             return
-        self.io = ConfigIO()
         Subsystem.__init__(self)
         self.setName(type(self).__name__)
-        self.inputs = ConfigIO.ConfigIOInputs()
-
-        # Call periodic early so we can load self.inputs.robotType before the other Subsytems
-        # are created. So that in replay, they can replay as their configured type.
-        self.periodic()
-        self._robotType: RobotTypes = ConfigIO.getRobotType(self.inputs)
-        self._isSpiresRobot: bool = ConfigIO.isSpiresRobot(self.inputs)
+        self._robotType = RobotLoggerSetup().robotType
 
         # Deferred import to avoid circular dependency
         from drivetrain.drivetrainDependentConstants import (
@@ -74,32 +68,13 @@ class ConfigSubsystem(Subsystem):
         """
         Called periodically when it can be called. Updates the robot's configuration
         """
-
-        LogTracer.resetOuter("ConfigSubsystemPeriodic")
-        self.io.updateInputs(self.inputs)
-        LogTracer.record("IOUpdate")
-        """TODO put any configuation IOUpdates here"""
-        LogTracer.record("StateUpdate")
-        Logger.processInputs("Config", self.inputs)
-        LogTracer.record("LoggerProcessInputs")
-
-        """TODO put any configuation periodic here"""
-        LogTracer.record("ModulesPeriodic")
-        LogTracer.recordTotal()
+        pass
 
     def getRobotType(self) -> RobotTypes:
         return self._robotType
-
-    def isSpiresRobot(self) -> bool:
-        return self._isSpiresRobot
 
     def useCasseroleSwerve(self) -> bool:
         return (
             self.drivetrainDepConstants["HAS_DRIVETRAIN"]
             and self.dpc.useCasseroleSwerve
-        )
-
-    def useWestwoodSwerve(self) -> bool:
-        return (
-            self.drivetrainDepConstants["HAS_DRIVETRAIN"] and self.dpc.useWestwoodSwerve
         )

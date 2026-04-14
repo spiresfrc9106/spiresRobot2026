@@ -56,10 +56,6 @@ from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
 
 
-DTDC = ConfigSubsystem().drivetrainDepConstants
-HAS_DRIVETRAIN = DTDC["HAS_DRIVETRAIN"]
-
-
 @autologgable_output
 class DrivetrainSubsystem(Subsystem):
     def __init__(
@@ -271,6 +267,8 @@ def DrivetrainSubsystemFactory() -> DrivetrainSubsystem | None:
     )
 
     drivetrain: Optional[DrivetrainSubsystem] = None
+    DTDC = ConfigSubsystem().drivetrainDepConstants
+    HAS_DRIVETRAIN = DTDC["HAS_DRIVETRAIN"]
     if HAS_DRIVETRAIN:
         p = DrivetrainPhysical()
 

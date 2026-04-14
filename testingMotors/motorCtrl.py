@@ -5,7 +5,7 @@
 
 from pykit.logger import Logger
 from utils.singleton import Singleton
-from subsystems.state.configio import RobotTypes
+from constants import RobotTypes
 from subsystems.state.configsubsystem import ConfigSubsystem
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
 
@@ -39,14 +39,11 @@ class MotorDependentConstants:
         return self.motorDepConstants[ConfigSubsystem().getRobotType()]
 
 
-motorDepConstants = MotorDependentConstants().get()
-
-
-TEST_MOTOR_CANID = motorDepConstants["TEST_MOTOR_CANID"]
-
-
 class MotorControl(metaclass=Singleton):
     def __init__(self):
+        motorDepConstants = MotorDependentConstants().get()
+
+        TEST_MOTOR_CANID = motorDepConstants["TEST_MOTOR_CANID"]
 
         # Elevator Motors
         self.Rmotor = WrapperedSparkMax(

@@ -5,7 +5,7 @@ from wpimath.geometry import Transform3d, Pose3d, Rotation3d
 from wpimath.units import inchesToMeters
 
 from constants import LoggerState, RobotModes
-from subsystems.state.configio import RobotTypes
+from constants import RobotTypes
 from subsystems.vision.visionio import VisionSubsystemIO
 from subsystems.vision.visioniophoton import VisionSubsystemIOPhotonVision
 

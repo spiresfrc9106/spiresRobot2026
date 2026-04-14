@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import sys
 
 from commands2.commandscheduler import CommandScheduler
@@ -18,18 +17,18 @@ from utils.calibration import CalibrationWrangler
 
 from util.logtracer import LogTracer
 
-from testingMotors.motorCtrl import motorDepConstants, MotorControl
+from testingMotors.motorCtrl import MotorControl, MotorDependentConstants
 
 from humanInterface.driverInterface import DriverInterface
 from humanInterface.ledControl import LEDControl
 from humanInterface.operatorInterface import OperatorInterface
 from utils.singleton import destroyAllSingletonInstances
-from wpilib import Timer, RobotController
+from wpilib import Timer
 import wpilib
 
 LoggedRobot.default_period = constants.kRobotUpdatePeriodS
 
-
+x = RobotLoggerSetup()
 @autologgable_output
 class MyRobot(LoggedRobot):
     """
@@ -40,12 +39,11 @@ class MyRobot(LoggedRobot):
     """
 
     def __init__(self):
-        print("MyRobot __init__")
         super().__init__()
-        self.loggerSetup = RobotLoggerSetup(type(self).__name__)
+        RobotLoggerSetup.robotName = type(self).__name__
+        self.loggerSetup = RobotLoggerSetup()
         self.useTiming = self.loggerSetup.useTiming
 
-        Logger.recordOutput("forceLoggerToStartAtZero", RobotController.getFPGATime())
         self.container = RobotContainer()
 
     #########################################################
@@ -105,8 +103,11 @@ class MyRobot(LoggedRobot):
 
         self.ledCtrl = LEDControl()
 
+        motorDepConstants = MotorDependentConstants().get()
         if motorDepConstants["HAS_MOTOR_TEST"]:
-            self.motorCtrlFun = MotorControl()
+            self.motorCtrlFun: MotorControl | None = MotorControl()
+        else:
+            self.motorCtrlFun = None
 
         # self.shooterCtrl = ShooterController()
 
@@ -189,7 +190,7 @@ class MyRobot(LoggedRobot):
 
         # No trajectory in Teleop
         # Trajectory().setCmd(None)
-        if motorDepConstants["HAS_MOTOR_TEST"]:
+        if self.motorCtrlFun is not None:
             self.motorCtrlFun.update(100.0)
 
     def teleopExit(self):
@@ -241,7 +242,3 @@ def remoteRIODebugSupport():
         else:
             debugpy.listen(("0.0.0.0", 5678))
             debugpy.wait_for_client()
-
-
-if __name__ == "__main__":
-    wpilib.run(MyRobot)

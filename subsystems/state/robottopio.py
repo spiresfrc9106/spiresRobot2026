@@ -3,7 +3,7 @@ from pykit.autolog import autolog
 
 from wpimath.geometry import Pose2d, Rotation2d
 
-from subsystems.state.configio import RobotTypes
+from constants import RobotTypes
 from utils.singleton import Singleton
 
 
