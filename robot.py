@@ -28,7 +28,7 @@ import wpilib
 
 LoggedRobot.default_period = constants.kRobotUpdatePeriodS
 
-x = RobotLoggerSetup()
+
 @autologgable_output
 class MyRobot(LoggedRobot):
     """
