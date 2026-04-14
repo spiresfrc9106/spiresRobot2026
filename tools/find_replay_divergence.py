@@ -242,6 +242,13 @@ def _compare(
             count_mismatches[key] = (len(real_vals), len(replay_vals))
         tol = _tol_for_key(key, cfg)
         found_first = False
+        # TODO Sometimes a time entry is missing for a real value, but is present for a replay value
+        # in this case it seems like if we were to patch up the hole for the missing value we
+        # would get only one mismatch at the missing hole rather than all of the remaining mis matches
+        # as we compare different time stamps to each other. Suggest making dictionaries by timestamp
+        # and then comparing dictionaries by keys in order.
+        # See "C:\Users\mike\Downloads\pykit_20260414_184637.961512_1582CAFB3464509D_sim.wpilog" for an
+        # example.
         for i, ((rts, rv), (pts, pv)) in enumerate(zip(real_vals, replay_vals)):
             if not _vals_close(rv, pv, tol):
                 d = Divergence(
