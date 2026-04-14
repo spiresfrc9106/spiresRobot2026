@@ -212,24 +212,26 @@ class SwerveModuleControl:
         if self.wheelMotorIsClosedLoop:
             self.wheelMotor.setVelCmd(motorDesSpd, motorVoltageFF)
 
-        Logger.recordOutput(f"{self._speedDesTopicName}_radps", motorDesSpd)
-        Logger.recordOutput(f"{self._speedDesTopicName}_radps2", motorDesAccel)
-        Logger.recordOutput(f"{self._speedDesTopicName}_FFV", motorVoltageFF)
-
         self._prevMotorDesSpeed = motorDesSpd  # save for next loop
 
-        Logger.recordOutput(f"{self._azmthDesTopicName}_v", self.azmthVoltage)
-        Logger.recordOutput(
-            f"{self._azmthDesTopicName}_deg", self.optimizedDesiredState.angle.degrees()
-        )
-        Logger.recordOutput(
-            f"{self._azmthActTopicName}_deg", self.actualState.angle.degrees()
-        )
-        Logger.recordOutput(
-            f"{self._speedDesTopicName}_frac",
-            self.optimizedDesiredState.speed / self.MAX_FWD_REV_SPEED_MPS,
-        )
-        Logger.recordOutput(
-            f"{self._speedActTopicName}_frac",
-            self.actualState.speed / self.MAX_FWD_REV_SPEED_MPS,
-        )
+        if False:
+            Logger.recordOutput(f"{self._speedDesTopicName}_radps", motorDesSpd)
+            Logger.recordOutput(f"{self._speedDesTopicName}_radps2", motorDesAccel)
+            Logger.recordOutput(f"{self._speedDesTopicName}_FFV", motorVoltageFF)
+
+            Logger.recordOutput(f"{self._azmthDesTopicName}_v", self.azmthVoltage)
+            Logger.recordOutput(
+                f"{self._azmthDesTopicName}_deg",
+                self.optimizedDesiredState.angle.degrees(),
+            )
+            Logger.recordOutput(
+                f"{self._azmthActTopicName}_deg", self.actualState.angle.degrees()
+            )
+            Logger.recordOutput(
+                f"{self._speedDesTopicName}_frac",
+                self.optimizedDesiredState.speed / self.MAX_FWD_REV_SPEED_MPS,
+            )
+            Logger.recordOutput(
+                f"{self._speedActTopicName}_frac",
+                self.actualState.speed / self.MAX_FWD_REV_SPEED_MPS,
+            )

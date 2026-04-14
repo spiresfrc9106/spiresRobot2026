@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import List
 
 from robotpy_apriltag import AprilTagFieldLayout, AprilTagField
@@ -16,6 +15,8 @@ from photonlibpy import PhotonPoseEstimator, PhotonCamera, EstimatedRobotPose
 from subsystems.vision.visionio import (
     VisionSubsystemPoseObservation,
     condenseTagsListToUint32,
+    MultiTagResult,
+    PhotonTarget,
 )
 from utils.faults import Fault
 
@@ -32,18 +33,8 @@ _MAX_SINGLE_TAG_AMBIGUITY = 0.2
 _ROT_STD_DEV_SINGLE_TAG = degreesToRadians(60.0)
 
 
-# Describes one on-field pose estimate from the camera at a specific time.
-@dataclass
-class CameraPoseObservation:
-    time: float
-    estFieldPose: Pose2d
-    xyStdDev: float = 1.0  # std dev of error in measurment, units of meters.
-    rotStdDev: float = degreesToRadians(
-        99999.0
-    )  # std dev of measurement, in units of radians
-    observationType: ObservationType = ObservationType.UNKNOWN
-    averageDistance_m: float = 0.0
-    nTags: int = 0
+INVALID_MULTITAG_RESULT = MultiTagResult(valid=False)
+INVALID_PHOTON_TARGET = PhotonTarget(valid=False)
 
 
 EMPTY_TRANSFORM = Transform3d()
@@ -76,6 +67,8 @@ class WrapperedPoseEstPhotonCamera:
 
         self.lastCaptureTime = RobotTopSubsystem().getFPGATimestampS()
         self.CAP_PERIOD_SEC = 0.025
+        self.lastResultNtReceiveTimestampMicros = 0
+        self.sameTimestampCount = 0
 
     def setSingleTagMode(self, tag: list[int] | None):
         self.singleTagModeTagList = tag
@@ -155,6 +148,9 @@ class WrapperedPoseEstPhotonCamera:
             camEstPose: EstimatedRobotPose | None = (
                 self.camPoseEst.estimateCoprocMultiTagPose(result)
             )
+            camEstPose2 = self.camPoseEst.estimateLowestAmbiguityPose(result)
+            if camEstPose is not None and camEstPose2 is not None:
+                pass
             if camEstPose is not None:
                 usedTargets = camEstPose.targetsUsed
                 nTags = len(usedTargets)
@@ -204,6 +200,42 @@ class WrapperedPoseEstPhotonCamera:
                             singleTarget.getBestCameraToTarget().translation().norm()
                         )
                         xyStdDev_m = _K_XY_SINGLE * avgDist_m**2
+
+                        if result.multitagResult is None:
+                            multiTagResult = INVALID_MULTITAG_RESULT
+                        else:
+                            multiTagResult = MultiTagResult(
+                                valid=True,
+                                bestPose=result.multitagResult.estimatedPose.best,
+                                altPose=result.multitagResult.estimatedPose.alt,
+                                bestReprojErr=result.multitagResult.estimatedPose.bestReprojErr,
+                                altReprojErr=result.multitagResult.estimatedPose.altReprojErr,
+                                ambiguity=result.multitagResult.estimatedPose.ambiguity,
+                            )
+                        photonTargets: List[PhotonTarget] = [
+                            PhotonTarget(
+                                valid=True,
+                                altCameraToTarget=x.altCameraToTarget,
+                                area=x.area,
+                                bestCameraToTarget=x.bestCameraToTarget,
+                                fiducialid=x.fiducialId,
+                                pitch=x.pitch,
+                                poseAmbiguity=x.poseAmbiguity,
+                                skew=x.skew,
+                                yaw=x.yaw,
+                            )
+                            for x in result.targets[:4]
+                        ]
+                        pt0 = pt1 = pt2 = pt3 = INVALID_PHOTON_TARGET
+                        if len(photonTargets) > 0:
+                            pt0 = photonTargets[0]
+                            if len(photonTargets) > 1:
+                                pt1 = photonTargets[1]
+                                if len(photonTargets) > 2:
+                                    pt2 = photonTargets[2]
+                                    if len(photonTargets) > 3:
+                                        pt3 = photonTargets[3]
+
                         self.poseEstimates.append(
                             VisionSubsystemPoseObservation(
                                 timestamp=camEstPose.timestampSeconds,
@@ -217,6 +249,11 @@ class WrapperedPoseEstPhotonCamera:
                                 observationType=ObservationType.PHOTON_SINGLETAG.value,
                                 xyStdDev_m=xyStdDev_m,
                                 rotStdDev_rad=_ROT_STD_DEV_SINGLE_TAG,
+                                multiTagResult=multiTagResult,
+                                target0=pt0,
+                                target1=pt1,
+                                target2=pt2,
+                                target3=pt3,
                             )
                         )
 

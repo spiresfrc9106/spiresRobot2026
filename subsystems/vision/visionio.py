@@ -10,6 +10,36 @@ from wpiutil.wpistruct import double, uint32, make_wpistruct
 tagsIntType = uint32
 
 
+@make_wpistruct(name="PhotonTarget")
+@autolog
+@dataclass
+class PhotonTarget:
+    valid: bool = False
+    tagCount: int = 0
+    altCameraToTarget: Transform3d = field(default_factory=Transform3d)
+    area: double = 0.0
+    bestCameraToTarget: Transform3d = field(default_factory=Transform3d)
+    fiducialid: int = 0
+    pitch: double = 0.0
+    poseAmbiguity: double = 0.0
+    skew: double = 0.0
+    yaw: double = 0.0
+
+
+@make_wpistruct(name="MultiTagResult")
+@autolog
+@dataclass
+class MultiTagResult:
+    valid: bool = False
+    tagCount: int = 0
+    tagsList: tagsIntType = tagsIntType(0)
+    bestPose: Transform3d = field(default_factory=Transform3d)
+    altPose: Transform3d = field(default_factory=Transform3d)
+    bestReprojErr: double = 0.0
+    altReprojErr: double = 0.0
+    ambiguity: double = 0.0
+
+
 @make_wpistruct(name="visionobservation")
 @autolog
 @dataclass
@@ -23,6 +53,11 @@ class VisionSubsystemPoseObservation:
     observationType: int = ObservationType.PHOTONVISION.value
     xyStdDev_m: double = 0.0
     rotStdDev_rad: double = 0.0
+    multiTagResult: MultiTagResult = field(default_factory=MultiTagResult)
+    target0: PhotonTarget = field(default_factory=PhotonTarget)
+    target1: PhotonTarget = field(default_factory=PhotonTarget)
+    target2: PhotonTarget = field(default_factory=PhotonTarget)
+    target3: PhotonTarget = field(default_factory=PhotonTarget)
 
 
 def condenseTagsListToUint32(tagsAsList: List[int]) -> tagsIntType:

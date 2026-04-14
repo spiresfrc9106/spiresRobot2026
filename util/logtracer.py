@@ -1,7 +1,8 @@
 from pykit.logger import Logger, RobotController
 
 
-class LogTracer:
+class LogTracerEnable:
+    enable: bool = False
     innerStart: float = 0.0
     outerStart: float = 0.0
 
@@ -31,3 +32,23 @@ class LogTracer:
         Logger.recordOutput(
             f"LogTracer/{cls.prefix}/TotalMS", (now - cls.outerStart) / 1000.0
         )
+
+class LogTracerDisable:
+    @classmethod
+    def resetOuter(cls, prefix: str) -> None:
+        pass
+
+    @classmethod
+    def reset(cls) -> None:
+        pass
+
+    @classmethod
+    def record(cls, action: str) -> None:
+        pass
+
+    @classmethod
+    def recordTotal(cls) -> None:
+        pass
+
+if True:
+    LogTracer: LogTracerEnable|LogTracerDisable = LogTracerDisable # type: ignore
