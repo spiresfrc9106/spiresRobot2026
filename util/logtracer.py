@@ -33,6 +33,7 @@ class LogTracerEnable:
             f"LogTracer/{cls.prefix}/TotalMS", (now - cls.outerStart) / 1000.0
         )
 
+
 class LogTracerDisable:
     @classmethod
     def resetOuter(cls, prefix: str) -> None:
@@ -50,5 +51,6 @@ class LogTracerDisable:
     def recordTotal(cls) -> None:
         pass
 
+
 if True:
-    LogTracer: LogTracerEnable|LogTracerDisable = LogTracerDisable # type: ignore
+    LogTracer: LogTracerEnable | LogTracerDisable = LogTracerDisable  # type: ignore
