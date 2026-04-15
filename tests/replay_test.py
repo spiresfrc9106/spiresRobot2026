@@ -53,7 +53,6 @@ def pykitReplayControl(reraise, robot: wpilib.RobotBase) -> PyKitReplayTestContr
     return PyKitReplayTestController(reraise, robot)
 
 
-# @pytest.mark.dependency(name="test_log_and_replay_step1")
 @pytest.mark.order(1)
 def test_log_and_replay_step1(pykitReplayControl, robot):
     # -----------------------------------------------------------------------
