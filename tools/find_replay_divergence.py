@@ -214,21 +214,31 @@ def _numeric_diff(rv: Value, pv: Value) -> float | None:
     return None
 
 
+@dataclass
+class TsGap:
+    real_only: list[float]  # timestamps present in real but not replay
+    replay_only: list[float]  # timestamps present in replay but not real
+    first_ts: float  # earliest timestamp across both sides
+    last_ts: float  # latest timestamp across both sides
+
+
 def _compare(
     real: dict[str, list[tuple[float, Value]]],
     replay: dict[str, list[tuple[float, Value]]],
     cfg: Config,
     show_all: bool,
-) -> tuple[list[Divergence], dict[str, tuple[int, int]], list[str]]:
+) -> tuple[list[Divergence], dict[str, tuple[int, int]], list[str], dict[str, TsGap]]:
     """
     Returns:
-        divergences:    list of Divergence (all or first-per-key depending on show_all)
+        divergences:      list of Divergence (all or first-per-key depending on show_all)
         count_mismatches: {key: (real_count, replay_count)}
-        missing_keys:   keys in real but not replay
+        missing_keys:     keys in real but not replay
+        ts_gaps:          {key: TsGap} for keys with unmatched timestamps
     """
     divergences: list[Divergence] = []
     count_mismatches: dict[str, tuple[int, int]] = {}
     missing_keys: list[str] = []
+    ts_gaps: dict[str, TsGap] = {}
 
     all_keys = sorted(real.keys())
     for key in all_keys:
@@ -241,19 +251,34 @@ def _compare(
         if len(real_vals) != len(replay_vals):
             count_mismatches[key] = (len(real_vals), len(replay_vals))
         tol = _tol_for_key(key, cfg)
-        found_first = False
-        # TODO Sometimes a time entry is missing for a real value, but is present for a replay value
-        # in this case it seems like if we were to patch up the hole for the missing value we
-        # would get only one mismatch at the missing hole rather than all of the remaining mis matches
-        # as we compare different time stamps to each other. Suggest making dictionaries by timestamp
-        # and then comparing dictionaries by keys in order.
-        # See "C:\Users\mike\Downloads\pykit_20260414_184637.961512_1582CAFB3464509D_sim.wpilog" for an
-        # example.
-        for i, ((rts, rv), (pts, pv)) in enumerate(zip(real_vals, replay_vals)):
+
+        # Build dicts keyed by timestamp for aligned comparison.
+        # Timestamps come from integer µs divided by 1e6, so the same wpilog
+        # timestamp always produces the same float — exact dict keying is safe.
+        real_dict: dict[float, Value] = {ts: v for ts, v in real_vals}
+        replay_dict: dict[float, Value] = {ts: v for ts, v in replay_vals}
+        real_ts = set(real_dict)
+        replay_ts = set(replay_dict)
+
+        real_only_ts = sorted(real_ts - replay_ts)
+        replay_only_ts = sorted(replay_ts - real_ts)
+        if real_only_ts or replay_only_ts:
+            all_ts = sorted(real_ts | replay_ts)
+            ts_gaps[key] = TsGap(
+                real_only=real_only_ts,
+                replay_only=replay_only_ts,
+                first_ts=all_ts[0],
+                last_ts=all_ts[-1],
+            )
+
+        common_ts = sorted(real_ts & replay_ts)
+        for cycle, ts in enumerate(common_ts):
+            rv = real_dict[ts]
+            pv = replay_dict[ts]
             if not _vals_close(rv, pv, tol):
                 d = Divergence(
-                    cycle=i,
-                    ts=rts,
+                    cycle=cycle,
+                    ts=ts,
                     key=key,
                     real_val=rv,
                     replay_val=pv,
@@ -261,13 +286,10 @@ def _compare(
                 )
                 divergences.append(d)
                 if not show_all:
-                    found_first = True
                     break
-            if found_first:
-                break
 
     divergences.sort(key=lambda d: d.cycle)
-    return divergences, count_mismatches, missing_keys
+    return divergences, count_mismatches, missing_keys, ts_gaps
 
 
 # ---------------------------------------------------------------------------
@@ -293,6 +315,14 @@ def _fmt_diff(d: float | None) -> str:
     return f"{d:.3e}"
 
 
+def _fmt_ts_list(ts_list: list[float], max_show: int = 4) -> str:
+    shown = ", ".join(f"{t:.3f}s" for t in ts_list[:max_show])
+    suffix = (
+        f", ... (+{len(ts_list) - max_show} more)" if len(ts_list) > max_show else ""
+    )
+    return f"[{shown}{suffix}]"
+
+
 def _print_report(
     divergences: list[Divergence],
     count_mismatches: dict[str, tuple[int, int]],
@@ -300,6 +330,7 @@ def _print_report(
     show_all: bool,
     real_key_count: int,
     replay_key_count: int,
+    ts_gaps: dict[str, TsGap],
 ) -> None:
     print(f"  Real keys: {real_key_count}  Replay keys: {replay_key_count}")
 
@@ -307,9 +338,30 @@ def _print_report(
     if count_mismatches:
         print(f"\n=== Count mismatches ({len(count_mismatches)}) ===")
         for key, (rc, pc) in sorted(count_mismatches.items()):
-            print(f"  {key:<60}  real={rc}  replay={pc}")
+            gap_info = ""
+            if key in ts_gaps:
+                gap = ts_gaps[key]
+                gap_info = (
+                    f"  (real-only={len(gap.real_only)}  replay-only={len(gap.replay_only)}"
+                    f"  span={gap.first_ts:.3f}s–{gap.last_ts:.3f}s)"
+                )
+            print(f"  {key:<60}  real={rc}  replay={pc}{gap_info}")
     else:
         print("\n=== Count mismatches: (none) ===")
+
+    # Timestamp gap detail
+    if ts_gaps:
+        print(f"\n=== Timestamp gaps ({len(ts_gaps)} keys) ===")
+        for key, gap in sorted(ts_gaps.items()):
+            print(f"  {key}")
+            print(
+                f"    span: {gap.first_ts:.3f}s – {gap.last_ts:.3f}s"
+                f"  (real-only={len(gap.real_only)}  replay-only={len(gap.replay_only)})"
+            )
+            if gap.real_only:
+                print(f"    real-only ts:   {_fmt_ts_list(gap.real_only)}")
+            if gap.replay_only:
+                print(f"    replay-only ts: {_fmt_ts_list(gap.replay_only)}")
 
     # Divergences
     label = (
@@ -387,7 +439,7 @@ def main() -> None:
     print(f"Reading {log_path} ...")
     real, replay = _read_log(log_path, cfg)
 
-    divergences, count_mismatches, missing_keys = _compare(
+    divergences, count_mismatches, missing_keys, ts_gaps = _compare(
         real, replay, cfg, args.show_all
     )
     _print_report(
@@ -397,6 +449,7 @@ def main() -> None:
         args.show_all,
         len(real),
         len(replay),
+        ts_gaps,
     )
 
 
