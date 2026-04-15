@@ -4,7 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyfrc"
-dynamic = ["version"]
+#dynamic = ["version"]
+version = "2026.0.2.0a1"
 description = "Development tools library for python interpreter used for the FIRST Robotics Competition"
 readme = "README.md"
 requires-python = ">=3.10"
