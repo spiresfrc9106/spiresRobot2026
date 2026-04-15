@@ -546,8 +546,7 @@ wheels = [
 
 [[package]]
 name = "pyfrc"
-version = "2026.0.2"
-source = { registry = "https://pypi.org/simple" }
+source = { editable = "examples/pyfrc" }
 dependencies = [
     { name = "pint" },
     { name = "pytest" },
@@ -556,9 +555,15 @@ dependencies = [
     { name = "tomli" },
     { name = "wpilib" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/91/39/74efe7dc0fec174d6ef2e3aea881d09ec481a268b2b7b50ff787a38d24c5/pyfrc-2026.0.2.tar.gz", hash = "sha256:45894a54ba715a18ac83295d1a2be96d97ac6e149267a41d04e0325113fbb729", size = 35256, upload-time = "2026-02-21T19:57:01.674Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c6/0e/ae510715beafa90132a1a8276b44f728a6707b5d5ea923e2ea989ddb1265/pyfrc-2026.0.2-py3-none-any.whl", hash = "sha256:bf090a48916d15f17db360006d92253006aea6613a7f3c397e7f834bcd250702", size = 41308, upload-time = "2026-02-21T19:57:00.397Z" },
+
+[package.metadata]
+requires-dist = [
+    { name = "pint", specifier = ">=0.24.4" },
+    { name = "pytest", specifier = ">=3.9" },
+    { name = "pytest-reraise" },
+    { name = "robotpy-cli", specifier = "~=2026.0.1" },
+    { name = "tomli" },
+    { name = "wpilib", specifier = ">=2026.1.1b1,<2027" },
 ]
 
 [[package]]
@@ -1209,6 +1214,7 @@ dev = [
     { name = "coverage" },
     { name = "mypy" },
     { name = "pre-commit" },
+    { name = "pyfrc" },
     { name = "pytest-dependency" },
     { name = "pytest-order" },
     { name = "ruff" },
@@ -1244,6 +1250,7 @@ dev = [
     { name = "coverage", specifier = ">=7.13.1" },
     { name = "mypy", specifier = ">=1.19.1" },
     { name = "pre-commit", specifier = ">=4.5.0" },
+    { name = "pyfrc", editable = "examples/pyfrc" },
     { name = "pytest-dependency" },
     { name = "pytest-order" },
     { name = "ruff", specifier = ">=0.15" },

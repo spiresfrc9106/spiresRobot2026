@@ -1,9 +1,5 @@
 """
-Runs the robot through c_backup in sim, then replays the resulting log
-and verifies that RealOutputs ≈ ReplayOutputs (determinism check).
-
-Run:
-    uv run -- robotpy test tests/replay_test.py -s
+Test that the robot can pyKit sim and replay the sim
 """
 
 import math
@@ -17,7 +13,6 @@ from wpiutil.log import DataLogReader
 from constants import LoggerState
 from pykit.wpilog.wpilogwriter import WPILOGWriter
 from tests.controllerTestPyKitReplay import PyKitReplayTestController
-from utils.singleton import _instances
 
 
 # Keys whose values legitimately differ between real and replay
@@ -33,19 +28,19 @@ _SKIP_PREFIXES = (
 # /sol/ — logged by WrapperedPoseEstPhotonCamera which runs only in sim, not replay.
 _SKIP_SUBSTRINGS = ("/sol/",)
 
-origLogName = "test_log_and_replay_step3.wpilog"
-origLogPath = os.path.join(WPILOGWriter.defaultPathSim, origLogName)
+step2InputLogName = "test_log_and_replay_step2.wpilog"
+globalStep2Path = os.path.join(WPILOGWriter.defaultPathSim, step2InputLogName)
 replayLogPath = os.path.join(
-    WPILOGWriter.defaultPathSim, "test_log_and_replay_step3_sim.wpilog"
+    WPILOGWriter.defaultPathSim, "test_log_and_replay_step2_sim.wpilog"
 )
 
 
 @pytest.fixture()
 def forceRobotInReplay():
-    LoggerState().logPath = origLogPath
+    LoggerState().logPath = globalStep2Path
     print("-----------------------")
     print("-----------------------")
-    print(f"\n\n-----------------------Forcing replay mode LOG_PATH: {origLogPath}\n\n")
+    print(f"-----------------------Forcing replay mode LOG_PATH: {globalStep2Path}\n\n")
     print("-----------------------")
     print("-----------------------")
 
@@ -74,36 +69,21 @@ def test_log_and_replay_step1(pykitReplayControl, robot):
         pykitReplayControl.step_timing(seconds=0.5, autonomous=True, enabled=False)
         pykitReplayControl.step_timing(seconds=15.0, autonomous=True, enabled=True)
         pykitReplayControl.step_timing(seconds=0.5, autonomous=True, enabled=False)
-        global origLogPath
-        origLogPath = robot.loggerSetup.logFiles[0]
 
-    originalDir = os.path.dirname(origLogPath)  # r'c:\temp'
-    newName = "test_log_and_replay_step3.wpilog"
-    newPath = os.path.join(originalDir, newName)
-    shutil.copyfile(origLogPath, newPath)
-    global replayLogPath
-    replayLogPath = origLogPath[:-7] + "_sim.wpilog"
+    step1LogPath = robot.loggerSetup.logFiles[0]
 
-    assert os.path.exists(origLogPath), f"Log file not created: {origLogPath}"
+    step1Dir = os.path.dirname(step1LogPath)
+    step2Path = os.path.join(step1Dir, step2InputLogName)
+    shutil.copyfile(step1LogPath, step2Path)
+
+    assert os.path.exists(step2Path), f"Log file not created: {step2Path}"
 
 
 @pytest.mark.order(2)
-def test_step2():
-    print(f"test_step2:instances={_instances}")
-
-
-# @pytest.mark.dependency(depends=["test_log_and_replay_step1"])
-@pytest.mark.order(3)
-@pytest.mark.replay
-def test_log_and_replay_step3(forceRobotInReplay, pykitReplayControl, robot):
+def test_log_and_replay_step2(forceRobotInReplay, pykitReplayControl, robot):
     # -----------------------------------------------------------------------
-    # Phase 2: replay in a subprocess so REVLib/HAL device registries are fresh
+    # Phase 2: replay the pykit log
     # -----------------------------------------------------------------------
-    # robot.container.autoChooser.sendableChooser.setDefaultOption(
-    #    "C-c_backup", "C-c_backup"
-    # )
-
-    # todo project_root = pathlib.Path(__file__).parent.parent
 
     with pykitReplayControl.run_robot():
         pykitReplayControl.step_timing(
@@ -121,7 +101,7 @@ def test_log_and_replay_step3(forceRobotInReplay, pykitReplayControl, robot):
     # -----------------------------------------------------------------------
     # Compare logs
     # -----------------------------------------------------------------------
-    _compareLogFiles(origLogPath, replayLogPath)
+    _compareLogFiles(globalStep2Path, replayLogPath)
 
 
 # ---------------------------------------------------------------------------

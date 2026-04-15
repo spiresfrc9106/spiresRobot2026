@@ -43,6 +43,7 @@ dev = [
     "ruff>=0.15",
     "pytest-dependency",
     "pytest-order",
+    "pyfrc",
 ]
 
 [tool.robotpy]
@@ -51,10 +52,6 @@ dev = [
 # to see what versions are available: https://pypi.org/pypi/robotpy/json
 
 robotpy_version = "2026.2.2"
-
-[tool.robotpy.pyfrc]
-
-#isolated = false
 
 # Which extra RobotPy components should be installed
 # -> equivalent to `pip install robotpy[extra1, ...]
@@ -83,8 +80,15 @@ requires = [
     "robotpy-playingwithfusion",
     "robotpy-opencv",
     "robotpy-navx",
+    "pyfrc",
 ]
 
+[tool.robotpy.pyfrc]
+
+#isolated = false
+
+[tool.pytest.ini_options]
+norecursedirs = ["examples"]
 
 [tool.mypy]
 python_version = "3.14"
@@ -94,14 +98,20 @@ mypy_path = "."
 ignore_missing_imports = true
 warn_unused_ignores = true
 warn_no_return = true
-exclude = ["(^examples/)"]
+exclude = [
+    "^examples/",
+    "^pykit/",
+]
 
 [tool.ruff]
 exclude = [
     # Default exclusions are included automatically.
     # Add your custom directories here:
     "examples/**",
+    "pykit/**",
 ]
 
 [tool.uv.sources]
 #robotpy-pykit = { path = "../PyKit", editable = true }
+pyfrc = { path = "examples/pyfrc", editable = true }
+
