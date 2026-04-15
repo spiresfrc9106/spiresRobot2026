@@ -99,9 +99,13 @@ ignore_missing_imports = true
 warn_unused_ignores = true
 warn_no_return = true
 exclude = [
-    "^examples/",
-    "^pykit/",
+    "(^examples/)",
+    "(^pykit/)",
 ]
+
+[[tool.mypy.overrides]]
+module = "pykit.*"
+ignore_errors = true
 
 [tool.ruff]
 exclude = [

@@ -131,9 +131,9 @@ class WPILOGWriter(LogDataReciever):
         Closes the log file and performs cleanup.
         In simulation, it can also trigger AdvantageScope to open the log.
         """
+        print("[WPILogWriter] Shutting down")
         self.log.flush()
         self.log.stop()
-        print("[WPILogWriter] Shutting down")
 
         if RobotBase.isSimulation() and Logger.isReplay():
             # open ascope

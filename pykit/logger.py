@@ -6,6 +6,7 @@ from wpilib import RobotController
 from pykit.alertlogger import AlertLogger
 from pykit.autolog import AutoLogInputManager, AutoLogOutputManager
 from pykit.inputs.loggableds import LoggedDriverStation
+from pykit.inputs.loggablepowerdistribution import LoggedPowerDistribution
 from pykit.inputs.loggablesystemstats import LoggedSystemStats
 from pykit.logdatareciever import LogDataReciever
 from pykit.logreplaysource import LogReplaySource
@@ -26,7 +27,7 @@ class _ConsoleRecorder:
                 self.orig.write(s)
                 try:
                     self.orig.flush()
-                except OSError, ValueError:
+                except (OSError, ValueError):
                     # I/O errors or writing to a closed stream
                     pass
                 # buffer until newline then record each line
@@ -36,10 +37,10 @@ class _ConsoleRecorder:
                     try:
                         # Logger may not yet be initialized when class is defined; reference at runtime
                         Logger.recordOutput("Console", line)
-                    except AttributeError, RuntimeError, ValueError:
+                    except (AttributeError, RuntimeError, ValueError):
                         # Logger may not be ready or the logging backend raised an error
                         pass
-        except OSError, ValueError, RuntimeError:
+        except (OSError, ValueError, RuntimeError):
             # Locking errors, I/O errors, or value errors from stream operations
             pass
 
@@ -49,7 +50,7 @@ class _ConsoleRecorder:
             self.buffer = ""
         try:
             self.orig.flush()
-        except OSError, ValueError:
+        except (OSError, ValueError):
             # I/O errors or writing to a closed stream
             pass
 
@@ -191,7 +192,7 @@ class Logger:
                     sys.stdout = cls._console_recorder_stdout
                     sys.stderr = cls._console_recorder_stderr
                     cls._console_wrapped = True
-                except AttributeError, RuntimeError, TypeError:
+                except (AttributeError, RuntimeError, TypeError):
                     # If sys streams are missing or recorder construction failed
                     pass
 
@@ -209,6 +210,7 @@ class Logger:
         """Stops the logger and all data receivers, and performs necessary cleanup."""
         if cls.running:
             cls.running = False
+            print("Logger ended")
 
             # Restore console if we wrapped it
             if cls._console_wrapped:
@@ -217,7 +219,7 @@ class Logger:
                         sys.stdout = cls._orig_stdout
                     if cls._orig_stderr is not None:
                         sys.stderr = cls._orig_stderr
-                except AttributeError, RuntimeError:
+                except (AttributeError, RuntimeError):
                     # Restoring original streams failed
                     pass
                 cls._console_wrapped = False
@@ -234,7 +236,6 @@ class Logger:
             RobotController.setTimeSource(RobotController.getFPGATime)
             for reciever in cls.dataRecievers:
                 reciever.end()
-            print("Logger end")
 
     @classmethod
     def getTimestamp(cls) -> int:
@@ -291,8 +292,7 @@ class Logger:
             )
             if cls.isReplay():
                 cls.recordOutput(
-                    "Logger/DriverStationMS",
-                    (dashboardInputStart - dsStart) / 1000.0,
+                    "Logger/DriverStationMS", (dashboardInputStart - dsStart) / 1000.0
                 )
             cls.recordOutput(
                 "Logger/DashboardInputsMS",

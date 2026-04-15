@@ -546,6 +546,7 @@ wheels = [
 
 [[package]]
 name = "pyfrc"
+version = "2026.0.2"
 source = { editable = "examples/pyfrc" }
 dependencies = [
     { name = "pint" },
