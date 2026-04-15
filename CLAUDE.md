@@ -80,8 +80,8 @@ uv run -- python -m robotpy deploy --skip-tests
 .venv/bin/robotpy coverage test -- --no-header -vvv -s
 .venv/bin/robotpy test -- --no-header -vvv
 .venv/bin/robotpy test -- --no-header -vvv -s
-.vevn/bin/robotpy test .\tests\replay_test.py::test_log_and_replay_step3 -- --runreplay --no-header -vvv
-.vevn/bin/robotpy test .\tests\replay_test.py::test_log_and_replay_step3 -- --runreplay --no-header -vvv -s
+.venv/bin/robotpy test .\tests\replay_test.py::test_log_and_replay_step3 -- --runreplay --no-header -vvv
+.venv/bin/robotpy test .\tests\replay_test.py::test_log_and_replay_step3 -- --runreplay --no-header -vvv -s
 
 
 # Run simulator
@@ -95,6 +95,10 @@ uv run -- python -m robotpy deploy --skip-tests
 
 # Network utilities
 .venv/bin/netconsole roboRIO-9106-frc.local
+
+# Look for errors in pykit replay *_sim.wpilog files
+.venv/bin/python ./tools/find_replay_divergence.py pyLogs/SOME_PYKIT_LOG_FILE_sim.wpilog
+.venv/bin/python ./tools/find_replay_divergence.py --show-all pyLogs/SOME_PYKIT_LOG_FILE_sim.wpilog
 ```
 
 ## CI Requirements
