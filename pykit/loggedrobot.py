@@ -73,7 +73,7 @@ class LoggedRobot(IterativeRobotBase):
 
         self.initEnd = RobotController.getFPGATime()
         Logger.periodicAfterUser(self.initEnd, 0)
-        print(f"Robot startup complete! time={self.initEnd}")
+        print("Robot startup complete!")
         hal.observeUserProgramStarting()
 
         while True:
