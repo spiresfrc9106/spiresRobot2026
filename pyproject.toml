@@ -41,6 +41,9 @@ dev = [
     "mypy>=1.19.1",
     "pre-commit>=4.5.0",
     "ruff>=0.15",
+    "pytest-dependency",
+    "pytest-order",
+    "pyfrc",
 ]
 
 [tool.robotpy]
@@ -77,8 +80,15 @@ requires = [
     "robotpy-playingwithfusion",
     "robotpy-opencv",
     "robotpy-navx",
+    "pyfrc",
 ]
 
+[tool.robotpy.pyfrc]
+
+#isolated = false
+
+[tool.pytest.ini_options]
+norecursedirs = ["examples"]
 
 [tool.mypy]
 python_version = "3.14"
@@ -88,6 +98,24 @@ mypy_path = "."
 ignore_missing_imports = true
 warn_unused_ignores = true
 warn_no_return = true
+exclude = [
+    "(^examples/)",
+    "(^pykit/)",
+]
+
+[[tool.mypy.overrides]]
+module = "pykit.*"
+ignore_errors = true
+
+[tool.ruff]
+exclude = [
+    # Default exclusions are included automatically.
+    # Add your custom directories here:
+    "examples/**",
+    "pykit/**",
+]
 
 [tool.uv.sources]
 #robotpy-pykit = { path = "../PyKit", editable = true }
+pyfrc = { path = "examples/pyfrc", editable = true }
+

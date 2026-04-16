@@ -9,16 +9,18 @@
 # of your robot code without too much extra effort.
 #
 
+import random
+
 from wpilib import RobotController
 from wpimath.geometry import Pose2d, Rotation2d, Transform2d
 from pyfrc.physics.core import PhysicsInterface
 from robot import MyRobot
-from robotstate import RobotState
 from subsystems.drivetrain.drivetrainsubsystem import DrivetrainSubsystem
 
 from constants.sim import (
     kSimDefaultRobotLocation,
 )
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 
 
 # TODO this comes from westwood and drives the westwood camera sim. Unify it with the drivetrain sim in the casserole swerve.
@@ -43,10 +45,20 @@ class SwerveDriveSim:
         deltaT = tm_diff
 
         chassisSpeed = self.drivetrainSubsystem.getRobotRelativeChassisSpeeds()
-        deltaHeading = chassisSpeed.omega * deltaT
-        deltaX = chassisSpeed.vx * deltaT
-        deltaY = chassisSpeed.vy * deltaT
-
+        sigma = None
+        if False:
+            # Large noise (~3 deg/cycle heading, ~5 cm/cycle position) to confirm
+            # that replay is isolated from physics — fromLog() overwrites these values.
+            sigma = 0.05
+        deltaHeading = chassisSpeed.omega * deltaT + (
+            random.gauss(0, sigma) if sigma is not None else 0.0
+        )
+        deltaX = chassisSpeed.vx * deltaT + (
+            random.gauss(0, sigma) if sigma is not None else 0.0
+        )
+        deltaY = chassisSpeed.vy * deltaT + (
+            random.gauss(0, sigma) if sigma is not None else 0.0
+        )
         deltaTrans = Transform2d(deltaX, deltaY, deltaHeading)
 
         newPose = self.pose + deltaTrans
@@ -108,8 +120,8 @@ class PhysicsEngine:
         assert drivetrainSubsystem is not None
         self.driveSim = SwerveDriveSim(drivetrainSubsystem)
 
-        RobotState.registerSimPoseResetConsumer(self.driveSim.resetPose)
-        RobotState.registerSimPoseReceiverConsumer(self.driveSim.getSimPose)
+        RobotTopSubsystem().registerSimPoseResetConsumer(self.driveSim.resetPose)
+        RobotTopSubsystem().registerSimPoseReceiverConsumer(self.driveSim.getSimPose)
 
         self.sim_initialized = False
 

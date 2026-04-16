@@ -18,6 +18,7 @@ class EncoderModuleIO:
         Args:
             inputs (EncoderModuleIOInputs): The module I/O inputs to update.
         """
+        # TODO fix this to get the current angle rad
 
     def getAngleRad(self) -> float:
         return 0.0

@@ -6,6 +6,7 @@ from wpilib import RobotController
 from pykit.alertlogger import AlertLogger
 from pykit.autolog import AutoLogInputManager, AutoLogOutputManager
 from pykit.inputs.loggableds import LoggedDriverStation
+from pykit.inputs.loggablepowerdistribution import LoggedPowerDistribution
 from pykit.inputs.loggablesystemstats import LoggedSystemStats
 from pykit.logdatareciever import LogDataReciever
 from pykit.logreplaysource import LogReplaySource
@@ -26,7 +27,7 @@ class _ConsoleRecorder:
                 self.orig.write(s)
                 try:
                     self.orig.flush()
-                except OSError, ValueError:
+                except (OSError, ValueError):
                     # I/O errors or writing to a closed stream
                     pass
                 # buffer until newline then record each line
@@ -36,10 +37,10 @@ class _ConsoleRecorder:
                     try:
                         # Logger may not yet be initialized when class is defined; reference at runtime
                         Logger.recordOutput("Console", line)
-                    except AttributeError, RuntimeError, ValueError:
+                    except (AttributeError, RuntimeError, ValueError):
                         # Logger may not be ready or the logging backend raised an error
                         pass
-        except OSError, ValueError, RuntimeError:
+        except (OSError, ValueError, RuntimeError):
             # Locking errors, I/O errors, or value errors from stream operations
             pass
 
@@ -49,7 +50,7 @@ class _ConsoleRecorder:
             self.buffer = ""
         try:
             self.orig.flush()
-        except OSError, ValueError:
+        except (OSError, ValueError):
             # I/O errors or writing to a closed stream
             pass
 
@@ -191,7 +192,7 @@ class Logger:
                     sys.stdout = cls._console_recorder_stdout
                     sys.stderr = cls._console_recorder_stderr
                     cls._console_wrapped = True
-                except AttributeError, RuntimeError, TypeError:
+                except (AttributeError, RuntimeError, TypeError):
                     # If sys streams are missing or recorder construction failed
                     pass
 
@@ -218,7 +219,7 @@ class Logger:
                         sys.stdout = cls._orig_stdout
                     if cls._orig_stderr is not None:
                         sys.stderr = cls._orig_stderr
-                except AttributeError, RuntimeError:
+                except (AttributeError, RuntimeError):
                     # Restoring original streams failed
                     pass
                 cls._console_wrapped = False
@@ -245,18 +246,16 @@ class Logger:
 
         :return: The current timestamp in microseconds.
         """
-        if cls.isReplay():
-            return cls.entry.getTimestamp()
-        # RobotController.getFPGATime may be untyped; ensure int
-        return int(RobotController.getFPGATime())
+        return cls.entry.getTimestamp()
 
     @classmethod
-    def periodicBeforeUser(cls):
+    def periodicBeforeUser(cls) -> bool:
         """
         Called periodically before the user's robot code.
         This method updates the log table with new data, either from the replay source
         or from the live robot hardware.
         """
+        stop = False
         cls.cycleCount += 1
         if cls.running:
             entryUpdateStart = RobotController.getFPGATime()
@@ -272,9 +271,7 @@ class Logger:
                         print(
                             "[ERROR] This robot did not start properly, is the replay logfile from PyKit?"
                         )
-                    else:
-                        cls.end()
-                    raise SystemExit(0)
+                    stop = True
 
             dsStart = RobotController.getFPGATime()
             # In replay mode, simulate driver station inputs from log
@@ -301,6 +298,7 @@ class Logger:
                 "Logger/DashboardInputsMS",
                 (dashboardInputEnd - dashboardInputStart) / 1000.0,
             )
+        return stop
 
     @classmethod
     def periodicAfterUser(cls, userCodeLength: int, periodicBeforeLength: int):

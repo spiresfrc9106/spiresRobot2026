@@ -4,10 +4,11 @@ from pykit.autolog import autologgable_output, autolog_output
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from pykit.logger import Logger
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from utils.allianceTransformUtils import onRed
 from utils.faults import Fault
 from wpimath import applyDeadband
-from wpilib import DriverStation, XboxController
+from wpilib import DriverStation, XboxController, RobotController
 from utils.calibration import Calibration
 from utils.singleton import Singleton
 from utils.slewratelimitawayfromzero import SlewRateLimitAwayFromZero
@@ -21,6 +22,9 @@ class DriverInterface(metaclass=Singleton):
     def __init__(self):
         # contoller
         ctrlIdx = 0
+        now = RobotController.getFPGATime()
+        now2 = RobotTopSubsystem().getFPGATimeUS()
+        print(f"now: {now}, now2: {now2}")
         self.ctrl = XboxController(ctrlIdx)
         self.connectedFault = Fault(f"Driver XBox controller ({ctrlIdx}) unplugged")
 
@@ -53,6 +57,9 @@ class DriverInterface(metaclass=Singleton):
         self.initiatialize()
 
     def initiatialize(self) -> None:
+        now = RobotController.getFPGATime()
+        now2 = RobotTopSubsystem().getFPGATimeUS()
+        print(f"DriverInterface Initialize - now: {now}, now2: {now2}")
         p = DrivetrainPhysical()
         self.MAX_FWD_REV_SPEED_MPS = p.MAX_FWD_REV_SPEED_MPS
         self.MAX_STRAFE_SPEED_MPS = p.MAX_STRAFE_SPEED_MPS
@@ -97,6 +104,9 @@ class DriverInterface(metaclass=Singleton):
             initialValue=initialValueY,
             dtSeconds=kRobotUpdatePeriodS,
         )
+        print(
+            f"DriverInterface newTranslateSlewRateLimiter - now: {RobotController.getFPGATime()}, now2: {RobotTopSubsystem().getFPGATimeUS()}"
+        )
         Logger.recordOutput("di/translateAccelFactor", self.translateAccelFactor)
 
     def newRotateSlewRateLimiter(self, initialValue: float) -> None:
@@ -106,6 +116,9 @@ class DriverInterface(metaclass=Singleton):
             * self.calDecelFactor.get(),
             initialValue=initialValue,
             dtSeconds=kRobotUpdatePeriodS,
+        )
+        print(
+            f"DriverInterface newRotateSlewRateLimiter - now: {RobotController.getFPGATime()}, now2: {RobotTopSubsystem().getFPGATimeUS()}"
         )
         Logger.recordOutput("di/rotateAccelFactor", self.rotateAccelFactor)
 

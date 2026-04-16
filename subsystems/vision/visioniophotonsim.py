@@ -33,9 +33,9 @@ class VisionSubsystemIOPhotonSim(VisionSubsystemIOPhotonVision):
             VisionSubsystemIOPhotonSim.turretSim = VisionSystemSim("turret")
             VisionSubsystemIOPhotonSim.turretSim.addAprilTags(kApriltagFieldLayout)
 
-        cameraProperties = SimCameraProperties.OV9281_1280_720()
+        cameraProperties = SimCameraProperties.OV9281_1920_1080()
         self.cameraSim = PhotonCameraSim(
-            self.camera, cameraProperties, kApriltagFieldLayout
+            self._wrapperedCam.cam, cameraProperties, kApriltagFieldLayout
         )
 
         if isTurreted:
@@ -48,6 +48,7 @@ class VisionSubsystemIOPhotonSim(VisionSubsystemIOPhotonVision):
             )
 
     def updateInputs(self, inputs: VisionSubsystemIO.VisionSubsystemIOInputs):
+
         if self.isTurreted:
             assert VisionSubsystemIOPhotonSim.turretSim is not None
             VisionSubsystemIOPhotonSim.turretSim.update(self.poseSupplier())

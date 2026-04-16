@@ -10,7 +10,5 @@ class DrivetrainSubsystemIO:
     class DrivetrainSubsystemIOInputs:
         """Initialize required TODO drivetrain inputs."""
 
-        gyro_yaw_rate_rad_per_sec: float = 0.0
-
     def updateInputs(self, inputs: DrivetrainSubsystemIOInputs):
         pass

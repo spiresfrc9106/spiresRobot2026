@@ -13,7 +13,6 @@ from pykit.logger import Logger
 from subsystems.common.encodermodule import EncoderModule
 from subsystems.common.motormodule import MotorModule
 from utils.allianceTransformUtils import onRed
-from wrappers.wrapperedGyro import wrapperedGyro
 
 
 class DrivetrainControl:
@@ -30,7 +29,6 @@ class DrivetrainControl:
     ):
         p = DrivetrainPhysical()
         self.name = p.DRIVETRAIN_NAME
-        self.gyro = wrapperedGyro()
         self.modules = []
         self.kinematics = p.kinematics
         for motorAndEncoderModules in motorAndEncoderModuleSets:
@@ -52,9 +50,14 @@ class DrivetrainControl:
 
         self.gainsSwerveModule = SwerveModuleGainSet()
 
-        self.poseEst = DrivetrainPoseEstimator(self.getModulePositions(), self.gyro)
+        self.poseEst = DrivetrainPoseEstimator(self.getModulePositions())
 
         self._updateAllCals()
+
+    def setKnownPose(self, newPose: Pose2d) -> None:
+        for mod in self.modules:
+            mod.updateActualStateAndPosition()
+        self.poseEst.setKnownPose(newPose, self.getModulePositions())
 
     def setManualCmd(self, cmd: DrivetrainCommand):
         """Send xyzzy to the robot for motion relative to the field
@@ -146,7 +149,7 @@ class DrivetrainControl:
             module.update()
 
         # Update the estimate of our pose
-        self.poseEst.update(self.getModulePositions(), self.getModuleStates())
+        self.poseEst.update(self.getModulePositions())
 
         # Update calibration values if they've changed
         if self.gainsSwerveModule.hasChanged():
@@ -217,29 +220,11 @@ class DrivetrainControl:
             tuple(mod.getActualState() for mod in self.modules),
         )
 
-    def getRawRotation(self) -> Rotation2d:
-        return self.poseEst.getRealOrSimRawGyroAngle()
-
     def getRobotRelativeChassisSpeeds(self) -> ChassisSpeeds:
         robotRelativeSpeeds: ChassisSpeeds = self.kinematics.toChassisSpeeds(
             self.getModuleStates()
         )
         return robotRelativeSpeeds
-
-    def getFieldRelativeChassisSpeeds(self) -> ChassisSpeeds:
-        robotRelativeSpeeds: ChassisSpeeds = self.getRobotRelativeChassisSpeeds()
-        # getPose() returns a Pose2d, which has a rotation() method to get the Rotation2d
-        currentAngle: Rotation2d = self.poseEst.getCurEstPose().rotation()
-
-        # Convert robot-relative speeds to field-relative speeds
-        fieldRelativeSpeeds: ChassisSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
-            robotRelativeSpeeds.vx,
-            robotRelativeSpeeds.vy,
-            robotRelativeSpeeds.omega,
-            currentAngle,
-        )
-
-        return fieldRelativeSpeeds
 
     def resetGyro(self):
         # Update pose estimator to think we're at the same translation,
@@ -249,7 +234,7 @@ class DrivetrainControl:
             Rotation2d.fromDegrees(180.0) if (onRed()) else Rotation2d.fromDegrees(0.0)
         )
         newPose = Pose2d(curTranslation, newGyroRotation)
-        self.poseEst.setKnownPose(newPose)
+        self.setKnownPose(newPose)
 
     def getCurEstPose(self) -> Pose2d:
         # Return the current best-guess at our pose on the field.

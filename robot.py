@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-
-import os
 import sys
 
 from commands2.commandscheduler import CommandScheduler
@@ -8,11 +5,10 @@ from commands2.commandscheduler import CommandScheduler
 from pathplannerlib.commands import PathPlannerLogging
 import commands2
 
-from pykit.wpilog.wpilogwriter import WPILOGWriter
-from pykit.wpilog.wpilogreader import WPILOGReader
-from pykit.networktables.nt4Publisher import NT4Publisher
+from pykit.autolog import autologgable_output
 from pykit.loggedrobot import LoggedRobot
 from pykit.logger import Logger
+from utils.robotLoggerSetup import RobotLoggerSetup
 
 import constants
 
@@ -21,9 +17,7 @@ from utils.calibration import CalibrationWrangler
 
 from util.logtracer import LogTracer
 
-from testingMotors.motorCtrl import motorDepConstants, MotorControl
-
-# from drivetrain.controlStrategies.trajectory import Trajectory
+from testingMotors.motorCtrl import MotorControl, MotorDependentConstants
 
 from humanInterface.driverInterface import DriverInterface
 from humanInterface.ledControl import LEDControl
@@ -35,6 +29,7 @@ import wpilib
 LoggedRobot.default_period = constants.kRobotUpdatePeriodS
 
 
+@autologgable_output
 class MyRobot(LoggedRobot):
     """
     Our default robot class, pass it to wpilib.run
@@ -45,48 +40,9 @@ class MyRobot(LoggedRobot):
 
     def __init__(self):
         super().__init__()
-        Logger.recordMetadata("Robot", type(self).__name__)
-        match constants.kRobotMode:
-            case constants.RobotModes.REAL | constants.RobotModes.SIMULATION:
-                deploy_config = wpilib.deployinfo.getDeployData()
-                if deploy_config is not None:
-                    Logger.recordMetadata(
-                        "Deploy Host", deploy_config.get("deploy-host", "")
-                    )
-                    Logger.recordMetadata(
-                        "Deploy User", deploy_config.get("deploy-user", "")
-                    )
-                    Logger.recordMetadata(
-                        "Deploy Date", deploy_config.get("deploy-date", "")
-                    )
-                    Logger.recordMetadata(
-                        "Code Path", deploy_config.get("code-path", "")
-                    )
-                    Logger.recordMetadata("Git Hash", deploy_config.get("git-hash", ""))
-                    Logger.recordMetadata(
-                        "Git Branch", deploy_config.get("git-branch", "")
-                    )
-                    Logger.recordMetadata(
-                        "Git Description", deploy_config.get("git-desc", "")
-                    )
-                Logger.addDataReciever(NT4Publisher(True))
-                # TODO consider using the WPILOGWriter path parameter in simulation to save
-                # the log file in a directory outside of the project.
-                Logger.addDataReciever(WPILOGWriter())
-            case constants.RobotModes.REPLAY:
-                self.useTiming = (
-                    False  # Disable timing in replay mode, run as fast as possible
-                    # True # replay with timing
-                )
-                log_path = os.environ["LOG_PATH"]
-                log_path = os.path.abspath(log_path)
-                print(f"Starting log from {log_path}")
-                replaySource = WPILOGReader(log_path)
-                Logger.setReplaySource(replaySource)
-                # TODO consider using the WPILOGWriter path parameter in simulation to save
-                # the log file in a directory outside of the project.
-                Logger.addDataReciever(WPILOGWriter(log_path[:-7] + "_sim.wpilog"))
-        Logger.start()
+        RobotLoggerSetup.robotName = type(self).__name__
+        self.loggerSetup = RobotLoggerSetup()
+        self.useTiming = self.loggerSetup.useTiming
 
         self.container = RobotContainer()
 
@@ -147,8 +103,11 @@ class MyRobot(LoggedRobot):
 
         self.ledCtrl = LEDControl()
 
+        motorDepConstants = MotorDependentConstants().get()
         if motorDepConstants["HAS_MOTOR_TEST"]:
-            self.motorCtrlFun = MotorControl()
+            self.motorCtrlFun: MotorControl | None = MotorControl()
+        else:
+            self.motorCtrlFun = None
 
         # self.shooterCtrl = ShooterController()
 
@@ -169,6 +128,7 @@ class MyRobot(LoggedRobot):
 
         # if self.count == 10:
         #    gc.freeze()
+        # gc.freeze()
 
         LogTracer.resetOuter("RobotPeriodic")
         self.container.robotPeriodic()
@@ -181,7 +141,6 @@ class MyRobot(LoggedRobot):
 
         self.ledCtrl.update()
 
-        self.count += 1
         LogTracer.record("OtherUpdates")
         LogTracer.recordTotal()
 
@@ -189,6 +148,7 @@ class MyRobot(LoggedRobot):
         # because it is a singleton and
         # the next line will open new top level tracers.
         commands2.CommandScheduler.getInstance().run()
+        self.count += 1
 
     #########################################################
     ## Disabled-Specific init and update
@@ -198,7 +158,6 @@ class MyRobot(LoggedRobot):
 
     def disabledPeriodic(self) -> None:
         """This function is called periodically when disabled"""
-        # Trajectory().trajHDC.updateCals()
 
     #########################################################
     ## Autonomous-Specific init and update
@@ -224,13 +183,14 @@ class MyRobot(LoggedRobot):
         """This function is called periodically when in teleop"""
         # print(f"{self.count} teleopPeriodic")
 
+        # TODO move this to the robotcontainer
         if self.dInt.getGyroResetCmd():
             if self.container.drivetrainSubsystem is not None:
                 self.container.drivetrainSubsystem.casseroleDrivetrain.resetGyro()
 
         # No trajectory in Teleop
         # Trajectory().setCmd(None)
-        if motorDepConstants["HAS_MOTOR_TEST"]:
+        if self.motorCtrlFun is not None:
             self.motorCtrlFun.update(100.0)
 
     def teleopExit(self):
@@ -251,10 +211,6 @@ class MyRobot(LoggedRobot):
     #########################################################
     ## Cleanup
     def endCompetition(self):
-        print("Goodbye!")
-
-        # Stop robot code exectuion first
-        super().endCompetition()
 
         # Sometimes `robopy test pyfrc_test.py` will invoke endCompetition() without completing robotInit(),
         # this will create a confusing exception here because we can reach self.rioMonitor.stopThreads()
@@ -265,6 +221,10 @@ class MyRobot(LoggedRobot):
             self.rioMonitor.stopThreads()
 
         destroyAllSingletonInstances()
+        from utils.singleton import _instances
+
+        print(f"Goodbye! utils.singleton.instances={_instances}")
+
         super().endCompetition()
 
 
@@ -282,7 +242,3 @@ def remoteRIODebugSupport():
         else:
             debugpy.listen(("0.0.0.0", 5678))
             debugpy.wait_for_client()
-
-
-if __name__ == "__main__":
-    wpilib.run(MyRobot)

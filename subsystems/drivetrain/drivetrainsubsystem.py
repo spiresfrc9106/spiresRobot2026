@@ -1,9 +1,11 @@
-from typing import Optional, List, Tuple, Callable, Type
+from typing import TYPE_CHECKING, Optional, List, Tuple, Callable, Type
+
+if TYPE_CHECKING:
+    from subsystems.drivetrain.drivetrainsimulation import DrivetrainSimulation
 
 from commands2 import Command, Subsystem, cmd
 from wpilib import XboxController
-from wpimath.geometry import Rotation2d
-from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
+from wpimath.kinematics import ChassisSpeeds
 
 from drivetrain.drivetrainCommand import DrivetrainCommand
 from drivetrain.drivetrainControl import DrivetrainControl
@@ -15,11 +17,11 @@ from pykit.autolog import autologgable_output, autolog_output
 from pykit.logger import Logger
 
 
-from constants import kRobotMode, RobotModes
+from constants import LoggerState, RobotModes
 from subsystems.common.encodermodule import EncoderModule
 from subsystems.common.encodermoduleio import EncoderModuleIO
 from subsystems.common.encodermoduleiowrappered import EncoderModuleIOWrappered
-from subsystems.common.encodermoduleiowrapperedsim import EncoderModuleIOWrapperedSim
+from subsystems.common.encodermoduleiosim import EncoderModuleIOSim
 from subsystems.common.sysidmotormodules import SysIdMotorModules
 from subsystems.drivetrain.drivetrainsubsystemio import DrivetrainSubsystemIO
 
@@ -31,6 +33,7 @@ from subsystems.common.motormoduleio import MotorModuleIO
 from subsystems.common.motormoduleiowrappered import MotorModuleIOWrappered
 from subsystems.common.motormoduleiowrapperedsim import MotorModuleIOWrapperedSim
 from subsystems.state.configsubsystem import ConfigSubsystem
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from utils.constants import (
     DT_FL_AZMTH_CANID,
     DT_FL_AZMTH_ENC_PORT,
@@ -48,12 +51,9 @@ from utils.constants import (
 
 from utils.units import rad2Deg
 from util.logtracer import LogTracer
+from wpimath.system.plant import DCMotor
 from wrappers.wrapperedMotorSuper import WrapperedMotorSuper
 from wrappers.wrapperedSparkMax import WrapperedSparkMax
-
-
-DTDC = ConfigSubsystem().drivetrainDepConstants
-HAS_DRIVETRAIN = DTDC["HAS_DRIVETRAIN"]
 
 
 @autologgable_output
@@ -64,12 +64,14 @@ class DrivetrainSubsystem(Subsystem):
         motorModuleIOsAndEncoderIOSets: List[
             Tuple[str, MotorModuleIO, MotorModuleIO, EncoderModuleIO]
         ],
+        simulation: "DrivetrainSimulation | None" = None,
     ) -> None:
         Subsystem.__init__(self)
         self.name = type(self).__name__
         self.setName(self.name)
         self.io = io
         self.inputs = DrivetrainSubsystemIO.DrivetrainSubsystemIOInputs()
+        self.simulation = simulation
         self.wheelModules: List[MotorModule] = []
         self.azmthModules: List[MotorModule] = []
         self.azmthEncoderModules: List[EncoderModule] = []
@@ -116,35 +118,13 @@ class DrivetrainSubsystem(Subsystem):
     def initialize(self):
         self.casseroleDrivetrain.setManualCmd(self.casseroleDrivetrain.DO_NOTHING_CMD)
 
-    def getRawRotation(self) -> Rotation2d:
-        return self.casseroleDrivetrain.getRawRotation()
-
     @autolog_output(key="Robot/velocity")
     def getAngularVelocity(self) -> float:
         """radians per sec"""
-        # TODO to get playback to work this needs to become an input/output module.
-        # if RobotBase.isSimulation() and not Logger.isReplay():
-        #    # todo value: ChassisSpeeds = self.simVelocityGetter.get()
-        #    #value: ChassisSpeeds = self.simVelocityGetter.get()
-        #    #return value.omega
-        #    #return self.casseroleDrivetrain.gyro.getRate()
-        return self.casseroleDrivetrain.gyro.getRate()
-
-    def getFieldRelativeChassisSpeeds(self) -> ChassisSpeeds:
-        return self.casseroleDrivetrain.getFieldRelativeChassisSpeeds()
+        return RobotTopSubsystem().inputs.gyroYawRateRadPerSec
 
     def getRobotRelativeChassisSpeeds(self) -> ChassisSpeeds:
         return self.casseroleDrivetrain.getRobotRelativeChassisSpeeds()
-
-    def getModulePositions(
-        self,
-    ) -> Tuple[
-        SwerveModulePosition,
-        SwerveModulePosition,
-        SwerveModulePosition,
-        SwerveModulePosition,
-    ]:
-        return self.casseroleDrivetrain.getModulePositions()
 
     def sysIdMotorModulePreInit(self) -> None:
         self.initialize()
@@ -170,6 +150,9 @@ class DrivetrainSubsystem(Subsystem):
         LogTracer.record("UpdateInputs")
         self.casseroleDrivetrain.update()
         LogTracer.record("casseroleDrivetrain.update")
+        if self.simulation:
+            self.simulation.periodic()
+            LogTracer.record("SimulationPeriodic")
 
     def _updateAllCals(self):
         pass
@@ -208,6 +191,8 @@ def makeNameAndWrapperedMotorsAndEncoder(
     invertWheelMotor: bool,
     invertAzmthMotor: bool,
     invertAzmthEncoder: bool,
+    wheelGearBox: Optional[DCMotor] = None,
+    azmthGearBox: Optional[DCMotor] = None,
 ) -> tuple:
     """
     Make motors for one swerve drive module.
@@ -250,12 +235,14 @@ def makeNameAndWrapperedMotorsAndEncoder(
         subsystemName + moduleName + "/wheelMotor",
         brakeMode=True,
         currentLimitA=60,
+        gearBox=wheelGearBox,
     )
     azmthMotor = WrapperedSparkMax(
         azmthMotorCanID,
         subsystemName + moduleName + "/azmthMotor",
         brakeMode=True,
         currentLimitA=20,
+        gearBox=azmthGearBox,
     )
 
     # Note the azimuth encoder inversion should be fixed, based on the physical design of the encoder itself,
@@ -274,12 +261,32 @@ def makeNameAndWrapperedMotorsAndEncoder(
 
 
 def DrivetrainSubsystemFactory() -> DrivetrainSubsystem | None:
+    from subsystems.drivetrain.drivetrainsimulation import (
+        SwerveModuleSim,
+        DrivetrainSimulation,
+    )
+
     drivetrain: Optional[DrivetrainSubsystem] = None
+    DTDC = ConfigSubsystem().drivetrainDepConstants
+    HAS_DRIVETRAIN = DTDC["HAS_DRIVETRAIN"]
     if HAS_DRIVETRAIN:
-        match kRobotMode:
-            case RobotModes.REAL | RobotModes.SIMULATION:
+        p = DrivetrainPhysical()
+
+        # Gear boxes for simulation — only needed when SparkSim requires a motor model.
+        wheelSimGearBox: Optional[DCMotor] = None
+        azmthSimGearBox: Optional[DCMotor] = None
+        if LoggerState().kRobotMode == RobotModes.SIMULATION:
+            # TODO should this be a separate GearBox for each swerve drive module?
+            wheelSimGearBox = DCMotor.neoVortex(
+                1
+            )  # TODO make this come from drivetraindependentconstants
+            azmthSimGearBox = DCMotor.NEO(
+                1
+            )  # TODO make this come from drivetraindependentconstants
+
+        match LoggerState().kRobotMode:
+            case RobotModes.REAL | RobotModes.SIMULATION | RobotModes.REPLAY:
                 wrapperedMotorsAndEncoderSets = []
-                p = DrivetrainPhysical()
 
                 wrapperedMotorsAndEncoderSets.append(
                     makeNameAndWrapperedMotorsAndEncoder(
@@ -293,6 +300,8 @@ def DrivetrainSubsystemFactory() -> DrivetrainSubsystem | None:
                         p.FL_INVERT_WHEEL_MOTOR,
                         p.INVERT_AZMTH_MOTOR,
                         p.INVERT_AZMTH_ENCODER,
+                        wheelGearBox=wheelSimGearBox,
+                        azmthGearBox=azmthSimGearBox,
                     )
                 )
                 wrapperedMotorsAndEncoderSets.append(
@@ -307,6 +316,8 @@ def DrivetrainSubsystemFactory() -> DrivetrainSubsystem | None:
                         p.FR_INVERT_WHEEL_MOTOR,
                         p.INVERT_AZMTH_MOTOR,
                         p.INVERT_AZMTH_ENCODER,
+                        wheelGearBox=wheelSimGearBox,
+                        azmthGearBox=azmthSimGearBox,
                     )
                 )
                 wrapperedMotorsAndEncoderSets.append(
@@ -321,6 +332,8 @@ def DrivetrainSubsystemFactory() -> DrivetrainSubsystem | None:
                         p.BL_INVERT_WHEEL_MOTOR,
                         p.INVERT_AZMTH_MOTOR,
                         p.INVERT_AZMTH_ENCODER,
+                        wheelGearBox=wheelSimGearBox,
+                        azmthGearBox=azmthSimGearBox,
                     )
                 )
                 wrapperedMotorsAndEncoderSets.append(
@@ -335,6 +348,8 @@ def DrivetrainSubsystemFactory() -> DrivetrainSubsystem | None:
                         p.BR_INVERT_WHEEL_MOTOR,
                         p.INVERT_AZMTH_MOTOR,
                         p.INVERT_AZMTH_ENCODER,
+                        wheelGearBox=wheelSimGearBox,
+                        azmthGearBox=azmthSimGearBox,
                     )
                 )
 
@@ -342,7 +357,8 @@ def DrivetrainSubsystemFactory() -> DrivetrainSubsystem | None:
             Tuple[str, MotorModuleIO, MotorModuleIO, EncoderModuleIO]
         ] = []
         io: DrivetrainSubsystemIO = DrivetrainSubsystemIO()
-        match kRobotMode:
+        simulation: Optional[DrivetrainSimulation] = None
+        match LoggerState().kRobotMode:
             case RobotModes.REAL:
                 io = DrivetrainSubsystemIOReal(name="drivetrainIO")
                 for (
@@ -368,6 +384,7 @@ def DrivetrainSubsystemFactory() -> DrivetrainSubsystem | None:
                     )
             case RobotModes.SIMULATION:
                 io = DrivetrainSubsystemIORealSim(name="drivetrainIO")
+                moduleSimulations: list[SwerveModuleSim] = []
                 for (
                     moduleName,
                     wheelMotor,
@@ -382,13 +399,22 @@ def DrivetrainSubsystemFactory() -> DrivetrainSubsystem | None:
                         name=f"{p.DRIVETRAIN_NAME}/{moduleName}AzmthMotorModuleIO",
                         motor=azmthMotor,
                     )
-                    azmthEncoder_io = EncoderModuleIOWrapperedSim(
+                    azmthEncoder_io = EncoderModuleIOSim(
                         name=f"{p.DRIVETRAIN_NAME}/{moduleName}AzmthEncoderModuleIO",
-                        encoder=azmthEncoder,
                     )
                     motorModuleIOsAndEncoderIOSets.append(
                         (moduleName, wheelMotor_io, azmthMotor_io, azmthEncoder_io)
                     )
+                    moduleSimulations.append(
+                        SwerveModuleSim(
+                            azmthMotor=azmthMotor,
+                            azmthEncoderIO=azmthEncoder_io,
+                            wheelMotor=wheelMotor,
+                            wheelGearRatio=p.WHEEL_GEAR_RATIO,
+                            azmthGearRatio=p.AZMTH_GEAR_RATIO,
+                        )
+                    )
+                simulation = DrivetrainSimulation(moduleSimulations)
             case RobotModes.REPLAY | _:
                 io = DrivetrainSubsystemIO()
                 for (
@@ -397,23 +423,22 @@ def DrivetrainSubsystemFactory() -> DrivetrainSubsystem | None:
                     azmthMotor,
                     azmthEncoder,
                 ) in wrapperedMotorsAndEncoderSets:
-                    wheelMotor_io = MotorModuleIO(  # type: ignore[call-arg]
+                    wheelMotor_io = MotorModuleIO(
                         name=f"{p.DRIVETRAIN_NAME}/{moduleName}WheelMotorModuleIO",
-                        motor=wheelMotor,
                     )
-                    azmthMotor_io = MotorModuleIO(  # type: ignore[call-arg]
+                    azmthMotor_io = MotorModuleIO(
                         name=f"{p.DRIVETRAIN_NAME}/{moduleName}AzmthMotorModuleIO",
-                        motor=azmthMotor,
                     )
-                    azmthEncoder_io = EncoderModuleIO(  # type: ignore[call-arg]
+                    azmthEncoder_io = EncoderModuleIO(
                         name=f"{p.DRIVETRAIN_NAME}/{moduleName}AzmthEncoderModuleIO",
-                        encoder=azmthEncoder,
                     )
                     motorModuleIOsAndEncoderIOSets.append(
                         (moduleName, wheelMotor_io, azmthMotor_io, azmthEncoder_io)
                     )
         drivetrain = DrivetrainSubsystem(
-            io=io, motorModuleIOsAndEncoderIOSets=motorModuleIOsAndEncoderIOSets
+            io=io,
+            motorModuleIOsAndEncoderIOSets=motorModuleIOsAndEncoderIOSets,
+            simulation=simulation,
         )
 
     return drivetrain

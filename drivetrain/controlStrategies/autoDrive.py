@@ -1,11 +1,11 @@
 from typing import List
 
-from wpilib import Timer
 from wpimath.geometry import Pose2d, Translation2d
 from drivetrain.controlStrategies.holonomicDriveController import (
     HolonomicDriveController,
 )
 from drivetrain.drivetrainCommand import DrivetrainCommand
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from utils.singleton import Singleton
 from navigation.repulsorFieldPlanner import (
     RepulsorFieldPlanner,
@@ -27,7 +27,7 @@ class AutoDrive(metaclass=Singleton):
         self._autoPrevEnabled = False  # This name might be a wee bit confusing. It just keeps track if we were in auto targeting the speaker last refresh.
         self.targetIndexNumber = 0
         self.stuckTracker = 0
-        self.prevCallTime = Timer.getFPGATimestamp()
+        self.prevCallTime = RobotTopSubsystem().getFPGATimeUS()
         self.prevPose = Pose2d()
         self.LenList: List[float] = []
         self.dashboardConversionList = [
@@ -83,9 +83,9 @@ class AutoDrive(metaclass=Singleton):
 
     def update(self, cmdIn: DrivetrainCommand, curPose: Pose2d) -> DrivetrainCommand:
 
-        startTime = Timer.getFPGATimestamp()
+        startTime = RobotTopSubsystem().getFPGATimeUS()
 
-        curTime = Timer.getFPGATimestamp()
+        curTime = RobotTopSubsystem().getFPGATimeUS()
         Ts = curTime - self.prevCallTime
         self.prevCallTime = curTime
 
@@ -215,7 +215,7 @@ class AutoDrive(metaclass=Singleton):
         else:
             self._prevCmd = None
 
-        self._plannerDur = Timer.getFPGATimestamp() - startTime
+        self._plannerDur = RobotTopSubsystem().getFPGATimeUS() - startTime
 
         # Set our curPos as the new old pose
         self.prevPose = curPose

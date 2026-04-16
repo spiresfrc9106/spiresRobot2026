@@ -1,0 +1,253 @@
+{
+  "hubs": [
+    {
+      "x": 247,
+      "y": 119,
+      "width": 1100,
+      "height": 749,
+      "state": {
+        "sidebar": {
+          "width": 434,
+          "expanded": [
+            "/SmartDashboard/Field",
+            "/SmartDashboard/Field/Robot",
+            "/AdvantageKit",
+            "/AdvantageKit/RealOutputs/Robot/Velocity",
+            "/photonvision/back_center_cam",
+            "/photonvision/back_center_cam/targetPose/rotation",
+            "/photonvision/back_center_cam/targetPose/rotation/q",
+            "/photonvision/back_center_cam/targetPose/translation",
+            "/AdvantageKit/RealOutputs/back_center_cam/0",
+            "/AdvantageKit/RealOutputs/back_center_cam/0/bestCameraToTarget",
+            "/AdvantageKit/RealOutputs/back_center_cam/1",
+            "/AdvantageKit/RealOutputs/back_center_cam/2",
+            "/AdvantageKit/RealOutputs/back_center_cam/2/alternateCameraToTarget",
+            "/AdvantageKit/RealOutputs/back_center_cam/2/alternateCameraToTarget/rotation",
+            "/AdvantageKit/RealOutputs/back_center_cam/2/alternateCameraToTarget/translation",
+            "/AdvantageKit/RealOutputs/back_center_cam/3",
+            "/AdvantageKit/RealOutputs/back_center_cam/4",
+            "/AdvantageKit/RealOutputs/back_center_cam/4/alternateCameraToTarget",
+            "/AdvantageKit/RealOutputs/back_center_cam/4/alternateCameraToTarget/translation",
+            "/AdvantageKit/RealOutputs/back_center_cam/4/bestCameraToTarget",
+            "/AdvantageKit/RealOutputs/back_center_cam/4/bestCameraToTarget/translation",
+            "/AdvantageKit/RealOutputs/back_center_cam/4/bestCameraToTarget/rotation",
+            "/AdvantageKit/RealOutputs/back_center_cam/0/bestCameraToTarget/translation",
+            "/RealOutputs",
+            "/RealOutputs/back_center_cam",
+            "/RealOutputs/back_center_cam/0",
+            "/RealOutputs/Robot",
+            "/RealOutputs/Robot/Pose",
+            "/RealOutputs/Robot/Pose/Estimator",
+            "/AdvantageKit/RealOutputs/Robot/Pose",
+            "/AdvantageKit/RealOutputs/Robot/Pose/Estimator",
+            "/AdvantageKit/RealOutputs/back_center_cam/sol/0",
+            "/AdvantageKit/RealOutputs/back_center_cam/sol/1/pose",
+            "/AdvantageKit/RealOutputs/back_center_cam/target/0",
+            "/AdvantageKit/RealOutputs/Robot/dt/Pose",
+            "/AdvantageKit/RealOutputs/back_center_cam/target/0/bestRobotField",
+            "/AdvantageKit/RealOutputs/back_center_cam/target/0/bestCameraToTarget",
+            "/AdvantageKit/RealOutputs/back_center_cam/sol/1",
+            "/AdvantageKit/RealOutputs/back_center_cam/sol/0/pose",
+            "/AdvantageKit/RealOutputs/back_center_cam/sol/0/pose/rotation",
+            "/AdvantageKit/RealOutputs/back_center_cam/sol/0/pose/translation",
+            "/AdvantageKit/RealOutputs/back_center_cam/sol/1/pose/rotation",
+            "/AdvantageKit/RealOutputs/back_center_cam/sol/1/pose/translation",
+            "/AdvantageKit/RealOutputs/back_center_cam/sol/2",
+            "/AdvantageKit/RealOutputs/back_center_cam/sol/2/pose",
+            "/AdvantageKit/RealOutputs/back_center_cam/sol/2/pose/rotation",
+            "/AdvantageKit/RealOutputs/back_center_cam/sol/2/pose/translation",
+            "/AdvantageKit/RealOutputs/back_center_cam/sol/3",
+            "/AdvantageKit/RealOutputs/back_center_cam/sol/3/pose",
+            "/AdvantageKit/RealOutputs/back_center_cam/sol/3/pose/rotation",
+            "/AdvantageKit/RealOutputs/back_center_cam/sol/3/pose/translation",
+            "/AdvantageKit/RealOutputs/back_center_cam/target",
+            "/AdvantageKit/RealOutputs/back_center_cam/target/1",
+            "/AdvantageKit/RealOutputs/back_center_cam/target/1/bestCameraToTarget",
+            "/AdvantageKit/RealOutputs/back_center_cam/target/2",
+            "/AdvantageKit/RealOutputs/back_center_cam/target/3",
+            "/RealOutputs/Robot/Pose/Estimator/Pose",
+            "/RealOutputs/back_center_cam/target",
+            "/RealOutputs/back_center_cam/target/0",
+            "/RealOutputs/back_center_cam/target/0/alternateRobotField",
+            "/RealOutputs/back_center_cam/target/1",
+            "/RealOutputs/back_center_cam/sol",
+            "/RealOutputs/back_center_cam/sol/0",
+            "/RealOutputs/back_center_cam/sol/0/pose",
+            "/RealOutputs/back_center_cam/sol/0/pose/rotation",
+            "/RealOutputs/back_center_cam/sol/0/pose/translation",
+            "/RealOutputs/back_center_cam/sol/1",
+            "/RealOutputs/back_center_cam/sol/1/pose",
+            "/RealOutputs/back_center_cam/sol/1/pose/rotation",
+            "/AdvantageKit/RealOutputs/back_center_cam/sol",
+            "/AdvantageKit/RealOutputs/back_high_cam/sol",
+            "/AdvantageKit/RealOutputs/back_high_cam/sol/0",
+            "/AdvantageKit/RealOutputs/back_high_cam/sol/0/pose",
+            "/AdvantageKit/RealOutputs/back_high_cam/sol/0/pose/rotation",
+            "/AdvantageKit/RealOutputs/front_left_cam/sol",
+            "/AdvantageKit/RealOutputs/front_left_cam/sol/0",
+            "/AdvantageKit/RealOutputs/front_right_cam/sol",
+            "/AdvantageKit/RealOutputs/front_right_cam/sol/0",
+            "/AdvantageKit/RealOutputs",
+            "/AdvantageKit/RealOutputs/Robot/dt/Pose/estPose",
+            "/AdvantageKit/RealOutputs/Robot/dt/Pose/estPose/rotation",
+            "/AdvantageKit/RealOutputs/Robot/dt/Pose/estPose/translation",
+            "/AdvantageKit/RealOutputs/Robot/top",
+            "/SmartDashboard",
+            "/SmartDashboard/DT Pose 2D",
+            "/SmartDashboard/DT Pose 2D/Robot",
+            "/AdvantageKit/RealOutputs/Robot",
+            "/AdvantageKit/RealOutputs/Robot/dt"
+          ]
+        },
+        "tabs": {
+          "selected": 2,
+          "tabs": [
+            {
+              "type": 0,
+              "title": "",
+              "controller": null,
+              "controllerUUID": "jsgric6hg6hdw5syvro1scopbs7yae0a",
+              "renderer": "",
+              "controlsHeight": 0
+            },
+            {
+              "type": 1,
+              "title": "Line Graph",
+              "controller": {
+                "leftSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/LoggedRobot/FullCycleMS",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#2b66a2",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "rightSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Robot/Velocity/vx",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#80588e",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "discreteSources": [],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "autoTarget": null,
+                  "preset": null
+                },
+                "rightUnitConversion": {
+                  "autoTarget": null,
+                  "preset": null
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "3ycjhktvfj6vtvpisaery7pf4k5q8ptr",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 2,
+              "title": "2D Field",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/back_center_cam/sol/0/pose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000"
+                    }
+                  },
+                  {
+                    "type": "robot",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Robot/dt/Pose/estPose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "bumpers": ""
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/back_high_cam/sol/0/pose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff8c00"
+                    }
+                  },
+                  {
+                    "type": "robotLegacy",
+                    "logKey": "NT:/SmartDashboard/Field/Robot",
+                    "logType": "NumberArray",
+                    "visible": true,
+                    "options": {
+                      "bumpers": "",
+                      "format": "Pose2d",
+                      "units": "degrees"
+                    }
+                  },
+                  {
+                    "type": "ghostLegacy",
+                    "logKey": "NT:/SmartDashboard/DT Pose 2D/Robot",
+                    "logType": "NumberArray",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ff00",
+                      "format": "Pose2d",
+                      "units": "degrees"
+                    }
+                  }
+                ],
+                "field": "FRC:2026 Field",
+                "orientation": 0,
+                "size": "large"
+              },
+              "controllerUUID": "8ardbaxlahqi8m88uni633fi68gpa905",
+              "renderer": null,
+              "controlsHeight": 312
+            },
+            {
+              "type": 3,
+              "title": "3D Field",
+              "controller": {
+                "sources": [],
+                "game": "FRC:2026 Field"
+              },
+              "controllerUUID": "3etcfncbcyf5yco1hhu22egjhd7gxpij",
+              "renderer": {
+                "cameraIndex": -1,
+                "orbitFov": 50,
+                "cameraPosition": [
+                  0,
+                  0,
+                  0
+                ],
+                "cameraTarget": [
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "controlsHeight": 200
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "satellites": [],
+  "version": "26.0.1"
+}

@@ -1,7 +1,6 @@
 from wpilib import ADIS16470_IMU
 from wpimath.geometry import Rotation2d
 import navx
-from subsystems.state.configsubsystem import ConfigSubsystem
 from utils.singleton import Singleton
 
 
@@ -14,6 +13,9 @@ class WrapperedNoGyro:
 
     def isConnected(self):
         return False
+
+    def getRate(self) -> float:
+        return 0.0
 
 
 class WrapperedNavx(navx.AHRS):
@@ -65,19 +67,3 @@ class WrapperedAdis16470ImuSingleton(metaclass=Singleton):
 
     def getRate(self) -> float:
         return self._gyro.getRate()
-
-
-def wrapperedGyro():
-    c = ConfigSubsystem()
-    result = None
-    if c.isSpiresRobot():
-        print(f"GYRO is {c.drivetrainDepConstants['GYRO']}")
-        if c.drivetrainDepConstants["GYRO"] == "NAVX":
-            result = WrapperedNavxSingleton()
-        elif c.drivetrainDepConstants["GYRO"] == "ADIS16470_IMU":
-            result = WrapperedAdis16470ImuSingleton()
-        else:
-            result = WrapperedNoGyro()
-    else:
-        result = WrapperedAdis16470Imu()
-    return result

@@ -1,7 +1,24 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pykit.autolog import autolog
 
-from wpilib import RobotController
+from wpimath.geometry import Pose2d, Rotation2d
+
+from constants import RobotTypes
+from utils.singleton import Singleton
+
+
+class RobotTopDependentConstants(metaclass=Singleton):
+    def __init__(self) -> None:
+        self._constants = {
+            RobotTypes.Spires2023: {"GYRO": "NAVX"},
+            RobotTypes.Spires2026: {"GYRO": "ADIS16470_IMU"},
+            RobotTypes.Spires2026Sim: {"GYRO": "ADIS16470_IMU"},
+            RobotTypes.SpiresTestBoard: {"GYRO": "NoGyro"},
+            RobotTypes.SpiresRoboRioV1: {"GYRO": "NoGyro"},
+        }
+
+    def get(self, robotType: RobotTypes) -> dict:
+        return self._constants[robotType]
 
 
 class RobotTopIO:
@@ -12,7 +29,16 @@ class RobotTopIO:
     class RobotTopIOInputs:
         """Hold I/O data for the robot high-level state subsystem."""
 
-        timeUSec: int = 0
+        gyroAngleRotation: Rotation2d = field(default_factory=lambda: Rotation2d())
+        gyroConnected: bool = False
+        gyroYawRateRadPerSec: float = 0.0
+
+    def __init__(self, gyro) -> None:
+        self.gyro = gyro
+
+    def resetSimPose(self, pose: Pose2d) -> None:
+        """No-op on real hardware; overridden by RobotTopIOSim."""
+        ...
 
     def updateInputs(self, inputs: RobotTopIOInputs) -> None:
         """Update the robot high-level state I/O inputs.
@@ -20,4 +46,7 @@ class RobotTopIO:
         Args:
             inputs (RobotTopIOInputs): The robot high-level state I/O inputs to update.
         """
-        inputs.timeUSec = RobotController.getFPGATime()
+        if self.gyro is not None:
+            inputs.gyroAngleRotation = self.gyro.getGyroAngleRotation2d()
+            inputs.gyroConnected = self.gyro.isConnected()
+            inputs.gyroYawRateRadPerSec = self.gyro.getRate()

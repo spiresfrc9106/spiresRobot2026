@@ -1,13 +1,13 @@
 from typing import Callable
 from ntcore import NetworkTableInstance
-from wpilib import RobotController
 from wpimath.geometry import Pose3d, Rotation2d, Rotation3d, Transform3d
+
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from subsystems.vision.visionio import (
-    ObservationType,
     VisionSubsystemIO,
     VisionSubsystemPoseObservation,
 )
-
+from constants.vision import ObservationType
 
 from constants.math import kRadiansPerDegree
 
@@ -47,7 +47,10 @@ class VisionSubsystemIOLimelight(VisionSubsystemIO):
 
     def updateInputs(self, inputs: VisionSubsystemIO.VisionSubsystemIOInputs):
         inputs.connected = (
-            (RobotController.getFPGATime() - self.latencySubscriber.getLastChange())
+            (
+                RobotTopSubsystem().getFPGATimeUS()
+                - self.latencySubscriber.getLastChange()
+            )
             / 1000
         ) < 250
         self.orientationPublisher.set(
@@ -56,14 +59,13 @@ class VisionSubsystemIOLimelight(VisionSubsystemIO):
 
         NetworkTableInstance.getDefault().flush()  # inefficient on usage but good for LL
 
-        tagIds = []
         poseObservatios = []
 
         for sample in self.megatag1.readQueue():
             if len(sample.value) == 0:
                 continue
             for i in range(11, len(sample.value), 7):
-                tagIds.append(int(sample.value[i]))
+                # tagIds.append(int(sample.value[i]))
                 poseObservatios.append(
                     VisionSubsystemPoseObservation(
                         sample.time * 1e-6 - sample.value[6] * 1e-3,
@@ -80,7 +82,7 @@ class VisionSubsystemIOLimelight(VisionSubsystemIO):
             if len(sample.value) == 0:
                 continue
             for i in range(11, len(sample.value), 7):
-                tagIds.append(int(sample.value[i]))
+                # tagIds.append(int(sample.value[i]))
                 poseObservatios.append(
                     VisionSubsystemPoseObservation(
                         sample.time * 1e-6 - sample.value[6] * 1e-3,
@@ -94,7 +96,6 @@ class VisionSubsystemIOLimelight(VisionSubsystemIO):
                 )
 
         inputs.poseObservations = poseObservatios
-        inputs.tagIds = tagIds
 
     @staticmethod
     def parsePose(rawLLArray: list[float]):

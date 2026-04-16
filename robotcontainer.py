@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from typing import Callable, Optional
 
 import commands2
 import wpilib
@@ -8,15 +8,12 @@ from pathplannerlib.auto import PathPlannerAuto, AutoBuilder, NamedCommands
 from pathplannerlib.config import RobotConfig
 from pathplannerlib.controller import PPHolonomicDriveController
 from wpimath.geometry import Pose2d, Rotation2d
-from wpimath.kinematics import ChassisSpeeds, SwerveModulePosition
 
 from constants import kFieldLengthIn, kFieldWidthIn
 from constants.field import poseTransformedForAlliance
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
 from humanInterface.driverInterface import DriverInterface
-from pykit.logger import Logger
 from pykit.networktables.loggeddashboardchooser import LoggedDashboardChooser
-from robotstate import RobotState
 from subsystems.drivetrain.drivetrainsubsystem import (
     DrivetrainSubsystemFactory,
     DrivetrainSubsystem,
@@ -27,10 +24,11 @@ from subsystems.intakeOuttake.inoutsubsystem import (
 )
 
 from subsystems.state.configsubsystem import ConfigSubsystem
-from subsystems.state.robottopsubsystem import RobotTopSubsystem
+from subsystems.state.robottopsubsystem import RobotTopSubsystemFactory
 from subsystems.vision.visionsubsystem import VisionSubsystem, VisionSubsystemFactory
+from util.robotposeestimator import VisionObservation
 from utils.allianceTransformUtils import onRed
-from utils.units import deg2Rad, in2m
+from utils.units import deg2Rad, in2m, m2in
 
 
 class RobotContainer:
@@ -45,18 +43,31 @@ class RobotContainer:
     Spires addendum to RobotContainer design, the robot container should know very little about the robot's subsystems,
     or how to build them or what they connect to. That information should be in the subsystem classes.
     """
-    autoOrTestCommand: Optional[Command] = None
 
     def __init__(self) -> None:
         # The robot's subsystems
+        self.autoOrTestCommand: Optional[Command] = None
         self.config = ConfigSubsystem()
-        self.robotop = RobotTopSubsystem()
+        self.robotop = RobotTopSubsystemFactory()
         self.inout: InOutSubsystem | None = inoutSubsystemFactory()
         self.drivetrainSubsystem: DrivetrainSubsystem | None = None
         if ConfigSubsystem().useCasseroleSwerve():
             self.drivetrainSubsystem = DrivetrainSubsystemFactory()
-        self.visionSubsystem: VisionSubsystem | None = VisionSubsystemFactory()
+        if self.drivetrainSubsystem is not None:
+            from subsystems.state.robottopiosim import RobotTopIOSim
 
+            if isinstance(self.robotop.io, RobotTopIOSim):
+                self.robotop.io.setChassisSpeedSupplier(
+                    self.drivetrainSubsystem.casseroleDrivetrain.getRobotRelativeChassisSpeeds
+                )
+        visionConsumers: list[Callable[[VisionObservation], None]] = []
+        if self.drivetrainSubsystem is not None:
+            visionConsumers.append(
+                self.drivetrainSubsystem.casseroleDrivetrain.poseEst.addVisionObservation
+            )
+        self.visionSubsystem: VisionSubsystem | None = VisionSubsystemFactory(
+            visionConsumers
+        )
         if self.inout is not None:
             NamedCommands.registerCommand(
                 "spinUpFlywheel", self.inout.spinUpFlywheelCommand()
@@ -196,33 +207,7 @@ class RobotContainer:
         self.testChooser.setDefaultOption("Do Nothing Once", cmd.none())
 
     def robotPeriodic(self) -> None:
-        if self.visionSubsystem is not None:
-            if self.drivetrainSubsystem is None:
-                RobotState.periodic(
-                    Rotation2d().fromDegrees(0.0),  # self.drive.getRawRotation(),
-                    Logger.getTimestamp() / 1e6,
-                    0.0,  # self.drive.getAngularVelocity(),
-                    ChassisSpeeds(),  # self.drive.getFieldRelativeSpeeds(),
-                    (
-                        SwerveModulePosition(),
-                        SwerveModulePosition(),
-                        SwerveModulePosition(),
-                        SwerveModulePosition(),
-                    ),
-                    # self.drive.getModulePositions(),
-                    Rotation2d().fromDegrees(0.0),  # self.turret.position,
-                    Rotation2d().fromDegrees(0.0),  # self.intake.position,
-                )
-            else:
-                RobotState.periodic(
-                    self.drivetrainSubsystem.getRawRotation(),
-                    Logger.getTimestamp() / 1e6,
-                    self.drivetrainSubsystem.getAngularVelocity(),
-                    self.drivetrainSubsystem.getFieldRelativeChassisSpeeds(),
-                    self.drivetrainSubsystem.getModulePositions(),
-                    Rotation2d().fromDegrees(0.0),  # self.turret.position,
-                    Rotation2d().fromDegrees(0.0),  # self.intake.position,
-                )
+        pass
 
     def autonomousInit(self) -> None:
         self.setDefaultStartpose()
@@ -252,8 +237,8 @@ class RobotContainer:
     def setDefaultStartpose(self) -> None:
         if self.drivetrainSubsystem is not None:
             if not self.autoHasRun:
-                robotStartXIn = 40.0
-                robotStartYIn = 80.0
+                robotStartXIn = m2in(2.5)
+                robotStartYIn = kFieldWidthIn / 2
                 if onRed():
                     startPose = Pose2d(
                         in2m(kFieldLengthIn - robotStartXIn),
@@ -273,9 +258,9 @@ class RobotContainer:
     def resetPose(self, pose: Pose2d) -> None:
         print(f"resetPose: {pose}")
         if self.drivetrainSubsystem is not None:
-            self.drivetrainSubsystem.casseroleDrivetrain.poseEst.setKnownPose(pose)
-        if self.visionSubsystem is not None:
-            RobotState.resetPose(pose)
+            self.drivetrainSubsystem.casseroleDrivetrain.setKnownPose(pose)
+        else:
+            self.robotop.resetRobotPose(pose)
 
     def testInit(self) -> None:
         self.autoOrTestCommand = self.testChooser.getSelected()

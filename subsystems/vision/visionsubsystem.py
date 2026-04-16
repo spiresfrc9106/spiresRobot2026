@@ -1,11 +1,11 @@
-from typing import Callable, List, Optional, cast
+from typing import Callable, List, Optional, cast, Any
 from commands2 import Subsystem
 from wpimath.geometry import Transform3d
 
-from constants import kRobotMode, RobotModes
+from constants import LoggerState, RobotModes
 from pykit.logger import Logger
-from robotstate import RobotState
 from subsystems.state.configsubsystem import ConfigSubsystem
+from subsystems.state.robottopsubsystem import RobotTopSubsystem
 from subsystems.vision.vision import CameraConfiguration
 
 from subsystems.vision.visionio import (
@@ -29,11 +29,11 @@ from util.robotposeestimator import TurretedVisionObservation, VisionObservation
 class VisionSubsystem(Subsystem):
     def __init__(
         self,
-        visionConsumer: Callable[[VisionObservation], None],
+        visionConsumers: List[Callable[[VisionObservation], None]],
         turretedVisionConsumer: Callable[[TurretedVisionObservation], None],
         io: List[VisionSubsystemIO],
     ) -> None:
-        self.consumer = visionConsumer
+        self.consumers = visionConsumers
         self.turretedConsumer = turretedVisionConsumer
         self.io = io
 
@@ -50,7 +50,7 @@ class VisionSubsystem(Subsystem):
             LogTracer.record(f"Camera{idx} UpdateInputs")
         LogTracer.record("All Cameras UpdateInputs")
 
-        allTagPoses = []
+        allTagPoses: List[Any] = []
         allRobotPoses = []
         allRobotPosesAccepted = []
         allRobotPosesRejected = []
@@ -61,7 +61,6 @@ class VisionSubsystem(Subsystem):
 
         LogTracer.reset()
         for idx, camera in enumerate(self.inputs):
-            tagPoses = []
             robotPoses = []
             robotPosesAccepted = []
             robotPosesRejected = []
@@ -70,12 +69,12 @@ class VisionSubsystem(Subsystem):
             turretedTransformsAccepted = []
             turretedTransformsRejected = []
 
-            for tagId in camera.tagIds:
-                tagPose = kApriltagFieldLayout.getTagPose(tagId)
-                if tagPose is not None:
-                    tagPoses.append(tagPose)
+            # if len(camera.poseObservations) or len(camera.turretedObservations):
+            #    print(f"camera observations: {camera.poseObservations} {camera.turretedObservations}")
 
             for observation in camera.poseObservations:
+                rejectPose = False
+                """
                 rejectPose = (
                     observation.tagCount == 0
                     or (
@@ -88,6 +87,7 @@ class VisionSubsystem(Subsystem):
                     or observation.pose.Y() < 0.0
                     or observation.pose.Y() > kApriltagFieldLayout.getFieldWidth()
                 )
+                """
 
                 robotPoses.append(observation.pose)
                 if rejectPose:
@@ -98,30 +98,30 @@ class VisionSubsystem(Subsystem):
                 if rejectPose:
                     continue
 
-                stdDevFactor = (
-                    pow(observation.averageTagDistance, 2.0) / observation.tagCount
-                )
-                linearStdDev = kXyStdDevCoeff * stdDevFactor
-                angularStdDev = kThetaStdDevCoeff * stdDevFactor
+                if observation.xyStdDev_m > 0.0:
+                    # Pre-computed stddevs from WrapperedPoseEstPhotonCamera — use directly
+                    linearStdDev = observation.xyStdDev_m
+                    angularStdDev = observation.rotStdDev_rad
+                else:
+                    # Fallback: compute from distance/tagCount (limelight and other IO)
+                    stdDevFactor = (
+                        pow(observation.avgTagDist_m, 2.0) / observation.tagCount
+                    )
+                    linearStdDev = kXyStdDevCoeff * stdDevFactor
+                    angularStdDev = kThetaStdDevCoeff * stdDevFactor
 
                 # here you can also factor in per-camera weighting
 
-                observedTags = []
-                tagsList = observation.tagsList
-                for tagId in range(32):
-                    if tagsList & (1 << tagId):
-                        observedTags.append(
-                            tagId + 1
-                        )  # need to add 1 since tag IDs are 1 indexed but our bitmask is 0 indexed
+                # observedTags = expandTagsUint32ToList(observation.tagsList)
 
-                self.consumer(
-                    VisionObservation(
-                        observation.pose.toPose2d(),
-                        observation.timestamp,
-                        [linearStdDev, linearStdDev, angularStdDev],
-                        observedTags,
-                    )
+                visionObs = VisionObservation(
+                    observation.pose.toPose2d(),
+                    observation.timestamp,
+                    (linearStdDev, linearStdDev, angularStdDev),
+                    # observedTags,
                 )
+                for consumer in self.consumers:
+                    consumer(visionObs)
             LogTracer.record(f"Camera{idx} ProcessObservations")
             for tObs in camera.turretedObservations:
                 tObsTyped: VisionSubsystemTurretedPoseObservation = cast(
@@ -162,23 +162,18 @@ class VisionSubsystem(Subsystem):
                 linearStdDev = kXyStdDevCoeff * stdDevFactor
                 angularStdDev = kThetaStdDevCoeff * stdDevFactor
                 # here you can also factor in per-camera weighting
-                observedTags = []
-                tagsList = tObsTyped.tagsList
-                # extract tag list from bit masks
-                for tagId in range(32):
-                    if tagsList & (1 << tagId):
-                        observedTags.append(tagId + 1)
+
+                # observedTags = expandTagsUint32ToList(tObsTyped.tagsList)
 
                 self.turretedConsumer(
                     TurretedVisionObservation(
                         tObsTyped.fieldToTurret,
                         tObsTyped.timestamp,
-                        [linearStdDev, linearStdDev, angularStdDev],
-                        observedTags,
+                        (linearStdDev, linearStdDev, angularStdDev),
+                        # observedTags,
                     )
                 )
 
-            Logger.recordOutput(f"Vision/Camera{idx}/TagPose", tagPoses)
             Logger.recordOutput(f"Vision/Camera{idx}/RobotPoses", robotPoses)
             Logger.recordOutput(
                 f"Vision/Camera{idx}/RobotPosesRejected", robotPosesRejected
@@ -197,7 +192,6 @@ class VisionSubsystem(Subsystem):
                 f"Vision/Camera{idx}/TurretedTransformsAccepted",
                 turretedTransformsAccepted,
             )
-            allTagPoses.extend(tagPoses)
             allRobotPoses.extend(robotPoses)
             allRobotPosesAccepted.extend(robotPosesAccepted)
             allRobotPosesRejected.extend(robotPosesRejected)
@@ -207,7 +201,11 @@ class VisionSubsystem(Subsystem):
         LogTracer.record("All Cameras ProcessObservations")
 
         Logger.recordOutput("Vision/Summary/TagPose", allTagPoses)
-        Logger.recordOutput("Vision/Summary/RobotPoses", allRobotPoses)
+        Logger.recordOutput(
+            "Vision/Summary/RobotPoses", allRobotPoses
+        )  # Problems: In simulation replay this field differs
+        # The convert to csv tool and find differences tool does not seem to handle this list of poses.
+        # Perhaps the check for errors part of the test does not look at lists of poses.
         Logger.recordOutput("Vision/Summary/RobotPosesRejected", allRobotPosesRejected)
         Logger.recordOutput("Vision/Summary/RobotPosesAccepted", allRobotPosesAccepted)
         Logger.recordOutput("Vision/Summary/TurretedTransforms", allTurretedTransforms)
@@ -222,7 +220,9 @@ class VisionSubsystem(Subsystem):
         LogTracer.recordTotal()
 
 
-def VisionSubsystemFactory() -> VisionSubsystem | None:
+def VisionSubsystemFactory(
+    visionConsumers: List[Callable[[VisionObservation], None]] | None = None,
+) -> VisionSubsystem | None:
     VDC = ConfigSubsystem().visionDepConstants
     vision: Optional[VisionSubsystem] = None
     if VDC["HAS_VISION"]:
@@ -235,7 +235,7 @@ def VisionSubsystemFactory() -> VisionSubsystem | None:
                 f"{cam} {t.X()} {t.Y()} {t.Z()} {t.rotation().X()} {t.rotation().Y()} {t.rotation().Z()}"
             )
 
-            match kRobotMode:
+            match LoggerState().kRobotMode:
                 case RobotModes.REAL:
                     io.append(
                         config.realCameraIO(
@@ -248,12 +248,16 @@ def VisionSubsystemFactory() -> VisionSubsystem | None:
                             config.cameraName,
                             config.robotToCameraTransform,
                             # pylint: disable-next=unnecessary-lambda
-                            lambda: RobotState.getSimPose(),
+                            lambda: RobotTopSubsystem().getSimPose(),
                         )
                     )
                 case _:
                     io.append(VisionSubsystemIO())
 
-        vision = VisionSubsystem(RobotState.addVisionMeasurement, lambda: None, io=io)  # type: ignore[arg-type, misc]
+        vision = VisionSubsystem(
+            visionConsumers if visionConsumers is not None else [],
+            lambda _: None,
+            io=io,
+        )
 
     return vision

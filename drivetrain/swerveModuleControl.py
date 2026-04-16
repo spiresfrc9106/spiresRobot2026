@@ -6,8 +6,6 @@ from wpimath.controller import PIDController
 from wpimath.kinematics import SwerveModuleState
 from wpimath.kinematics import SwerveModulePosition
 from wpimath.geometry import Rotation2d
-from wpimath.filter import SlewRateLimiter
-from wpilib import TimedRobot
 
 from constants import kRobotUpdatePeriodS
 from drivetrain.drivetrainPhysical import DrivetrainPhysical
@@ -83,7 +81,7 @@ class SwerveModuleControl:
         self.actualState = SwerveModuleState()
         self.actualPosition = SwerveModulePosition()
 
-        self.azmthCtrl = PIDController(0, 0, 0)
+        self.azmthCtrl = PIDController(0, 0, 0, period=kRobotUpdatePeriodS)
         self.azmthCtrl.enableContinuousInput(-180.0, 180.0)
         self.azmthVoltage = 0.0
 
@@ -95,9 +93,6 @@ class SwerveModuleControl:
         self._speedActTopicName = getSpeedActTopicName(self.moduleName)
 
         self.wheelMotorIsClosedLoop = True
-
-        # Simulation Support Only
-        self.wheelSimFilter = SlewRateLimiter(24.0)
 
     def getActualPosition(self) -> SwerveModulePosition:
         """
@@ -171,23 +166,20 @@ class SwerveModuleControl:
         else:
             return 0
 
+    def updateActualStateAndPosition(self):
+        # Update this module's actual state with measurements from the sensors (or IO layer in sim).
+        self.actualState.angle = Rotation2d(self.azmthEnc.getAngleRad())
+        self.actualState.speed = self.dtMotorRotToLinear(
+            self.wheelMotor.getMotorVelocityRadPerSec()
+        )
+        self.actualPosition.distance = self.dtMotorRotToLinear(
+            self.wheelMotor.getMotorPositionRad()
+        )
+        self.actualPosition.angle = self.actualState.angle
+
     def update(self):
-        """Main update function, call every 40ms"""
-
-        # Read from the azimuth angle sensor (encoder)
-        # self.azmthEnc.update() This is now being handled by PyKit moduleIO processing.
-
-        if TimedRobot.isReal():
-            # Real Robot. Use the actual sensors to get data about the module.
-            # Update this module's actual state with measurements from the sensors
-            self.actualState.angle = Rotation2d(self.azmthEnc.getAngleRad())
-            self.actualState.speed = self.dtMotorRotToLinear(
-                self.wheelMotor.getMotorVelocityRadPerSec()
-            )
-            self.actualPosition.distance = self.dtMotorRotToLinear(
-                self.wheelMotor.getMotorPositionRad()
-            )
-            self.actualPosition.angle = self.actualState.angle
+        """Main update function, call every robot period"""
+        self.updateActualStateAndPosition()
 
         # Optimize our incoming swerve command to minimize motion
         self.optimizedDesiredState = self.desiredState
@@ -220,44 +212,26 @@ class SwerveModuleControl:
         if self.wheelMotorIsClosedLoop:
             self.wheelMotor.setVelCmd(motorDesSpd, motorVoltageFF)
 
-        Logger.recordOutput(f"{self._speedDesTopicName}_radps", motorDesSpd)
-        Logger.recordOutput(f"{self._speedDesTopicName}_radps2", motorDesAccel)
-        Logger.recordOutput(f"{self._speedDesTopicName}_FFV", motorVoltageFF)
-
         self._prevMotorDesSpeed = motorDesSpd  # save for next loop
 
-        if TimedRobot.isSimulation():
-            # Simulation only. Do a very rough simulation of module behavior, and populate
-            # sensor data for the next loop.
+        if False:
+            Logger.recordOutput(f"{self._speedDesTopicName}_radps", motorDesSpd)
+            Logger.recordOutput(f"{self._speedDesTopicName}_radps2", motorDesAccel)
+            Logger.recordOutput(f"{self._speedDesTopicName}_FFV", motorVoltageFF)
 
-            # Very simple voltage/motor model of azimuth rotation
-            azmthVoltage = self.azmthVoltage
-            if abs(azmthVoltage) < 0.1:
-                azmthVoltage = 0.0
-            self.actualState.angle += Rotation2d.fromDegrees(
-                azmthVoltage / 12.0 * 1500.0 * kRobotUpdatePeriodS
+            Logger.recordOutput(f"{self._azmthDesTopicName}_v", self.azmthVoltage)
+            Logger.recordOutput(
+                f"{self._azmthDesTopicName}_deg",
+                self.optimizedDesiredState.angle.degrees(),
             )
-            self.actualPosition.angle = self.actualState.angle
-
-            # Wheel speed is slew-rate filtered to roughly simulate robot inertia
-            speed = (
-                self.desiredState.speed
-            )  # self.wheelSimFilter.calculate(self.desiredState.speed)
-            self.actualState.speed = speed  # + random.uniform(-0.0, 0.0)
-            self.actualPosition.distance += self.actualState.speed * kRobotUpdatePeriodS
-
-        Logger.recordOutput(f"{self._azmthDesTopicName}_v", self.azmthVoltage)
-        Logger.recordOutput(
-            f"{self._azmthDesTopicName}_deg", self.optimizedDesiredState.angle.degrees()
-        )
-        Logger.recordOutput(
-            f"{self._azmthActTopicName}_deg", self.actualState.angle.degrees()
-        )
-        Logger.recordOutput(
-            f"{self._speedDesTopicName}_frac",
-            self.optimizedDesiredState.speed / self.MAX_FWD_REV_SPEED_MPS,
-        )
-        Logger.recordOutput(
-            f"{self._speedActTopicName}_frac",
-            self.actualState.speed / self.MAX_FWD_REV_SPEED_MPS,
-        )
+            Logger.recordOutput(
+                f"{self._azmthActTopicName}_deg", self.actualState.angle.degrees()
+            )
+            Logger.recordOutput(
+                f"{self._speedDesTopicName}_frac",
+                self.optimizedDesiredState.speed / self.MAX_FWD_REV_SPEED_MPS,
+            )
+            Logger.recordOutput(
+                f"{self._speedActTopicName}_frac",
+                self.actualState.speed / self.MAX_FWD_REV_SPEED_MPS,
+            )
